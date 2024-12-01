@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Python Terminal</title>
+    <title>Responsive Python Terminal</title>
     <!-- Include Brython core and standard library -->
     <script src="https://cdn.jsdelivr.net/npm/brython@3.11.1/brython.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/brython@3.11.1/brython_stdlib.js"></script>
@@ -12,36 +12,45 @@
             background: #282c34;
             color: #61dafb;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
         h1 {
             color: #61dafb;
             text-align: center;
+            margin: 10px 0;
         }
 
         #terminal {
             background: #1e1e1e;
             border-radius: 5px;
             padding: 10px;
-            width: 800px;
+            max-width: 800px;
             margin: 0 auto;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-            height: 400px;
+            height: 60vh;
             overflow-y: auto;
+            box-sizing: border-box;
         }
 
-        #input-line {
+        #terminal-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-line {
             display: flex;
             align-items: center;
             color: #61dafb;
         }
 
-        #prompt {
+        .prompt {
             margin-right: 5px;
+            flex-shrink: 0;
         }
 
-        input {
+        .command-input {
             flex: 1;
             border: none;
             outline: none;
@@ -49,16 +58,17 @@
             color: #61dafb;
             font-family: "Courier New", Courier, monospace;
             font-size: 16px;
+            padding: 0;
         }
 
-        #input-line input::placeholder {
+        .command-input::placeholder {
             color: #777;
         }
 
         .output-line {
             color: #eee;
             margin-bottom: 5px;
-            white-space: pre-wrap; /* Preserve line breaks */
+            white-space: pre-wrap;
         }
 
         .error-line {
@@ -71,15 +81,33 @@
             color: #61dafb;
             margin-bottom: 5px;
         }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+
+            #terminal {
+                padding: 5px;
+                height: 70vh;
+            }
+
+            .command-input {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body onload="brython()">
-    <h1>Python Terminal</h1>
+    <h1>Python Terminal Emulator</h1>
     <div id="terminal">
-        <div class="output-line">Welcome to the Python Terminal! Type your commands below:</div>
-        <div id="input-line">
-            <span id="prompt">>>> </span>
-            <input id="command-input" type="text" autofocus placeholder="Type a Python command and press Enter">
+        <div id="terminal-content">
+            <div class="output-line">Welcome to the Python Terminal! Type your commands below:</div>
+            <!-- Initial input line -->
+            <div class="input-line">
+                <span class="prompt">>>> </span>
+                <input class="command-input" type="text" autofocus placeholder="">
+            </div>
         </div>
     </div>
 
@@ -88,8 +116,10 @@
         import sys
         import traceback
 
-        terminal = document["terminal"]
-        command_input = document["command-input"]
+        terminal = document["terminal-content"]
+
+        # Initialize global namespace
+        global_namespace = {}
 
         # Capture print statements
         class StdoutCatcher:
@@ -102,59 +132,120 @@
             def flush(self):
                 pass
 
-        def run_command(event):
+        def handle_command(event):
             if event.key == "Enter":
+                command_input = event.target
                 command = command_input.value.strip()
                 if not command:
+                    # Create a new input line
+                    create_new_input_line()
                     return
 
                 # Display the entered command
                 command_line = document.createElement("div")
                 command_line.className = "command-line"
                 command_line.textContent = f">>> {command}"
-                terminal <= command_line
+                terminal.insertBefore(command_line, command_input.parentNode)
 
-                # Clear the input field
-                command_input.value = ""
+                # Remove the old input line
+                command_input.parentNode.remove()
 
                 # Prepare stdout catcher
                 stdout_catcher = StdoutCatcher()
                 sys.stdout = stdout_catcher
 
                 try:
-                    # Try to compile as an expression
-                    try:
-                        code = compile(command, '<string>', 'eval')
-                        result = eval(code, globals())
-                        if result is not None:
-                            output_line = document.createElement("div")
-                            output_line.className = "output-line"
-                            output_line.textContent = str(result)
-                            terminal <= output_line
-                    except SyntaxError:
-                        # Not an expression, try as a statement
-                        code = compile(command, '<string>', 'exec')
-                        exec(code, globals())
-                        # Check if there was any print output
-                        if stdout_catcher.data:
-                            output_line = document.createElement("div")
-                            output_line.className = "output-line"
-                            output_line.textContent = stdout_catcher.data
-                            terminal <= output_line
+                    # Special commands handling
+                    if command == "clear":
+                        # Clear the terminal content except the last input line
+                        terminal.textContent = ''
+                        create_new_input_line()
+                        return
+                    elif command == "ls":
+                        # Simulate 'ls' by listing variables in global namespace
+                        vars_list = ', '.join(global_namespace.keys()) or 'No variables defined.'
+                        output_line = document.createElement("div")
+                        output_line.className = "output-line"
+                        output_line.textContent = vars_list
+                        terminal.insertBefore(output_line, None)
+                    elif command.startswith("pip"):
+                        # Simulate 'pip' command
+                        output_line = document.createElement("div")
+                        output_line.className = "output-line"
+                        output_line.textContent = "Error: 'pip' command is not available in this environment."
+                        terminal.insertBefore(output_line, None)
+                    else:
+                        # Try to compile as an expression
+                        try:
+                            code = compile(command, '<string>', 'eval')
+                            result = eval(code, global_namespace)
+                            if result is not None:
+                                output_line = document.createElement("div")
+                                output_line.className = "output-line"
+                                output_line.textContent = str(result)
+                                terminal.insertBefore(output_line, None)
+                        except SyntaxError:
+                            # Not an expression, try as a statement
+                            code = compile(command, '<string>', 'exec')
+                            exec(code, global_namespace)
+                            # Check if there was any print output
+                            if stdout_catcher.data:
+                                output_line = document.createElement("div")
+                                output_line.className = "output-line"
+                                output_line.textContent = stdout_catcher.data
+                                terminal.insertBefore(output_line, None)
+                    # Handle standard output
+                    if stdout_catcher.data and command not in ("clear", "ls"):
+                        output_line = document.createElement("div")
+                        output_line.className = "output-line"
+                        output_line.textContent = stdout_catcher.data
+                        terminal.insertBefore(output_line, None)
                 except Exception as e:
                     # Display errors
                     error_line = document.createElement("div")
                     error_line.className = "error-line"
                     error_line.textContent = ''.join(traceback.format_exception_only(type(e), e))
-                    terminal <= error_line
+                    terminal.insertBefore(error_line, None)
                 finally:
                     sys.stdout = sys.__stdout__
 
                 # Scroll to the bottom
                 terminal.scrollTop = terminal.scrollHeight
 
-        # Add event listener for the input field
-        command_input.bind("keypress", run_command)
+                # Create a new input line
+                create_new_input_line()
+
+        def create_new_input_line():
+            # Create a new input line div
+            input_line_div = document.createElement("div")
+            input_line_div.className = "input-line"
+
+            # Create prompt span
+            prompt_span = document.createElement("span")
+            prompt_span.className = "prompt"
+            prompt_span.textContent = ">>> "
+
+            # Create input element
+            input_element = document.createElement("input")
+            input_element.className = "command-input"
+            input_element.type = "text"
+            input_element.autofocus = True
+
+            # Bind the event listener
+            input_element.bind("keypress", handle_command)
+
+            # Append elements
+            input_line_div <= prompt_span
+            input_line_div <= input_element
+            terminal <= input_line_div
+
+            # Focus on the new input
+            input_element.focus()
+
+        # Start by focusing on the first input
+        initial_input = document.querySelector(".command-input")
+        initial_input.bind("keypress", handle_command)
+        initial_input.focus()
     </script>
 </body>
 </html>
