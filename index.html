@@ -47,6 +47,7 @@
         .prompt {
             margin-right: 5px;
             flex-shrink: 0;
+            margin-top: 4px;
         }
 
         .command-input {
@@ -58,9 +59,10 @@
             font-family: "Courier New", Courier, monospace;
             font-size: 16px;
             padding: 0;
-            resize: none;
-            overflow: hidden;
+            resize: vertical;
+            overflow: auto;
             min-height: 20px;
+            white-space: pre-wrap;
         }
 
         .command-input::placeholder {
@@ -85,6 +87,21 @@
             white-space: pre-wrap;
         }
 
+        .run-button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            background-color: #61dafb;
+            border: none;
+            color: #282c34;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .run-button:hover {
+            background-color: #52a0e0;
+        }
+
         @media (max-width: 600px) {
             body {
                 padding: 5px;
@@ -105,11 +122,12 @@
     <h1>Python Terminal Emulator</h1>
     <div id="terminal">
         <div id="terminal-content">
-            <div class="output-line">Welcome to the Python Terminal! Type your commands below:</div>
+            <div class="output-line">Welcome to the Python Terminal! Type your code below:</div>
             <!-- Initial input line -->
             <div class="input-line">
                 <span class="prompt">>>> </span>
-                <textarea class="command-input" autofocus rows="1"></textarea>
+                <textarea class="command-input" autofocus rows="1" placeholder="Type your code here..."></textarea>
+                <button class="run-button">Run</button>
             </div>
         </div>
     </div>
@@ -125,10 +143,6 @@
         # Initialize global namespace
         global_namespace = {}
 
-        # State variables
-        code_buffer = []
-        more_input_needed = False
-
         # Capture print statements
         class StdoutCatcher:
             def __init__(self):
@@ -140,132 +154,106 @@
             def flush(self):
                 pass
 
-        def handle_command(event):
-            if event.key == "Enter" and not event.shiftKey:
-                event.preventDefault()
-                command_input = event.target
-                command = command_input.value.rstrip()
+        def handle_run(event):
+            command_input = event.target.previousSibling  # Get the textarea
+            command = command_input.value.rstrip()
 
-                # Append command to code buffer
-                code_buffer.append(command)
-
-                source = '\n'.join(code_buffer)
-
-                # Check if code is complete
-                try:
-                    compiled_code = code.compile_command(source)
-                    if compiled_code is None:
-                        # Incomplete code
-                        display_input(command_input, prompt='... ')
-                        create_new_input_line(more_input_needed=True)
-                        return
-                    else:
-                        # Complete code
-                        display_input(command_input)
-                        execute_code(source)
-                        code_buffer.clear()
-                except Exception as e:
-                    # Syntax error
-                    display_input(command_input)
-                    execute_code(source)
-                    code_buffer.clear()
-
-                # Scroll to the bottom
-                terminal.scrollTop = terminal.scrollHeight
-
-                # Create a new input line
-                create_new_input_line()
-            elif event.key == "Enter" and event.shiftKey:
-                # Allow line break with Shift+Enter
-                command_input.rows += 1
-
-        def display_input(command_input, prompt='>>> '):
             # Display the entered command
-            lines = command_input.value.rstrip().split('\n')
-            command_display = '\n'.join([prompt + line for line in lines])
+            display_input(command_input)
 
-            command_line = document.createElement("div")
-            command_line.className = "command-line"
-            command_line.textContent = command_display
-            terminal.insertBefore(command_line, command_input.parentNode)
+            # Clear the input
+            command_input.value = ''
+            command_input.rows = 1
 
-            # Remove the old input line
-            command_input.parentNode.remove()
-
-        def execute_code(source):
             # Prepare stdout catcher
             stdout_catcher = StdoutCatcher()
             sys.stdout = stdout_catcher
 
             try:
                 # Special commands handling
-                command = source.strip()
-                if command == "clear":
+                command_strip = command.strip()
+                if command_strip == "clear":
                     # Clear the terminal content
                     terminal.textContent = ''
-                elif command == "ls":
+                    # Add welcome message and new input line
+                    welcome_line = document.createElement("div")
+                    welcome_line.className = "output-line"
+                    welcome_line.textContent = "Welcome to the Python Terminal! Type your code below:"
+                    terminal <= welcome_line
+                elif command_strip == "ls":
                     # Simulate 'ls' by listing variables in global namespace
                     vars_list = ', '.join(global_namespace.keys()) or 'No variables defined.'
                     output_line = document.createElement("div")
                     output_line.className = "output-line"
                     output_line.textContent = vars_list
-                    terminal.insertBefore(output_line, None)
-                elif command.startswith("pip"):
+                    terminal <= output_line
+                elif command_strip.startswith("pip"):
                     # Simulate 'pip' command
                     output_line = document.createElement("div")
                     output_line.className = "output-line"
                     output_line.textContent = "Error: 'pip' command is not available in this environment."
-                    terminal.insertBefore(output_line, None)
+                    terminal <= output_line
                 else:
-                    exec(source, global_namespace)
-                    # Check if there was any print output
-                    if stdout_catcher.data:
-                        output_line = document.createElement("div")
-                        output_line.className = "output-line"
-                        output_line.textContent = stdout_catcher.data
-                        terminal.insertBefore(output_line, None)
+                    # Try to compile the code
+                    compiled_code = code.compile_command(command)
+                    if compiled_code is None:
+                        # Code incomplete
+                        error_line = document.createElement("div")
+                        error_line.className = "error-line"
+                        error_line.textContent = "Error: Incomplete code."
+                        terminal <= error_line
+                    else:
+                        exec(compiled_code, global_namespace)
+                        # Check if there was any print output
+                        if stdout_catcher.data:
+                            output_line = document.createElement("div")
+                            output_line.className = "output-line"
+                            output_line.textContent = stdout_catcher.data
+                            terminal <= output_line
             except Exception as e:
                 # Display errors
                 error_line = document.createElement("div")
                 error_line.className = "error-line"
                 error_line.textContent = ''.join(traceback.format_exception_only(type(e), e))
-                terminal.insertBefore(error_line, None)
+                terminal <= error_line
             finally:
                 sys.stdout = sys.__stdout__
 
-        def create_new_input_line(more_input_needed=False):
-            # Create a new input line div
-            input_line_div = document.createElement("div")
-            input_line_div.className = "input-line"
+            # Scroll to the bottom
+            terminal.scrollTop = terminal.scrollHeight
 
-            # Create prompt span
-            prompt_span = document.createElement("span")
-            prompt_span.className = "prompt"
-            prompt_span.textContent = '... ' if more_input_needed else '>>> '
+        def display_input(command_input):
+            command = command_input.value.rstrip()
+            lines = command.split('\n')
+            for i, line in enumerate(lines):
+                prompt = '... ' if i > 0 else '>>> '
+                command_line = document.createElement("div")
+                command_line.className = "command-line"
+                command_line.textContent = f"{prompt}{line}"
+                terminal <= command_line
 
-            # Create textarea element
-            input_element = document.createElement("textarea")
-            input_element.className = "command-input"
-            input_element.rows = 1
-            input_element.autofocus = True
+        # Adjust textarea height automatically
+        def adjust_textarea_height(event):
+            textarea = event.target
+            textarea.style.height = 'auto'
+            textarea.style.height = f'{textarea.scrollHeight}px'
 
-            # Bind the event listener
-            input_element.bind("keydown", handle_command)
+        # Bind the event listener to the initial run button and textarea
+        run_button = document.querySelector(".run-button")
+        run_button.bind("click", handle_run)
+        command_input = document.querySelector(".command-input")
+        command_input.bind("input", adjust_textarea_height)
 
-            # Append elements
-            input_line_div <= prompt_span
-            input_line_div <= input_element
-            terminal <= input_line_div
+        # Bind 'Enter' key to run code when not in multi-line code
+        def handle_keydown(event):
+            if event.key == "Enter" and not event.shiftKey:
+                event.preventDefault()
+                run_button.click()
+            elif event.key == "Enter" and event.shiftKey:
+                # Allow new line with Shift+Enter
+                pass
 
-            # Focus on the new input
-            input_element.focus()
-            # Adjust state
-            window.more_input_needed = more_input_needed
-
-        # Start by focusing on the first input
-        initial_input = document.querySelector(".command-input")
-        initial_input.bind("keydown", handle_command)
-        initial_input.focus()
+        command_input.bind("keydown", handle_keydown)
     </script>
 </body>
 </html>
