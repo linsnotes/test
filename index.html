@@ -1,259 +1,951 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>Python Terminal with Multi-line Support</title>
-    <!-- Include Brython core and standard library -->
-    <script src="https://cdn.jsdelivr.net/npm/brython@3.11.1/brython.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/brython@3.11.1/brython_stdlib.js"></script>
-    <style>
-        body {
-            font-family: "Courier New", Courier, monospace;
-            background: #282c34;
-            color: #61dafb;
-            margin: 0;
-            padding: 10px;
-            box-sizing: border-box;
-        }
+  <!-- Specify the character encoding for the document -->
+  <meta charset="UTF-8">
+  <!-- Set the viewport for responsive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Prevent caching of the page -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <!-- Include the pinyin-pro library for converting Chinese characters to pinyin -->
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro?v=1.0"></script>
+  <!-- Include SheetJS (XLSX) library for parsing spreadsheet data -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+  <!-- Set the title of the webpage -->
+  <title class="ignore">博闻强记</title>
+  <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+  <!-- CSS Styling Section -->
+  <style>
+    /* --------------------------------------------------
+       CSS Variables for Translation Font Sizes
+       - Adjust these values to change the translation font sizes.
+         --translation-font-size-desktop: Font size for desktop (default).
+         --translation-font-size-mobile: Font size for mobile (set here to 50% of desktop).
+    ----------------------------------------------------- */
+    :root {
+      --translation-font-size-desktop: 3rem;
+      --translation-font-size-mobile: calc(var(--translation-font-size-desktop) * 0.5);
+    }
 
-        h1 {
-            color: #61dafb;
-            text-align: center;
-            margin: 10px 0;
-        }
+    /* --------------------------------------------------
+       Global Reset and Base Styles
+       - Removes default margins and paddings.
+       - Sets a base font, background, and text color.
+    ----------------------------------------------------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8f9fa; /* Light gray background */
+      color: #333; /* Dark text color */
+      line-height: 1.6; /* Improve readability */
+    }
 
-        #terminal {
-            background: #1e1e1e;
-            border-radius: 5px;
-            padding: 10px;
-            max-width: 800px;
-            margin: 0 auto;
-            box-sizing: border-box;
-            height: 60vh;
-            overflow-y: auto;
-        }
+    #visitor-counter {
+      font-size: 1em;
+      margin: 5px 0;
+      text-align: center;
+      color: #333;
+    }
+    
+    #visitor-counter #pageviews {
+      font-weight: bold;
+      color: #000;
+    }
 
-        #terminal-content {
-            display: flex;
-            flex-direction: column;
-        }
+    #other-chinese-tools {
+      text-align: center;
+      margin-top: 10px;
+    }
 
-        .input-line {
-            display: flex;
-            align-items: flex-start;
-            color: #61dafb;
-        }
+    footer {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
 
-        .prompt {
-            margin-right: 5px;
-            flex-shrink: 0;
-            margin-top: 4px;
-        }
+    #translate {
+      display: none;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
 
-        .command-input {
-            flex: 1;
-            border: none;
-            outline: none;
-            background: transparent;
-            color: #61dafb;
-            font-family: "Courier New", Courier, monospace;
-            font-size: 16px;
-            padding: 0;
-            resize: vertical;
-            overflow: auto;
-            min-height: 20px;
-            white-space: pre-wrap;
-        }
+    /* --------------------------------------------------
+       Header Styles
+       - Styles for the page header.
+    ----------------------------------------------------- */
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-        .command-input::placeholder {
-            color: #777;
-        }
+    /* --------------------------------------------------
+       Banner Styles
+       - Banner to display the translation disclaimer.
+    ----------------------------------------------------- */
+    #banner {
+      background-color: #b3d615;
+      color: #171010;
+      text-align: center;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+    /* Fade-out effect when dismissed */
+    #banner.fade-out {
+      opacity: 0;
+    }
+    /* Style for the "Noted" button */
+    #banner button {
+      background-color: #fff;
+      color: #000000;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #banner button:hover {
+      background-color: #ff0037;
+    }
 
-        .output-line {
-            color: #eee;
-            margin-bottom: 5px;
-            white-space: pre-wrap;
-        }
+    /* --------------------------------------------------
+       Input Section Styles
+       - Styles for the textarea, dropdown selection, toggle button, and start button.
+    ----------------------------------------------------- */
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      resize: vertical; /* Allow vertical resizing */
+    }
+    /* Toggle button for the dropdown section */
+    #toggleDropdown {
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background-color: #0e9a2f;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    #toggleDropdown:hover {
+      background-color: #15bb3b;
+    }
+    /* New dropdown styling (adapted from Code 2, but consistent with Code 1) */
+    #dropdownSection {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fff;
+    }
+    #dropdownSection p {
+      margin-bottom: 10px;
+      font-size: 1rem;
+      color: #333;
+    }
+    .dropdown-container {
+      margin-bottom: 10px;
+    }
+    .dropdown-container label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 1rem;
+      color: #333;
+    }
+    .dropdown {
+      width: 100%;
+      padding: 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
 
-        .error-line {
-            color: #ff6b6b;
-            margin-bottom: 5px;
-            white-space: pre-wrap;
-        }
+    /* -----------------------------
+       Spinner CSS (added)
+    ------------------------------ */
+    #spinner-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #e0e0e0; /* Light gray */
+      border-top: 5px solid #00799e; /* Blue */
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .loading-text {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #3c3c3c;
+      font-weight: bold;
+      text-align: center;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    #spinner-container.hidden {
+      display: none;
+    }
 
-        .command-line {
-            color: #61dafb;
-            margin-bottom: 5px;
-            white-space: pre-wrap;
-        }
+    /* --------------------------------------------------
+       Flashcard Container and Card Styles
+       - Styles for the flashcard container, the inner card,
+         and the front/back sides of the card.
+    ----------------------------------------------------- */
+    .flashcard {
+        font-size: 3rem; /* Large font size for card content */
+        height: 300px; /* Fixed height for larger screens */
+        margin: 20px auto;
+        cursor: pointer; /* Indicates clickable card */
+        perspective: 1000px; /* Set up 3D perspective for flip effect */
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+    }
+    /* Define the flashcard inner container with consistent sizing and GPU optimization */
+    .flashcard-inner {
+        position: relative;
+        width: 100%;
+        height: 100%; /* Ensure inner container fills the flashcard */
+        transition: transform 0.6s; /* Smooth flip transition */
+        transform-style: preserve-3d;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        will-change: transform;
+    }
+    /* Apply the flip transform without altering height */
+    .flashcard.flipped .flashcard-inner {
+        transform: rotateY(180deg);
+    }
+    /* --------------------------------------------------
+       Common Styles for Front and Back Sides
+       - Both sides will be exactly the same size.
+    ----------------------------------------------------- */
+    .front, .back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden; /* Hide back face during flip */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        padding: 25px;
+        text-align: center;
+    }
+    /* --------------------------------------------------
+       Front Side Styles
+    ----------------------------------------------------- */
+    .front {
+        background-color: #e3f2fd; /* Light blue background */
+        color: #1976d2; /* Blue text color */
+    }
+    /* --------------------------------------------------
+       Back Side Styles
+       - The back is pre-rotated for the flip effect.
+    ----------------------------------------------------- */
+    .back {
+        background-color: #e8f5e9; /* Light green background */
+        color: #2e7d32; /* Green text color */
+        flex-direction: column;
+        transform: rotateY(180deg); /* Pre-rotated for flip effect */
+    }
 
-        .run-button {
-            margin-left: 5px;
-            padding: 5px 10px;
-            background-color: #61dafb;
-            border: none;
-            color: #282c34;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 3px;
-        }
+    /* Pinyin Text Styling on the Back of the Card */
+    .pinyin {
+      font-size: var(--translation-font-size-desktop);
+    }
+    /* English Translation Container Styling */
+    .english {
+      margin-top: 10px;
+      font-size: var(--translation-font-size-desktop);
+      color: #555;
+    }
 
-        .run-button:hover {
-            background-color: #52a0e0;
-        }
+    /* --------------------------------------------------
+       Controls (Buttons) Styles
+       - Styles for navigation, flip, return, and shuffle buttons.
+    ----------------------------------------------------- */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    /* Common Button Styles */
+    button {
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    /* Button Styles */
+    .start-btn, .prev-btn, .next-btn {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .start-btn:hover, .prev-btn:hover, .next-btn:hover {
+      background-color: #0056b3;
+    }
 
-        @media (max-width: 600px) {
-            body {
-                padding: 5px;
-            }
+    /* Flip Button Specific Styles */
+    .flip-btn {
+      background-color: rgb(198, 81, 93);
+      color: #fff;
+    }
+    .flip-btn:hover {
+      background-color: rgb(172, 59, 70);
+    }
 
-            #terminal {
-                padding: 5px;
-                height: 70vh;
-            }
+    /* Shuffle Button Specific Styles */
+    .shuffle-btn {
+      background-color: rgb(131, 182, 30);
+      color: #fff;
+    }
+    .shuffle-btn:hover {
+      background-color: rgb(86, 126, 7);
+    }
 
-            .command-input {
-                font-size: 14px;
-            }
-        }
-    </style>
+    /* Return Button Specific Styles */
+    .return-btn {
+      background-color: #6c757d;
+      color: #fff;
+    }
+    .return-btn:hover {
+      background-color: #5a6268;
+    }
+    /* Utility Class to Hide Elements */
+    .hidden {
+      display: none;
+    }
+
+    /* --------------------------------------------------
+       Progress Indicator Styles
+       - Displays the current card number out of total.
+    ----------------------------------------------------- */
+    #progress {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 1.2rem;
+      color: #333;
+    }
+
+    /* --------------------------------------------------
+       Responsive Design Adjustments for Small Screens
+    ----------------------------------------------------- */
+    @media (max-width: 576px) {
+      .flashcard {
+        font-size: 2rem;
+        height: 200px;  /* Override fixed height for smaller screens */
+        margin: 15px auto;
+        max-width: 320px;
+      }
+      .front, .back {
+        padding: 20px;
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+      }
+      /* On mobile, reduce the pinyin and English translation font size to 50% */
+      .pinyin, .english {
+        font-size: var(--translation-font-size-mobile);
+      }
+    }
+  </style>
 </head>
-<body onload="brython()">
-    <h1>Python Terminal Emulator</h1>
-    <div id="terminal">
-        <div id="terminal-content">
-            <div class="output-line">Welcome to the Python Terminal! Type your code below:</div>
-            <!-- Initial input line -->
-            <div class="input-line">
-                <span class="prompt">>>> </span>
-                <textarea class="command-input" autofocus rows="1" placeholder="Type your code here..."></textarea>
-                <button class="run-button">Run</button>
-            </div>
+<body>
+  <!-- Main container for all content -->
+  <div class="container">
+    <!-- Header: Displays the title (marked with "ignore" to exclude from translation) -->
+    <h1 class="ignore">中文闪卡<br>Chinese Flashcards</h1>
+    
+    <!-- Banner Section -->
+    <div id="banner">
+      <p>Please note that the English translations on the back of the flashcards are provided from our database.</p>
+      <button id="dismiss-banner">Noted</button>
+    </div>
+    
+    <!-- Input Section: Contains textarea, dropdown toggle, dropdown selection UI, and start button -->
+    <div class="input-section ignore" id="inputSection">
+      <!-- Manual input textarea -->
+      <textarea id="input-words" class="ignore"
+                placeholder="Enter Chinese words, separated by commas, e.g. 你好, 谢谢"
+                rows="3"></textarea>
+
+      <!-- Toggle button for the dropdown section -->
+      <button type="button" id="toggleDropdown" onclick="toggleDropdownSection()">Use a built-in word list from the SG Chinese Textbook</button>
+
+      <!-- Dropdown selection UI (hidden by default) -->
+      <div id="dropdownSection" class="hidden">
+        <!--<p>选择获取词汇</p>-->
+        <div class="dropdown-container" id="bandingContainer">
+          <label for="banding" class="input-label">科目 Course</label>
+          <select id="banding" name="banding" class="dropdown">
+            <option value="">选择科目 Select Course</option>
+            <option value="G3">G3</option>
+            <option value="G2">G2</option>
+            <option value="G1">G1</option>
+            <option value="HCL">HCL</option>
+          </select>
         </div>
+        <div class="dropdown-container" id="levelContainer">
+          <label for="level" class="input-label">年级 Level</label>
+          <select id="level" name="level" class="dropdown">
+            <option value="">选择年级 Select Level</option>
+            <option value="中一">中一</option>
+            <option value="中二">中二</option>
+            <option value="中三">中三</option>
+            <option value="中四">中四</option>
+          </select>
+        </div>
+        <div class="dropdown-container" id="unitContainer">
+          <label for="unit" class="input-label">单元 Unit</label>
+          <select id="unit" name="unit" class="dropdown">
+            <option value="">选择单元 Select Unit</option>
+            <option value="单元一">单元一</option>
+            <option value="单元二">单元二</option>
+            <option value="单元三">单元三</option>
+            <option value="单元四">单元四</option>
+            <option value="单元五">单元五</option>
+            <option value="单元六">单元六</option>
+          </select>
+        </div>
+        <div class="dropdown-container" id="passageContainer">
+          <label for="passage" class="input-label">课文 Passage</label>
+          <select id="passage" name="passage" class="dropdown">
+            <option value="">选择课文 Select Passage</option>
+            <option value="生活空间">生活空间</option>
+            <option value="核心">核心</option>
+            <option value="巩固">巩固</option>
+            <option value="进阶">进阶</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Start button remains at the bottom of the input section -->
+      <button onclick="initDeck()" class="start-btn ignore">开始 Start</button>
+      
+      <!-- Spinner container (hidden by default) -->
+      <div id="spinner-container" class="hidden">
+        <div class="spinner"></div>
+        <p class="loading-text">Loading... Please wait!</p>
+      </div>
     </div>
 
-    <script type="text/python">
-        from browser import document, window, html
-        import sys
-        import traceback
-        import code
+    <!-- Flashcard Container: Initially hidden; displays flashcard once deck is initialized -->
+    <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
+      <div class="flashcard-inner">
+        <!-- Front Side of the Flashcard -->
+        <div class="front ignore"></div>
+        <!-- Back Side of the Flashcard -->
+        <div class="back"></div>
+      </div>
+    </div>
 
-        terminal = document["terminal-content"]
+    <!-- Progress Indicator: Shows current flashcard progress -->
+    <div id="progress" class="ignore hidden"></div>
 
-        # Initialize global namespace
-        global_namespace = {}
+    <!-- Controls: Navigation, flip, return, and shuffle buttons; initially hidden -->
+    <div class="controls hidden ignore" id="controls">
+      <button onclick="prevCard()" class="prev-btn ignore">← Previous</button>
+      <button onclick="flipCard()" class="flip-btn ignore">Flip</button>   
+      <button onclick="nextCard()" class="next-btn ignore">Next →</button>
+      <button class="return-btn ignore" onclick="returnToEdit()">Return to Edit</button>
+      <button onclick="shuffleDeck()" class="shuffle-btn ignore">Shuffle Cards</button>
+    </div>
+  </div>
+  
+  <footer>
+    <div id="visitor-counter">
+      Welcome! You're visitor #<span id="pageviews">Loading...</span> 
+    </div>
 
-        # Capture print statements
-        class StdoutCatcher:
-            def __init__(self):
-                self.data = ''
+    <div id="other-chinese-tools">
+      <a href="https://linsnotes.com/apps/">Other Chinese Learning Tools</a>
+    </div>
+  </footer>
 
-            def write(self, s):
-                self.data += s
+  <!-- JavaScript Section -->
+  <script>
+    // Google Sheet ID constant - replace with your actual Google Sheet ID
+    const GOOGLE_SHEET_ID = '17v5FSgIQbGiMbseAYWbTAncfW-XNnk7iknssc1hGaTs';
+    
+    // Global variables: current card index and the deck array.
+    let currentIndex = 0;
+    let deck = [];
+    let fullWordData = []; // Will store full word data including Chinese, English, and Pinyin
 
-            def flush(self):
-                pass
+    // --------------------------------------------------
+    // Function: initCustomPinyin
+    // Purpose: Add custom pinyin mappings for specific Chinese characters.
+    // --------------------------------------------------
+    function initCustomPinyin() {
+      if (window.pinyinPro && window.pinyinPro.addDict) {
+        window.pinyinPro.addDict({
+          '嗯': 'ḿ',
+          '嗄': 'á',
+          '咯': 'lo',
+          '谁': 'shéi',
+          '〇': 'líng'
+        });
+      }
+    }
 
-        def handle_run(event):
-            command_input = event.target.previousSibling  # Get the textarea
-            command = command_input.value.rstrip()
+    // --------------------------------------------------
+    // Utility: Check if all dropdowns have a selection.
+    // --------------------------------------------------
+    function isDropdownMode() {
+      return document.getElementById('banding').value !== "" &&
+             document.getElementById('level').value !== "" &&
+             document.getElementById('unit').value !== "" &&
+             document.getElementById('passage').value !== "";
+    }
 
-            # Display the entered command
-            display_input(command_input)
+    // --------------------------------------------------
+    // Function: fetchGoogleSheetData
+    // Purpose: Fetch and parse Google Sheet data directly
+    // --------------------------------------------------
+    async function fetchGoogleSheetData() {
+      try {
+        // Show spinner
+        document.getElementById('spinner-container').classList.remove('hidden');
+        
+        // Construct URL to export the Google Sheet as XLSX
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=xlsx`;
+        
+        // Fetch the XLSX file
+        const response = await fetch(exportUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch spreadsheet: ${response.status} ${response.statusText}`);
+        }
+        
+        // Convert the response to array buffer for XLSX parsing
+        const data = await response.arrayBuffer();
+        
+        // Parse the spreadsheet using SheetJS
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Get the first sheet
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Hide spinner
+        document.getElementById('spinner-container').classList.add('hidden');
+        
+        return jsonData;
+      } catch (error) {
+        // Hide spinner in case of error
+        document.getElementById('spinner-container').classList.add('hidden');
+        console.error('Error fetching Google Sheet:', error);
+        alert(`Failed to fetch word data: ${error.message}`);
+        return [];
+      }
+    }
 
-            # Clear the input
-            command_input.value = ''
-            command_input.rows = 1
+    // --------------------------------------------------
+    // Function: filterWordsBySelections
+    // Purpose: Filter words based on dropdown selections
+    // --------------------------------------------------
+    function filterWordsBySelections(allWords, banding, level, unit, passage) {
+      return allWords.filter(word => {
+        return word.banding === banding && 
+               word.level === level && 
+               word.unit === unit && 
+               word.passage === passage;
+      });
+    }
 
-            # Prepare stdout catcher
-            stdout_catcher = StdoutCatcher()
-            sys.stdout = stdout_catcher
+    // --------------------------------------------------
+    // Function: initDeck
+    // Purpose: Initialize the flashcard deck using user input or filtered data from Google Sheet
+    // --------------------------------------------------
+    async function initDeck() {
+      const dropdownSectionVisible = !document.getElementById("dropdownSection").classList.contains("hidden");
+      
+      if (dropdownSectionVisible) {
+        if (!isDropdownMode()) {
+          alert("Please select all dropdown options to retrieve the vocabulary.");
+          return;
+        }
+        
+        // Show spinner before starting the fetch
+        document.getElementById('spinner-container').classList.remove('hidden');
+        
+        try {
+          // Fetch all words from Google Sheet
+          const allWords = await fetchGoogleSheetData();
+          
+          if (allWords.length === 0) {
+            alert("No data was retrieved from the spreadsheet. Please check the spreadsheet ID.");
+            document.getElementById('spinner-container').classList.add('hidden');
+            return;
+          }
+          
+          // Get selected filter values
+          const banding = document.getElementById('banding').value;
+          const level = document.getElementById('level').value;
+          const unit = document.getElementById('unit').value;
+          const passage = document.getElementById('passage').value;
+          
+          // Filter words based on selections
+          const filteredWords = filterWordsBySelections(allWords, banding, level, unit, passage);
+          
+          if (filteredWords.length === 0) {
+            alert("No vocabulary found matching your selection criteria. Please try different selections.");
+            document.getElementById('spinner-container').classList.add('hidden');
+            return;
+          }
+          
+          // Store full word data and create simplified deck for display
+          fullWordData = filteredWords;
+          deck = filteredWords.map(word => word.chinese);
+          
+          // Hide spinner
+          document.getElementById('spinner-container').classList.add('hidden');
+          
+          // Hide the input section and show the flashcard and controls
+          document.getElementById('inputSection').classList.add('hidden');
+          document.getElementById('controls').classList.remove('hidden');
+          document.getElementById('flashcard').classList.remove('hidden');
+          document.getElementById('progress').classList.remove('hidden');
+          
+          // Initialize and display the first card
+          currentIndex = 0;
+          updateCard();
+        } catch (error) {
+          // Hide spinner in case of error
+          document.getElementById('spinner-container').classList.add('hidden');
+          alert("An error occurred while retrieving the vocabulary: " + error.message);
+        }
+      } else {
+        // Manual input mode: use comma-separated words from the textarea
+        const input = document.getElementById('input-words').value;
+        const manualWords = input.split(/[,，]/)
+                          .map(word => word.trim())
+                          .filter(word => word);
+        
+        if (manualWords.length === 0) {
+          alert("Please enter valid Chinese vocabulary or select an existing vocabulary list.");
+          return;
+        }
+        
+        // For manual input, we create simple word objects with just the Chinese text
+        fullWordData = manualWords.map(word => ({ 
+          chinese: word,
+          english: "", // Will be filled by translation service
+          pinyin: ""   // Will be generated using pinyinPro
+        }));
+        
+        deck = manualWords;
+        
+        document.getElementById('inputSection').classList.add('hidden');
+        document.getElementById('controls').classList.remove('hidden');
+        document.getElementById('flashcard').classList.remove('hidden');
+        document.getElementById('progress').classList.remove('hidden');
+        
+        initCustomPinyin();
+        currentIndex = 0;
+        updateCard();
+      }
+    }
 
-            try:
-                # Special commands handling
-                command_strip = command.strip()
-                if command_strip == "clear":
-                    # Clear the terminal content
-                    terminal.textContent = ''
-                    # Add welcome message and new input line
-                    welcome_line = document.createElement("div")
-                    welcome_line.className = "output-line"
-                    welcome_line.textContent = "Welcome to the Python Terminal! Type your code below:"
-                    terminal <= welcome_line
-                elif command_strip == "ls":
-                    # Simulate 'ls' by listing variables in global namespace
-                    vars_list = ', '.join(global_namespace.keys()) or 'No variables defined.'
-                    output_line = document.createElement("div")
-                    output_line.className = "output-line"
-                    output_line.textContent = vars_list
-                    terminal <= output_line
-                elif command_strip.startswith("pip"):
-                    # Simulate 'pip' command
-                    output_line = document.createElement("div")
-                    output_line.className = "output-line"
-                    output_line.textContent = "Error: 'pip' command is not available in this environment."
-                    terminal <= output_line
-                else:
-                    # Try to compile the code
-                    compiled_code = code.compile_command(command)
-                    if compiled_code is None:
-                        # Code incomplete
-                        error_line = document.createElement("div")
-                        error_line.className = "error-line"
-                        error_line.textContent = "Error: Incomplete code."
-                        terminal <= error_line
-                    else:
-                        exec(compiled_code, global_namespace)
-                        # Check if there was any print output
-                        if stdout_catcher.data:
-                            output_line = document.createElement("div")
-                            output_line.className = "output-line"
-                            output_line.textContent = stdout_catcher.data
-                            terminal <= output_line
-            except Exception as e:
-                # Display errors
-                error_line = document.createElement("div")
-                error_line.className = "error-line"
-                error_line.textContent = ''.join(traceback.format_exception_only(type(e), e))
-                terminal <= error_line
-            finally:
-                sys.stdout = sys.__stdout__
+    // --------------------------------------------------
+    // Function: toggleDropdownSection
+    // Purpose: Toggle the visibility of the dropdown section and update the toggle button text.
+    //          When hiding the dropdowns, reset all dropdown values to default.
+    // --------------------------------------------------
+    function toggleDropdownSection() {
+      const dropdownSection = document.getElementById("dropdownSection");
+      const toggleButton = document.getElementById("toggleDropdown");
+      if (dropdownSection.classList.contains("hidden")) {
+        // Show dropdown section and update button label.
+        dropdownSection.classList.remove("hidden");
+        toggleButton.textContent = "Use a custom word list";
+      } else {
+        // Hide dropdown section, reset dropdown values, and update button label.
+        dropdownSection.classList.add("hidden");
+        toggleButton.textContent = "Use a built-in word list from the SG Chinese Textbook";
+        document.getElementById("banding").value = "";
+        document.getElementById("level").value = "";
+        document.getElementById("unit").value = "";
+        document.getElementById("passage").value = "";
+      }
+    }
 
-            # Scroll to the bottom
-            terminal.scrollTop = terminal.scrollHeight
+    // --------------------------------------------------
+    // Function: returnToEdit
+    // Purpose: Return to the input mode by showing the input section and hiding flashcard, progress indicator, and controls.
+    // --------------------------------------------------
+    function returnToEdit() {
+      document.getElementById('inputSection').classList.remove('hidden');
+      document.getElementById('controls').classList.add('hidden');
+      document.getElementById('flashcard').classList.add('hidden');
+      // Hide progress indicator when returning to edit mode.
+      document.getElementById('progress').classList.add('hidden');
+    }
 
-        def display_input(command_input):
-            command = command_input.value.rstrip()
-            lines = command.split('\n')
-            for i, line in enumerate(lines):
-                prompt = '... ' if i > 0 else '>>> '
-                command_line = document.createElement("div")
-                command_line.className = "command-line"
-                command_line.textContent = f"{prompt}{line}"
-                terminal <= command_line
+    // --------------------------------------------------
+    // Function: updateCard
+    // Purpose: Update the flashcard content (both front and back) based on the current index,
+    //          and update the progress indicator.
+    // --------------------------------------------------
+    function updateCard() {
+      const front = document.querySelector('.front');
+      const back = document.querySelector('.back');
+      const progress = document.getElementById('progress');
+      
+      if (deck[currentIndex]) {
+        const currentWord = deck[currentIndex];
+        // Find the full word data in our array
+        const wordData = fullWordData[currentIndex];
+        
+        // Set the front to display the Chinese text
+        front.textContent = currentWord;
+        front.classList.add('ignore');
+        
+        // Use stored pinyin if available, otherwise generate it
+        let pinyinText = wordData.pinyin || getPinyin(currentWord);
+        
+        // Use stored English if available, otherwise use the Chinese text
+        // (the translation service will translate it if needed)
+        let englishText = wordData.english || currentWord;
+        
+        // Set the back of the card to include pinyin and English translation
+        back.innerHTML = `<div>
+                            <div class="pinyin ignore">${pinyinText}</div>
+                            <div class="english">${englishText}</div>
+                          </div>`;
+                          
+        // Update the progress indicator text
+        progress.textContent = `Card ${currentIndex + 1} of ${deck.length}`;
+        progress.classList.remove('hidden');
+        
+        // If the translation library is loaded, trigger the translation for manual inputs
+        if (!wordData.english && window.translate && typeof translate.execute === 'function') {
+          translate.execute();
+        }
+      }
+    }
 
-        # Adjust textarea height automatically
-        def adjust_textarea_height(event):
-            textarea = event.target
-            textarea.style.height = 'auto'
-            textarea.style.height = f'{textarea.scrollHeight}px'
+    // --------------------------------------------------
+    // Function: getPinyin
+    // Purpose: Convert a Chinese word to its pinyin representation using the pinyinPro library.
+    // --------------------------------------------------
+    function getPinyin(word) {
+      if (window.pinyinPro && window.pinyinPro.pinyin) {
+        return window.pinyinPro.pinyin(word, {
+          toneType: 'symbol', // Use tone symbols
+          type: 'array',      // Output as an array of strings
+          multiple: true,     // Allow multiple pronunciations if applicable
+          mode: 'surname'     // Use surname mode if applicable
+        }).join(' ');
+      }
+      // Fallback: return the original word if conversion is not possible.
+      return word;
+    }
 
-        # Bind the event listener to the initial run button and textarea
-        run_button = document.querySelector(".run-button")
-        run_button.bind("click", handle_run)
-        command_input = document.querySelector(".command-input")
-        command_input.bind("input", adjust_textarea_height)
+    // --------------------------------------------------
+    // Function: flipCard
+    // Purpose: Toggle the flip effect on the flashcard.
+    // --------------------------------------------------
+    function flipCard() {
+      document.getElementById('flashcard').classList.toggle('flipped');
+    }
 
-        # Bind 'Enter' key to run code when not in multi-line code
-        def handle_keydown(event):
-            if event.key == "Enter" and not event.shiftKey:
-                event.preventDefault()
-                run_button.click()
-            elif event.key == "Enter" and event.shiftKey:
-                # Allow new line with Shift+Enter
-                pass
+    // --------------------------------------------------
+    // Function: prevCard
+    // Purpose: Navigate to the previous flashcard.
+    // --------------------------------------------------
+    function prevCard() {
+      currentIndex = Math.max(0, currentIndex - 1);
+      // Remove any flipped state before updating.
+      document.getElementById('flashcard').classList.remove('flipped');
+      updateCard();
+    }
 
-        command_input.bind("keydown", handle_keydown)
-    </script>
+    // --------------------------------------------------
+    // Function: nextCard
+    // Purpose: Navigate to the next flashcard.
+    //          If on the last card, ask the user if they want to restart.
+    // --------------------------------------------------
+    function nextCard() {
+      if (currentIndex >= deck.length - 1) {
+        // Use confirm to allow user to cancel restarting.
+        if (confirm("You've reached the end of the flashcards! Restart from the beginning?")) {
+          currentIndex = 0;
+        } else {
+          // If the user chooses 'No', do not restart.
+          return;
+        }
+      } else {
+        currentIndex++;
+      }
+      // Remove any flipped state before updating.
+      document.getElementById('flashcard').classList.remove('flipped');
+      updateCard();
+    }
+
+    // --------------------------------------------------
+    // Function: shuffleDeck
+    // Purpose: Randomize the order of the flashcards using the Fisher-Yates algorithm.
+    // --------------------------------------------------
+    function shuffleDeck() {
+      // Create an array of indices
+      const indices = Array.from({ length: deck.length }, (_, i) => i);
+      
+      // Shuffle the indices
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      
+      // Create new arrays based on shuffled indices
+      const shuffledDeck = indices.map(i => deck[i]);
+      const shuffledFullWordData = indices.map(i => fullWordData[i]);
+      
+      // Replace the original arrays with shuffled ones
+      deck = shuffledDeck;
+      fullWordData = shuffledFullWordData;
+      
+      // Reset to the first card after shuffling
+      currentIndex = 0;
+      
+      // Remove any flipped state before updating
+      document.getElementById('flashcard').classList.remove('flipped');
+      updateCard();
+    }
+
+    // --------------------------------------------------
+    // Event Listener: Window Load
+    // Purpose: Ensure the pinyinPro library has loaded and initialize custom pinyin mappings.
+    // --------------------------------------------------
+    window.addEventListener('load', () => {
+      if (!window.pinyinPro) {
+        alert("An error occurred while loading the pinyin-pro library. Please refresh the page.");
+      }
+      initCustomPinyin();
+    });
+
+    // --------------------------------------------------
+    // Event Listener: Keyboard Controls
+    // Purpose: Enable keyboard navigation and flip controls.
+    // --------------------------------------------------
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') prevCard();
+      if (e.key === 'ArrowRight') nextCard();
+      if (e.key === ' ' || e.key === 'Enter') flipCard();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const pv = document.getElementById('pageviews');
+
+      if (pv !== null) {
+        const uri = location.pathname.replace(/\/$/, '');
+        const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const count = data.count.replace(/\s/g, '');
+            pv.innerText = new Intl.NumberFormat().format(count);
+          })
+          .catch((error) => {
+            pv.innerText = '1';
+          });
+      }
+    });
+  </script>
+
+  <!-- Banner Dismissal Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const banner = document.getElementById('banner');
+      const dismissButton = document.getElementById('dismiss-banner');
+      let dismissed = false;
+      
+      // Auto-dismiss the banner after 15 seconds if the user never clicks "Noted"
+      const autoDismissTimer = setTimeout(() => {
+        if (!dismissed) {
+          banner.classList.add('fade-out');
+          banner.addEventListener('transitionend', function() {
+            banner.style.display = 'none';
+          }, { once: true });
+        }
+      }, 15000);
+      
+      // Dismiss the banner when the user clicks "Noted"
+      dismissButton.addEventListener('click', function() {
+        dismissed = true; // Mark as dismissed to cancel the auto-dismiss timer
+        clearTimeout(autoDismissTimer);
+        banner.classList.add('fade-out');
+        banner.addEventListener('transitionend', function() {
+          banner.style.display = 'none';
+        }, { once: true });
+      });
+    });
+  </script>
+
+  <!-- Translation Library Integration (for manual inputs only) -->
+  <script src="https://res.zvo.cn/translate/translate.js"></script>
+  <script>
+    // Exclude elements with the "ignore" class from translation.
+    translate.ignore.class.push('ignore');
+    // Use version 2 of the translation library.
+    translate.setUseVersion2();
+    // Set the local language for the current page (the original text is in simplified Chinese).
+    translate.language.setLocal('chinese_simplified');
+    // Override the storage to use sessionStorage so that caching lasts only during the current session.
+    translate.storage = {
+      set: function (key, value) {
+        sessionStorage.setItem(key, value);
+      },
+      get: function (key) {
+        return sessionStorage.getItem(key);
+      }
+    };
+    // Optionally, force the target language to English.
+    translate.language.setDefaultTo('english');
+    translate.changeLanguage('english');
+    // When the deck is ready, pre-translate the entire deck.
+    // Allow a short delay so that all elements are present.
+    setTimeout(function(){
+      translate.execute();
+    }, 500); // adjust delay (in ms) as needed
+  </script>
 </body>
 </html>
