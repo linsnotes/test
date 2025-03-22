@@ -494,8 +494,8 @@
 
   <!-- JavaScript Section -->
   <script>
-    // Google Sheet ID constant - replace with your actual Google Sheet ID
-    const GOOGLE_SHEET_ID = '17v5FSgIQbGiMbseAYWbTAncfW-XNnk7iknssc1hGaTs';
+    // Data source ID constant - replace with your actual data source ID
+    const DATA_SOURCE_ID = '17v5FSgIQbGiMbseAYWbTAncfW-XNnk7iknssc1hGaTs';
     
     // Global variables: current card index and the deck array.
     let currentIndex = 0;
@@ -530,21 +530,21 @@
     }
 
     // --------------------------------------------------
-    // Function: fetchGoogleSheetData
-    // Purpose: Fetch and parse Google Sheet data directly
+    // Function: fetchVocabularyData
+    // Purpose: Fetch and parse vocabulary data from the remote source
     // --------------------------------------------------
-    async function fetchGoogleSheetData() {
+    async function fetchVocabularyData() {
       try {
         // Show spinner
         document.getElementById('spinner-container').classList.remove('hidden');
         
-        // Construct URL to export the Google Sheet as XLSX
-        const exportUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=xlsx`;
+        // Construct URL to export the spreadsheet as XLSX
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${DATA_SOURCE_ID}/export?format=xlsx`;
         
         // Fetch the XLSX file
         const response = await fetch(exportUrl);
         if (!response.ok) {
-          throw new Error(`Failed to fetch spreadsheet: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to fetch vocabulary data: ${response.status} ${response.statusText}`);
         }
         
         // Convert the response to array buffer for XLSX parsing
@@ -567,7 +567,7 @@
       } catch (error) {
         // Hide spinner in case of error
         document.getElementById('spinner-container').classList.add('hidden');
-        console.error('Error fetching Google Sheet:', error);
+        console.error('Error fetching vocabulary data:', error);
         alert(`Failed to fetch word data: ${error.message}`);
         return [];
       }
@@ -588,7 +588,7 @@
 
     // --------------------------------------------------
     // Function: initDeck
-    // Purpose: Initialize the flashcard deck using user input or filtered data from Google Sheet
+    // Purpose: Initialize the flashcard deck using user input or filtered data from data source
     // --------------------------------------------------
     async function initDeck() {
       const dropdownSectionVisible = !document.getElementById("dropdownSection").classList.contains("hidden");
@@ -605,11 +605,11 @@
         document.getElementById('spinner-container').classList.remove('hidden');
         
         try {
-          // Fetch all words from Google Sheet
-          const allWords = await fetchGoogleSheetData();
+          // Fetch all words from data source
+          const allWords = await fetchVocabularyData();
           
           if (allWords.length === 0) {
-            alert("No data was retrieved from the spreadsheet. Please check the spreadsheet ID.");
+            alert("No data was retrieved from the database. Please try again later.");
             document.getElementById('spinner-container').classList.add('hidden');
             return;
           }
