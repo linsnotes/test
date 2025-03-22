@@ -368,12 +368,23 @@
     ----------------------------------------------------- */
     .controls {
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      flex-direction: column;
       justify-content: center;
       margin-top: 24px;
     }
-    
+
+    .controls .top-row, .controls .bottom-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .controls .bottom-row {
+      margin-top: 10px;
+    }
+
     /* Common Button Styles */
     button {
       padding: 12px 20px;
@@ -572,12 +583,17 @@
 
     <!-- Controls: Navigation, flip, return, and shuffle buttons; initially hidden -->
     <div class="controls hidden" id="controls">
-      <button onclick="prevCard()" class="prev-btn">← Previous</button>
-      <button onclick="flipCard()" class="flip-btn">Flip</button>   
-      <button onclick="nextCard()" class="next-btn">Next →</button>
-      <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
-      <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
+      <div class="top-row">
+        <button onclick="prevCard()" class="prev-btn">← Previous</button>
+        <button onclick="flipCard()" class="flip-btn">Flip</button>   
+        <button onclick="nextCard()" class="next-btn">Next →</button>
+      </div>
+      <div class="bottom-row">
+        <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
+        <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
+      </div>
     </div>
+    
   </div>
   
   <footer>
