@@ -692,18 +692,22 @@
     function toggleDropdownSection() {
       const dropdownSection = document.getElementById("dropdownSection");
       const toggleButton = document.getElementById("toggleDropdown");
+      const inputTextarea = document.getElementById("input-words");
+      
       if (dropdownSection.classList.contains("hidden")) {
-        // Show dropdown section and update button label.
+        // Show dropdown section, hide textarea, and update button label.
         dropdownSection.classList.remove("hidden");
-        toggleButton.textContent = "Use a custom word list";
+        inputTextarea.classList.add("hidden");
+        toggleButton.textContent = "Use a custom word list";     
       } else {
-        // Hide dropdown section, reset dropdown values, and update button label.
+        // Hide dropdown section, show textarea, reset dropdown values, and update button label.
         dropdownSection.classList.add("hidden");
+        inputTextarea.classList.remove("hidden");
         toggleButton.textContent = "Use a built-in word list from the SG Chinese Textbook";
         document.getElementById("banding").value = "";
         document.getElementById("level").value = "";
         document.getElementById("unit").value = "";
-        document.getElementById("passage").value = "";
+        document.getElementById("passage").value = "";       
       }
     }
 
