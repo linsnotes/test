@@ -14,7 +14,7 @@
   <!-- Include SheetJS (XLSX) library for parsing spreadsheet data -->
   <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
   <!-- Set the title of the webpage -->
-  <title class="ignore">博闻强记</title>
+  <title>博闻强记</title>
   <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
   <!-- CSS Styling Section -->
   <style>
@@ -66,10 +66,6 @@
     footer {
       margin-top: 20px;
       margin-bottom: 20px;
-    }
-
-    #translate {
-      display: none;
     }
     
     .container {
@@ -388,8 +384,8 @@
 <body>
   <!-- Main container for all content -->
   <div class="container">
-    <!-- Header: Displays the title (marked with "ignore" to exclude from translation) -->
-    <h1 class="ignore">中文闪卡<br>Chinese Flashcards</h1>
+    <!-- Header: Displays the title -->
+    <h1>中文闪卡<br>Chinese Flashcards</h1>
     
     <!-- Banner Section -->
     <div id="banner">
@@ -398,9 +394,9 @@
     </div>
     
     <!-- Input Section: Contains textarea, dropdown toggle, dropdown selection UI, and start button -->
-    <div class="input-section ignore" id="inputSection">
+    <div class="input-section" id="inputSection">
       <!-- Manual input textarea -->
-      <textarea id="input-words" class="ignore"
+      <textarea id="input-words"
                 placeholder="Enter Chinese words, separated by commas, e.g. 你好, 谢谢"
                 rows="3"></textarea>
 
@@ -409,7 +405,6 @@
 
       <!-- Dropdown selection UI (hidden by default) -->
       <div id="dropdownSection" class="hidden">
-        <!--<p>选择获取词汇</p>-->
         <div class="dropdown-container" id="bandingContainer">
           <label for="banding" class="input-label">科目 Course</label>
           <select id="banding" name="banding" class="dropdown">
@@ -455,7 +450,7 @@
       </div>
       
       <!-- Start button remains at the bottom of the input section -->
-      <button onclick="initDeck()" class="start-btn ignore">开始 Start</button>
+      <button onclick="initDeck()" class="start-btn">开始 Start</button>
       
       <!-- Spinner container (hidden by default) -->
       <div id="spinner-container" class="hidden">
@@ -468,22 +463,22 @@
     <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
       <div class="flashcard-inner">
         <!-- Front Side of the Flashcard -->
-        <div class="front ignore"></div>
+        <div class="front"></div>
         <!-- Back Side of the Flashcard -->
         <div class="back"></div>
       </div>
     </div>
 
     <!-- Progress Indicator: Shows current flashcard progress -->
-    <div id="progress" class="ignore hidden"></div>
+    <div id="progress" class="hidden"></div>
 
     <!-- Controls: Navigation, flip, return, and shuffle buttons; initially hidden -->
-    <div class="controls hidden ignore" id="controls">
-      <button onclick="prevCard()" class="prev-btn ignore">← Previous</button>
-      <button onclick="flipCard()" class="flip-btn ignore">Flip</button>   
-      <button onclick="nextCard()" class="next-btn ignore">Next →</button>
-      <button class="return-btn ignore" onclick="returnToEdit()">Return to Edit</button>
-      <button onclick="shuffleDeck()" class="shuffle-btn ignore">Shuffle Cards</button>
+    <div class="controls hidden" id="controls">
+      <button onclick="prevCard()" class="prev-btn">← Previous</button>
+      <button onclick="flipCard()" class="flip-btn">Flip</button>   
+      <button onclick="nextCard()" class="next-btn">Next →</button>
+      <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
+      <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
     </div>
   </div>
   
@@ -741,7 +736,6 @@
         
         // Set the front to display the Chinese text
         front.textContent = currentWord;
-        front.classList.add('ignore');
         
         // Use stored pinyin if available, otherwise generate it
         let pinyinText = wordData.pinyin || getPinyin(currentWord);
@@ -753,18 +747,13 @@
           
           // Set the back of the card to include pinyin and English translation
           back.innerHTML = `<div>
-                              <div class="pinyin ignore">${pinyinText}</div>
+                              <div class="pinyin">${pinyinText}</div>
                               <div class="english">${englishText}</div>
                             </div>`;
-                            
-          // If the translation library is loaded and there's no English, trigger translation
-          if (!wordData.english && window.translate && typeof translate.execute === 'function') {
-            translate.execute();
-          }
         } else {
           // For custom mode, show ONLY pinyin
           back.innerHTML = `<div>
-                              <div class="pinyin ignore">${pinyinText}</div>
+                              <div class="pinyin">${pinyinText}</div>
                             </div>`;
         }
                           
@@ -930,29 +919,6 @@
         }, { once: true });
       });
     });
-  </script>
-
-  <!-- Translation Library Integration (loaded only for built-in mode) -->
-  <script src="https://res.zvo.cn/translate/translate.js"></script>
-  <script>
-    // Exclude elements with the "ignore" class from translation.
-    translate.ignore.class.push('ignore');
-    // Use version 2 of the translation library.
-    translate.setUseVersion2();
-    // Set the local language for the current page (the original text is in simplified Chinese).
-    translate.language.setLocal('chinese_simplified');
-    // Override the storage to use sessionStorage so that caching lasts only during the current session.
-    translate.storage = {
-      set: function (key, value) {
-        sessionStorage.setItem(key, value);
-      },
-      get: function (key) {
-        return sessionStorage.getItem(key);
-      }
-    };
-    // Optionally, force the target language to English.
-    translate.language.setDefaultTo('english');
-    translate.changeLanguage('english');
   </script>
 </body>
 </html>
