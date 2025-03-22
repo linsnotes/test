@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <!-- Specify the character encoding for the document -->
   <meta charset="UTF-8">
@@ -26,7 +26,7 @@
     ----------------------------------------------------- */
     :root {
       --translation-font-size-desktop: 3rem;
-      --translation-font-size-mobile: calc(var(--translation-font-size-desktop) * 0.5);
+      --translation-font-size-mobile: calc(var(--translation-font-size-desktop) * 0.7);
     }
 
     /* --------------------------------------------------
@@ -389,7 +389,7 @@
     
     <!-- Banner Section -->
     <div id="banner">
-      <p>Please note that the English translations on the back of the flashcards are provided from our database.</p>
+      <p>Please note that the custom word list only shows Pinyin on the back of the flashcard.</p>
       <button id="dismiss-banner">Noted</button>
     </div>
     
@@ -397,7 +397,7 @@
     <div class="input-section" id="inputSection">
       <!-- Manual input textarea -->
       <textarea id="input-words"
-                placeholder="Enter Chinese words, separated by commas, e.g. 你好, 谢谢"
+                placeholder="Enter Chinese words, separated by commas, e.g. 你好, 世界"
                 rows="3"></textarea>
 
       <!-- Toggle button for the dropdown section -->
