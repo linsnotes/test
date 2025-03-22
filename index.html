@@ -393,7 +393,7 @@
     
     <!-- Banner Section -->
     <div id="banner">
-      <p>Please note that the English translations on the back of the flashcards are provided from our database.</p>
+      <p id="banner-text">Please note that the English translations on the back of the flashcards are provided from our database.</p>
       <button id="dismiss-banner">Noted</button>
     </div>
     
@@ -500,12 +500,13 @@
   <!-- JavaScript Section -->
   <script>
     // Google Sheet ID constant - replace with your actual Google Sheet ID
-    const GOOGLE_SHEET_ID = '17v5FSgIQbGiMbseAYWbTAncfW-XNnk7iknssc1hGaTs';
+    const GOOGLE_SHEET_ID = 'xxxxx';
     
-    // Global variables: current card index and the deck array.
+    // Global variables
     let currentIndex = 0;
     let deck = [];
     let fullWordData = []; // Will store full word data including Chinese, English, and Pinyin
+    let isCustomWordList = false; // Flag to track if we're using custom words
 
     // --------------------------------------------------
     // Function: initCustomPinyin
@@ -521,6 +522,23 @@
           '〇': 'líng'
         });
       }
+    }
+
+    // --------------------------------------------------
+    // Function: getPinyin
+    // Purpose: Convert a Chinese word to its pinyin representation using the pinyinPro library.
+    // --------------------------------------------------
+    function getPinyin(word) {
+      if (window.pinyinPro && window.pinyinPro.pinyin) {
+        return window.pinyinPro.pinyin(word, {
+          toneType: 'symbol', // Use tone symbols
+          type: 'array',      // Output as an array of strings
+          multiple: true,     // Allow multiple pronunciations if applicable
+          mode: 'surname'     // Use surname mode if applicable
+        }).join(' ');
+      }
+      // Fallback: return the original word if conversion is not possible.
+      return word;
     }
 
     // --------------------------------------------------
@@ -598,10 +616,15 @@
       const dropdownSectionVisible = !document.getElementById("dropdownSection").classList.contains("hidden");
       
       if (dropdownSectionVisible) {
+        // Built-in word list mode
         if (!isDropdownMode()) {
           alert("Please select all dropdown options to retrieve the vocabulary.");
           return;
         }
+        
+        // Update banner text for built-in words
+        document.getElementById('banner-text').textContent = 
+          "Please note that the English translations on the back of the flashcards are provided from our database.";
         
         // Show spinner before starting the fetch
         document.getElementById('spinner-container').classList.remove('hidden');
@@ -633,7 +656,9 @@
           
           // Store full word data and create simplified deck for display
           fullWordData = filteredWords;
+          // Extract just the Chinese words for the deck
           deck = filteredWords.map(word => word.chinese);
+          isCustomWordList = false;
           
           // Hide spinner
           document.getElementById('spinner-container').classList.add('hidden');
@@ -653,7 +678,7 @@
           alert("An error occurred while retrieving the vocabulary: " + error.message);
         }
       } else {
-        // Manual input mode: use comma-separated words from the textarea
+        // Custom word list mode
         const input = document.getElementById('input-words').value;
         const manualWords = input.split(/[,，]/)
                           .map(word => word.trim())
@@ -664,21 +689,28 @@
           return;
         }
         
-        // For manual input, we create simple word objects with just the Chinese text
+        // Update banner text for custom words
+        document.getElementById('banner-text').textContent = 
+          "Please note that the English translations on the back of the flashcards are generated using a free machine translation service. Some translations may be inaccurate.";
+        
+        // Initialize pinyin dictionary for custom words
+        initCustomPinyin();
+        
+        // For manual input, generate pinyin immediately and leave English blank for translation service
         fullWordData = manualWords.map(word => ({ 
           chinese: word,
           english: "", // Will be filled by translation service
-          pinyin: ""   // Will be generated using pinyinPro
+          pinyin: getPinyin(word) // Generate pinyin right away
         }));
         
         deck = manualWords;
+        isCustomWordList = true;
         
         document.getElementById('inputSection').classList.add('hidden');
         document.getElementById('controls').classList.remove('hidden');
         document.getElementById('flashcard').classList.remove('hidden');
         document.getElementById('progress').classList.remove('hidden');
         
-        initCustomPinyin();
         currentIndex = 0;
         updateCard();
       }
@@ -738,45 +770,37 @@
         front.textContent = currentWord;
         front.classList.add('ignore');
         
-        // Use stored pinyin if available, otherwise generate it
-        let pinyinText = wordData.pinyin || getPinyin(currentWord);
+        // Use the stored pinyin
+        let pinyinText = wordData.pinyin;
         
-        // Use stored English if available, otherwise use the Chinese text
-        // (the translation service will translate it if needed)
+        // Get English text
         let englishText = wordData.english || currentWord;
         
         // Set the back of the card to include pinyin and English translation
         back.innerHTML = `<div>
                             <div class="pinyin ignore">${pinyinText}</div>
-                            <div class="english">${englishText}</div>
+                            <div class="english ${isCustomWordList ? '' : 'ignore'}">${englishText}</div>
                           </div>`;
                           
         // Update the progress indicator text
         progress.textContent = `Card ${currentIndex + 1} of ${deck.length}`;
         progress.classList.remove('hidden');
         
-        // If the translation library is loaded, trigger the translation for manual inputs
-        if (!wordData.english && window.translate && typeof translate.execute === 'function') {
+        // Only trigger translation for custom words that don't have English yet
+        if (isCustomWordList && window.translate && typeof translate.execute === 'function') {
           translate.execute();
+          
+          // Add an event listener to capture the translated text and store it back in wordData
+          // This is a simplified approach that may need refinement depending on how the 
+          // translation service works
+          setTimeout(() => {
+            const translatedText = document.querySelector('.english').textContent;
+            if (translatedText !== currentWord) {
+              wordData.english = translatedText;
+            }
+          }, 1000); // Give time for translation to complete
         }
       }
-    }
-
-    // --------------------------------------------------
-    // Function: getPinyin
-    // Purpose: Convert a Chinese word to its pinyin representation using the pinyinPro library.
-    // --------------------------------------------------
-    function getPinyin(word) {
-      if (window.pinyinPro && window.pinyinPro.pinyin) {
-        return window.pinyinPro.pinyin(word, {
-          toneType: 'symbol', // Use tone symbols
-          type: 'array',      // Output as an array of strings
-          multiple: true,     // Allow multiple pronunciations if applicable
-          mode: 'surname'     // Use surname mode if applicable
-        }).join(' ');
-      }
-      // Fallback: return the original word if conversion is not possible.
-      return word;
     }
 
     // --------------------------------------------------
@@ -852,13 +876,15 @@
 
     // --------------------------------------------------
     // Event Listener: Window Load
-    // Purpose: Ensure the pinyinPro library has loaded and initialize custom pinyin mappings.
+    // Purpose: Ensure libraries have loaded.
     // --------------------------------------------------
     window.addEventListener('load', () => {
       if (!window.pinyinPro) {
         alert("An error occurred while loading the pinyin-pro library. Please refresh the page.");
       }
-      initCustomPinyin();
+      if (!window.XLSX) {
+        alert("An error occurred while loading the XLSX library. Please refresh the page.");
+      }
     });
 
     // --------------------------------------------------
