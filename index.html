@@ -1087,7 +1087,8 @@ function updateCard() {
       const definitionFontSize = calculateEnglishFontSize(definition);
 
       // Calculate appropriate font size for current word based on definition length
-      const currentWordFontSize = definition.length > 50 ? '2rem' : 
+      const currentWordFontSize = definition.length > 80 ? '1.2rem' : 
+                                  definition.length > 50 ? '2rem' : 
                                   definition.length > 30 ? '2.5rem' : 
                                   'var(--translation-font-size-desktop)';
       
