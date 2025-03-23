@@ -18,58 +18,35 @@
   <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
   <!-- CSS Styling Section -->
   <style>
-    /* ==================================================
-       CSS CUSTOM PROPERTIES (VARIABLES)
-       - Centralized color scheme and sizing variables
-       - Easier to modify the entire theme by changing these values
-    ==================================================== */
+    /* --------------------------------------------------
+       CSS Variables for Translation Font Sizes
+       - Adjust these values to change the translation font sizes.
+         --translation-font-size-desktop: Font size for desktop (default).
+         --translation-font-size-mobile: Font size for mobile (set here to 70% of desktop).
+    ----------------------------------------------------- */
     :root {
-      /* Font Sizes */
-      --card-font-size-desktop: 3rem;
-      --card-font-size-mobile: 2rem;
-      --translation-font-size-desktop: 2.5rem;
-      --translation-font-size-mobile: 1.8rem;
+      --translation-font-size-desktop: 3rem;
+      --translation-font-size-mobile: calc(var(--translation-font-size-desktop) * 0.7);
       
-      /* Colors */
-      --bg-color: #f8f9fa;
-      --card-bg: #ffffff;
-      --primary: #4361ee;
-      --primary-hover: #3a56d4;
-      --secondary: #6c757d;
-      --success: #2ecc71;
-      --success-hover: #27ae60;
-      --warning: #f39c12;
-      --warning-hover: #e67e22;
-      --text-primary: #212529;
-      --text-secondary: #495057;
-      --border-color: rgba(0, 0, 0, 0.12);
-      
-      /* Shadows */
-      --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      --button-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-      
-      /* Spacing */
-      --container-padding: 30px 20px;
-      --card-padding: 25px;
-      --button-padding: 12px 20px;
-      
-      /* Sizing */
-      --flashcard-width-desktop: 480px;
-      --flashcard-height-desktop: 320px;
-      --flashcard-width-mobile: 300px;
-      --flashcard-height-mobile: min(200px, 70vh);
-      
-      /* Border Radius */
-      --border-radius-sm: 8px;
-      --border-radius-md: 12px;
-      --border-radius-lg: 16px;
+      /* Apple-inspired color palette */
+      --apple-background: #f5f5f7;
+      --apple-card-bg: #ffffff;
+      --apple-accent: #0066cc;
+      --apple-text: #1d1d1f;
+      --apple-secondary-text: #86868b;
+      --apple-border: rgba(0, 0, 0, 0.1);
+      --apple-success: #34c759;
+      --apple-warning: #ff9500;
+      --apple-danger: #ff3b30;
+      --apple-card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --apple-button-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    /* ==================================================
-       GLOBAL RESET AND BASE STYLES
-       - Removes default margins and paddings
-       - Sets base font, background, and text color
-    ==================================================== */
+    /* --------------------------------------------------
+       Global Reset and Base Styles
+       - Removes default margins and paddings.
+       - Sets a base font, background, and text color.
+    ----------------------------------------------------- */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -78,37 +55,23 @@
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-primary);
+      background-color: var(--apple-background);
+      color: var(--apple-text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* ==================================================
-       LAYOUT AND CONTAINER STYLES
-    ==================================================== */
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: var(--container-padding);
-    }
-
-    footer {
-      margin-top: 30px;
-      margin-bottom: 30px;
     }
 
     #visitor-counter {
       font-size: 1em;
       margin: 10px 0;
       text-align: center;
-      color: var(--text-secondary);
+      color: var(--apple-secondary-text);
     }
     
     #visitor-counter #pageviews {
       font-weight: 500;
-      color: var(--text-primary);
+      color: var(--apple-text);
     }
 
     #other-chinese-tools {
@@ -117,7 +80,7 @@
     }
     
     #other-chinese-tools a {
-      color: var(--primary);
+      color: var(--apple-accent);
       text-decoration: none;
       font-weight: 500;
     }
@@ -126,20 +89,32 @@
       text-decoration: underline;
     }
 
-    /* ==================================================
-       HEADER STYLES
-    ==================================================== */
+    footer {
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    /* --------------------------------------------------
+       Header Styles
+       - Styles for the page header.
+    ----------------------------------------------------- */
     h1 {
       text-align: center;
       margin-bottom: 24px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--apple-text);
     }
 
-    /* ==================================================
-       INPUT SECTION STYLES
-       - Tabs, fields, dropdowns, and buttons in the input section
-    ==================================================== */
+    /* --------------------------------------------------
+       Input Section Styles
+       - Styles for the textarea, dropdown selection, toggle button, and start button.
+    ----------------------------------------------------- */
     .input-section {
       display: flex;
       flex-direction: column;
@@ -155,10 +130,10 @@
     
     .input-tab {
       padding: 12px 15px;
-      background-color: rgba(67, 97, 238, 0.1); /* Light primary color */
-      color: var(--primary);
+      background-color: rgba(0, 102, 204, 0.1);
+      color: var(--apple-accent);
       border: none;
-      border-radius: var(--border-radius-md);
+      border-radius: 12px;
       cursor: pointer;
       font-weight: 500;
       transition: all 0.2s ease;
@@ -176,12 +151,12 @@
     }
     
     .input-tab.active {
-      background-color: var(--primary);
+      background-color: var(--apple-accent);
       color: white;
     }
     
     .input-tab:hover:not(.active) {
-      background-color: rgba(67, 97, 238, 0.2);
+      background-color: rgba(0, 102, 204, 0.2);
     }
     
     /* Input content sections */
@@ -198,8 +173,8 @@
       width: 100%;
       padding: 12px;
       font-size: 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--border-radius-md);
+      border: 1px solid var(--apple-border);
+      border-radius: 12px;
       margin-bottom: 16px;
       resize: vertical;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -207,18 +182,18 @@
     }
     
     textarea:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      border-color: var(--apple-accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
       outline: none;
     }
     
     /* Input help styles (shared by textarea and sheet inputs) */
     .textarea-input-help, .sheet-input-help {
       font-size: 0.85rem;
-      color: var(--text-secondary);
+      color: var(--apple-secondary-text);
       padding: 8px;
-      background-color: rgba(67, 97, 238, 0.05);
-      border-radius: var(--border-radius-sm);
+      background-color: rgba(0, 102, 204, 0.05);
+      border-radius: 8px;
       margin-bottom: 16px;
     }
     
@@ -231,33 +206,33 @@
       width: 100%;
       padding: 12px;
       font-size: 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--border-radius-md);
+      border: 1px solid var(--apple-border);
+      border-radius: 12px;
       margin-bottom: 8px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     
     .sheet-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      border-color: var(--apple-accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
       outline: none;
     }
     
-    /* Dropdown styling */
+    /* New dropdown styling */
     #dropdownSection {
       margin: 10px 0;
       padding: 16px;
-      border: 1px solid var(--border-color);
-      border-radius: var(--border-radius-md);
-      background-color: var(--card-bg);
-      box-shadow: var(--card-shadow);
+      border: 1px solid var(--apple-border);
+      border-radius: 12px;
+      background-color: var(--apple-card-bg);
+      box-shadow: var(--apple-card-shadow);
     }
     
     #dropdownSection p {
       margin-bottom: 12px;
       font-size: 1rem;
-      color: var(--text-primary);
+      color: var(--apple-text);
     }
     
     .dropdown-container {
@@ -268,7 +243,7 @@
       display: block;
       margin-bottom: 6px;
       font-size: 0.95rem;
-      color: var(--text-secondary);
+      color: var(--apple-secondary-text);
       font-weight: 500;
     }
     
@@ -276,19 +251,21 @@
       width: 100%;
       padding: 10px 12px;
       font-size: 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--apple-border);
+      border-radius: 10px;
       background-color: #fff;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     
     .dropdown:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      border-color: var(--apple-accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
       outline: none;
     }
 
-    /* Spinner styles */
+    /* -----------------------------
+       Spinner CSS
+    ------------------------------ */
     #spinner-container {
       display: flex;
       flex-direction: column;
@@ -300,8 +277,8 @@
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid rgba(67, 97, 238, 0.1);
-      border-top: 3px solid var(--primary);
+      border: 3px solid rgba(0, 102, 204, 0.1);
+      border-top: 3px solid var(--apple-accent);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -309,7 +286,7 @@
     .loading-text {
       margin-top: 1rem;
       font-size: 1rem;
-      color: var(--text-secondary);
+      color: var(--apple-secondary-text);
       font-weight: 500;
       text-align: center;
     }
@@ -318,84 +295,99 @@
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    
+    #spinner-container.hidden {
+      display: none;
+    }
 
-    /* ==================================================
-       FLASHCARD STYLES
-       - Container, front/back, flip effects
-    ==================================================== */
+    /* --------------------------------------------------
+       Flashcard Container and Card Styles
+       - Styles for the flashcard container, the inner card,
+         and the front/back sides of the card.
+    ----------------------------------------------------- */
     .flashcard {
-        font-size: var(--card-font-size-desktop);
-        height: var(--flashcard-height-desktop);
-        width: var(--flashcard-width-desktop);
+        font-size: 3rem; /* Keep original font size as requested */
+        height: 300px; /* Fixed height for larger screens */
         margin: 24px auto;
-        cursor: pointer;
-        perspective: 1000px;
+        cursor: pointer; /* Indicates clickable card */
+        perspective: 1000px; /* Set up 3D perspective for flip effect */
+        width: 100%;
+        max-width: 400px;
         position: relative;
     }
     
+    /* Define the flashcard inner container with consistent sizing and GPU optimization */
     .flashcard-inner {
         position: relative;
         width: 100%;
-        height: 100%;
-        transition: transform 0.6s;
+        height: 100%; /* Ensure inner container fills the flashcard */
+        transition: transform 0.6s; /* Smooth flip transition */
         transform-style: preserve-3d;
-        border-radius: var(--border-radius-lg);
-        box-shadow: var(--card-shadow);
+        border-radius: 16px;
+        box-shadow: var(--apple-card-shadow);
         will-change: transform;
     }
     
+    /* Apply the flip transform without altering height */
     .flashcard.flipped .flashcard-inner {
         transform: rotateY(180deg);
     }
     
-    /* Common card face styles */
+    /* --------------------------------------------------
+       Common Styles for Front and Back Sides
+       - Both sides will be exactly the same size.
+    ----------------------------------------------------- */
     .front, .back {
         position: absolute;
         width: 100%;
         height: 100%;
-        backface-visibility: hidden;
+        backface-visibility: hidden; /* Hide back face during flip */
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: var(--border-radius-lg);
-        padding: var(--card-padding);
+        border-radius: 16px;
+        padding: 25px;
         text-align: center;
-        overflow: auto; /* Allow scrolling for long content */
     }
     
-    /* Front card face */
+    /* --------------------------------------------------
+       Front Side Styles
+    ----------------------------------------------------- */
     .front {
-        background-color: var(--card-bg);
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
+        background-color: var(--apple-card-bg);
+        color: var(--apple-text);
+        border: 1px solid var(--apple-border);
     }
     
-    /* Back card face */
+    /* --------------------------------------------------
+       Back Side Styles
+       - The back is pre-rotated for the flip effect.
+    ----------------------------------------------------- */
     .back {
-        background-color: var(--card-bg);
-        color: var(--text-primary);
+        background-color: var(--apple-card-bg);
+        color: var(--apple-text);
         flex-direction: column;
-        transform: rotateY(180deg);
-        border: 1px solid var(--border-color);
+        transform: rotateY(180deg); /* Pre-rotated for flip effect */
+        border: 1px solid var(--apple-border);
     }
 
-    /* Content styling on card back */
-    .current-word .pinyin {
+    /* Pinyin Text Styling on the Back of the Card */
+    .pinyin {
       font-size: var(--translation-font-size-desktop);
-      color: var(--primary);
-      margin-bottom: 12px;
-      word-wrap: break-word;
+      color: var(--apple-accent);
     }
     
+    /* English Translation Container Styling */
     .english {
+      margin-top: 10px;
       font-size: var(--translation-font-size-desktop);
-      color: var(--text-secondary);
-      word-wrap: break-word;
+      color: var(--apple-secondary-text);
     }
 
-    /* ==================================================
-       CONTROLS (BUTTONS) STYLES
-    ==================================================== */
+    /* --------------------------------------------------
+       Controls (Buttons) Styles
+       - Styles for navigation, flip, return, and shuffle buttons.
+    ----------------------------------------------------- */
     .controls {
       display: flex;
       flex-direction: column;
@@ -415,16 +407,16 @@
       margin-top: 10px;
     }
 
-    /* Common button styles */
+    /* Common Button Styles */
     button {
-      padding: var(--button-padding);
+      padding: 12px 20px;
       font-size: 1rem;
       border: none;
-      border-radius: var(--border-radius-md);
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s ease;
       font-weight: 500;
-      box-shadow: var(--button-shadow);
+      box-shadow: var(--apple-button-shadow);
     }
     
     button:active {
@@ -432,115 +424,98 @@
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
     
-    /* Primary buttons (Start, Prev, Next) */
+    /* Button Styles */
     .start-btn, .prev-btn, .next-btn {
-      background-color: var(--primary);
+      background-color: var(--apple-accent);
       color: white;
     }
     
     .start-btn:hover, .prev-btn:hover, .next-btn:hover {
-      background-color: var(--primary-hover);
+      background-color: #0055b3;
       transform: translateY(-1px);
     }
 
-    /* Flip button */
+    /* Flip Button Specific Styles */
     .flip-btn {
-      background-color: var(--warning);
+      background-color: var(--apple-warning);
       color: white;
     }
     
     .flip-btn:hover {
-      background-color: var(--warning-hover);
+      background-color: #e68600;
       transform: translateY(-1px);
     }
 
-    /* Shuffle button */
+    /* Shuffle Button Specific Styles */
     .shuffle-btn {
-      background-color: var(--success);
+      background-color: var(--apple-success);
       color: white;
     }
     
     .shuffle-btn:hover {
-      background-color: var(--success-hover);
+      background-color: #28b14d;
       transform: translateY(-1px);
     }
 
-    /* Return button */
+    /* Return Button Specific Styles */
     .return-btn {
       background-color: rgba(0, 0, 0, 0.05);
-      color: var(--text-secondary);
+      color: var(--apple-secondary-text);
     }
     
     .return-btn:hover {
       background-color: rgba(0, 0, 0, 0.1);
       transform: translateY(-1px);
     }
-
-    /* ==================================================
-       PROGRESS INDICATOR
-    ==================================================== */
-    #progress {
-      text-align: center;
-      margin-top: 16px;
-      font-size: 1rem;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    /* ==================================================
-       UTILITY CLASSES
-    ==================================================== */
+    
+    /* Utility Class to Hide Elements */
     .hidden {
       display: none;
     }
 
-    /* ==================================================
-       RESPONSIVE DESIGN
-       - Adjustments for different screen sizes
-    ==================================================== */
-    @media (max-width: 768px) {
+    /* --------------------------------------------------
+       Progress Indicator Styles
+       - Displays the current card number out of total.
+    ----------------------------------------------------- */
+    #progress {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 1rem;
+      color: var(--apple-secondary-text);
+      font-weight: 500;
+    }
+
+    /* --------------------------------------------------
+       Responsive Design Adjustments for Small Screens
+    ----------------------------------------------------- */
+    @media (max-width: 576px) {
+      .flashcard {
+        font-size: 2rem;
+        height: 200px;  /* Override fixed height for smaller screens */
+        margin: 15px auto;
+        max-width: 320px;
+      }
+      
+      .front, .back {
+        padding: 20px;
+      }
+      
+      button {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+      }
+      
+      /* On mobile, reduce the pinyin and English translation font size to 50% */
+      .pinyin, .english {
+        font-size: var(--translation-font-size-mobile);
+      }
+      
       .input-tabs {
         flex-direction: column;
       }
       
       .input-tab {
         margin: 5px 0;
-      }
-      
-      .controls .top-row, .controls .bottom-row {
-        flex-direction: column;
-      }
-      
-      button {
-        width: 100%;
-        margin-bottom: 8px;
-      }
-    }
-    
-    @media (max-width: 576px) {
-      .flashcard {
-        font-size: var(--card-font-size-mobile);
-        height: var(--flashcard-height-mobile);
-        width: var(--flashcard-width-mobile);
-        margin: 15px auto;
-      }
-      
-      .front, .back {
-        padding: 15px;
-      }
-      
-      /* Reduce card content font sizes on mobile */
-      .pinyin {
-        font-size: var(--translation-font-size-mobile);
-      }
-      
-      .english {
-        font-size: var(--translation-font-size-mobile);
-      }
-      
-      button {
-        font-size: 0.9rem;
-        padding: 10px 16px;
       }
     }
   </style>
@@ -1016,23 +991,11 @@ function returnToEdit() {
 // Purpose: Dynamically calculate font size based on text length
 // --------------------------------------------------
 function calculateEnglishFontSize(text) {
-  // Get the base size from CSS variables
-  const computedStyle = getComputedStyle(document.documentElement);
-  let baseSize;
+  const baseSize = window.innerWidth <= 576 ? 1.5 : 3; // Starting sizes in rem
   
-  if (window.innerWidth <= 576) {
-    // Mobile base size
-    baseSize = parseFloat(computedStyle.getPropertyValue('--translation-font-size-mobile'));
-  } else {
-    // Desktop base size
-    baseSize = parseFloat(computedStyle.getPropertyValue('--translation-font-size-desktop'));
-  }
-  
-  // Scale font size based on text length
-  if (text.length > 100) return '1rem';
-  if (text.length > 80) return (baseSize * 0.4) + 'rem';
-  if (text.length > 50) return (baseSize * 0.6) + 'rem';
-  if (text.length > 30) return (baseSize * 0.8) + 'rem';
+  if (text.length > 80) return '1rem';
+  if (text.length > 50) return (baseSize * 0.5) + 'rem';
+  if (text.length > 30) return (baseSize * 0.7) + 'rem';
   return baseSize + 'rem';
 }
 
@@ -1084,7 +1047,7 @@ function updateCard() {
       
       // Set the back of the card to include pinyin and definition
       back.innerHTML = `<div>
-                          <div class="current-word">${currentWord}</div>
+                          <div class="pinyin">${pinyinText}</div>
                           <div class="english" style="font-size: ${definitionFontSize};">${definition}</div>
                         </div>`;
     }
