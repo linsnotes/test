@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Specify the character encoding for the document -->
+  <meta charset="UTF-8">
+  <!-- Set the viewport for responsive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Prevent caching of the page -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <!-- Include the pinyin-pro library for converting Chinese characters to pinyin -->
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro?v=1.0"></script>
+  <!-- Include SheetJS (XLSX) library for parsing spreadsheet data -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+  <!-- Set the title of the webpage -->
+  <title>博闻强记</title>
+  <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+  <!-- CSS Styling Section -->
+  <style>
+    /* --------------------------------------------------
+       CSS Variables for Translation Font Sizes
+       - Adjust these values to change the translation font sizes.
+         --translation-font-size-desktop: Font size for desktop (default).
+         --translation-font-size-mobile: Font size for mobile (set here to 70% of desktop).
+    ----------------------------------------------------- */
+    :root {
+      --translation-font-size-desktop: 3rem;
+      --translation-font-size-mobile: calc(var(--translation-font-size-desktop) * 0.7);
+      
+      /* Apple-inspired color palette */
+      --apple-background: #f5f5f7;
+      --apple-card-bg: #ffffff;
+      --apple-accent: #0066cc;
+      --apple-text: #1d1d1f;
+      --apple-secondary-text: #86868b;
+      --apple-border: rgba(0, 0, 0, 0.1);
+      --apple-success: #34c759;
+      --apple-warning: #ff9500;
+      --apple-danger: #ff3b30;
+      --apple-card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --apple-button-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --------------------------------------------------
+       Global Reset and Base Styles
+       - Removes default margins and paddings.
+       - Sets a base font, background, and text color.
+    ----------------------------------------------------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--apple-background);
+      color: var(--apple-text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #visitor-counter {
+      font-size: 1em;
+      margin: 10px 0;
+      text-align: center;
+      color: var(--apple-secondary-text);
+    }
+    
+    #visitor-counter #pageviews {
+      font-weight: 500;
+      color: var(--apple-text);
+    }
+
+    #other-chinese-tools {
+      text-align: center;
+      margin-top: 15px;
+    }
+    
+    #other-chinese-tools a {
+      color: var(--apple-accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    #other-chinese-tools a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    /* --------------------------------------------------
+       Header Styles
+       - Styles for the page header.
+    ----------------------------------------------------- */
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      font-weight: 600;
+      color: var(--apple-text);
+    }
+
+    /* --------------------------------------------------
+       Banner Styles
+       - Banner to display the translation disclaimer.
+    ----------------------------------------------------- */
+    #banner {
+      background-color: rgba(0, 102, 204, 0.1);
+      color: var(--apple-text);
+      text-align: center;
+      padding: 16px;
+      margin-bottom: 24px;
+      border-radius: 12px;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+      border: 1px solid rgba(0, 102, 204, 0.2);
+    }
+    
+    /* Fade-out effect when dismissed */
+    #banner.fade-out {
+      opacity: 0;
+    }
+    
+    /* Style for the "Noted" button */
+    #banner button {
+      background-color: var(--apple-accent);
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      margin-top: 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    #banner button:hover {
+      background-color: #0055b3;
+      transform: translateY(-1px);
+    }
+
+    /* --------------------------------------------------
+       Input Section Styles
+       - Styles for the textarea, dropdown selection, toggle button, and start button.
+    ----------------------------------------------------- */
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 24px;
+    }
+    
+    textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid var(--apple-border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      resize: vertical;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    textarea:focus {
+      border-color: var(--apple-accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+      outline: none;
+    }
+
+    /* Input for Google Sheet URL */
+    .google-sheet-input {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid var(--apple-border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .google-sheet-input:focus {
+      border-color: var(--apple-accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+      outline: none;
+    }
+    
+    /* Toggle button for the dropdown section */
+    #toggleDropdown, #toggleGoogleSheet {
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background-color: rgba(0, 102, 204, 0.1);
+      color: var(--apple-accent);
+      margin-bottom: 16px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    #toggleDropdown:hover, #toggleGoogleSheet:hover {
+      background-color: rgba(0, 102, 204, 0.2);
+    }
+    
+    /* New dropdown styling */
+    #dropdownSection, #googleSheetSection {
+      margin: 10px 0;
+      padding: 16px;
+      border: 1px solid var(--apple-border);
+      border-radius: 12px;
+      background-color: var(--apple-card-bg);
+      box-shadow: var(--apple-card-shadow);
+    }
+    
+    #dropdownSection p, #googleSheetSection p {
+      margin-bottom: 12px;
+      font-size: 1rem;
+      color: var(--apple-text);
+    }
+    
+    .dropdown-container {
+      margin-bottom: 14px;
+    }
+    
+    .dropdown-container label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+      color: var(--apple-secondary-text);
+      font-weight: 500;
+    }
+    
+    .dropdown {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 1rem;
+      border: 1px solid var(--apple-border);
+      border-radius: 10px;
+      background-color: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .dropdown:focus {
+      border-color: var(--apple-accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+      outline: none;
+    }
+
+    /* -----------------------------
+       Spinner CSS
+    ------------------------------ */
+    #spinner-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 102, 204, 0.1);
+      border-top: 3px solid var(--apple-accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    .loading-text {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: var(--apple-secondary-text);
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    #spinner-container.hidden {
+      display: none;
+    }
+
+    /* --------------------------------------------------
+       Flashcard Container and Card Styles
+       - Styles for the flashcard container, the inner card,
+         and the front/back sides of the card.
+    ----------------------------------------------------- */
+    .flashcard {
+        font-size: 3rem; /* Keep original font size as requested */
+        height: 300px; /* Fixed height for larger screens */
+        margin: 24px auto;
+        cursor: pointer; /* Indicates clickable card */
+        perspective: 1000px; /* Set up 3D perspective for flip effect */
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+    }
+    
+    /* Define the flashcard inner container with consistent sizing and GPU optimization */
+    .flashcard-inner {
+        position: relative;
+        width: 100%;
+        height: 100%; /* Ensure inner container fills the flashcard */
+        transition: transform 0.6s; /* Smooth flip transition */
+        transform-style: preserve-3d;
+        border-radius: 16px;
+        box-shadow: var(--apple-card-shadow);
+        will-change: transform;
+    }
+    
+    /* Apply the flip transform without altering height */
+    .flashcard.flipped .flashcard-inner {
+        transform: rotateY(180deg);
+    }
+    
+    /* --------------------------------------------------
+       Common Styles for Front and Back Sides
+       - Both sides will be exactly the same size.
+    ----------------------------------------------------- */
+    .front, .back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden; /* Hide back face during flip */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+    }
+    
+    /* --------------------------------------------------
+       Front Side Styles
+    ----------------------------------------------------- */
+    .front {
+        background-color: var(--apple-card-bg);
+        color: var(--apple-text);
+        border: 1px solid var(--apple-border);
+    }
+    
+    /* --------------------------------------------------
+       Back Side Styles
+       - The back is pre-rotated for the flip effect.
+    ----------------------------------------------------- */
+    .back {
+        background-color: var(--apple-card-bg);
+        color: var(--apple-text);
+        flex-direction: column;
+        transform: rotateY(180deg); /* Pre-rotated for flip effect */
+        border: 1px solid var(--apple-border);
+    }
+
+    /* Pinyin Text Styling on the Back of the Card */
+    .pinyin {
+      font-size: var(--translation-font-size-desktop);
+      color: var(--apple-accent);
+    }
+    
+    /* English Translation Container Styling */
+    .english {
+      margin-top: 10px;
+      font-size: var(--translation-font-size-desktop);
+      color: var(--apple-secondary-text);
+    }
+
+    /* Card Image Styling */
+    .card-image {
+      max-width: 100%;
+      max-height: 120px;
+      margin-top: 10px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    /* --------------------------------------------------
+       Controls (Buttons) Styles
+       - Styles for navigation, flip, return, and shuffle buttons.
+    ----------------------------------------------------- */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    .controls .top-row, .controls .bottom-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .controls .bottom-row {
+      margin-top: 10px;
+    }
+
+    /* Common Button Styles */
+    button {
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      box-shadow: var(--apple-button-shadow);
+    }
+    
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Button Styles */
+    .start-btn, .prev-btn, .next-btn, .import-btn {
+      background-color: var(--apple-accent);
+      color: white;
+    }
+    
+    .start-btn:hover, .prev-btn:hover, .next-btn:hover, .import-btn:hover {
+      background-color: #0055b3;
+      transform: translateY(-1px);
+    }
+
+    /* Flip Button Specific Styles */
+    .flip-btn {
+      background-color: var(--apple-warning);
+      color: white;
+    }
+    
+    .flip-btn:hover {
+      background-color: #e68600;
+      transform: translateY(-1px);
+    }
+
+    /* Shuffle Button Specific Styles */
+    .shuffle-btn {
+      background-color: var(--apple-success);
+      color: white;
+    }
+    
+    .shuffle-btn:hover {
+      background-color: #28b14d;
+      transform: translateY(-1px);
+    }
+
+    /* Return Button Specific Styles */
+    .return-btn {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--apple-secondary-text);
+    }
+    
+    .return-btn:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    /* Utility Class to Hide Elements */
+    .hidden {
+      display: none;
+    }
+
+    /* --------------------------------------------------
+       Progress Indicator Styles
+       - Displays the current card number out of total.
+    ----------------------------------------------------- */
+    #progress {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 1rem;
+      color: var(--apple-secondary-text);
+      font-weight: 500;
+    }
+
+    /* --------------------------------------------------
+       Responsive Design Adjustments for Small Screens
+    ----------------------------------------------------- */
+    @media (max-width: 576px) {
+      .flashcard {
+        font-size: 2rem;
+        height: 200px;  /* Override fixed height for smaller screens */
+        margin: 15px auto;
+        max-width: 320px;
+      }
+      
+      .front, .back {
+        padding: 20px;
+      }
+      
+      button {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+      }
+      
+      /* On mobile, reduce the pinyin and English translation font size to 50% */
+      .pinyin, .english {
+        font-size: var(--translation-font-size-mobile);
+      }
+
+      .card-image {
+        max-height: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Main container for all content -->
+  <div class="container">
+    <!-- Header: Displays the title -->
+    <h1>中文闪卡<br>Chinese Flashcards</h1>
+    
+    <!-- Banner Section -->
+    <div id="banner">
+      <p>Please note that the custom word list only shows Pinyin on the back of the flashcard.</p>
+      <button id="dismiss-banner">Noted</button>
+    </div>
+    
+    <!-- Input Section: Contains textarea, dropdown toggle, dropdown selection UI, and start button -->
+    <div class="input-section" id="inputSection">
+      <!-- Manual input textarea -->
+      <textarea id="input-words"
+                placeholder="Enter Chinese words, separated by commas, e.g. 你好, 世界"
+                rows="3"></textarea>
+
+      <!-- Toggle button for the dropdown section -->
+      <button type="button" id="toggleDropdown" onclick="toggleDropdownSection()">Use a built-in word list from the SG Chinese Textbook</button>
+
+      <!-- Toggle button for Google Sheet import -->
+      <button type="button" id="toggleGoogleSheet" onclick="toggleGoogleSheetSection()">Import from Google Sheet</button>
+
+      <!-- Dropdown selection UI (hidden by default) -->
+      <div id="dropdownSection" class="hidden">
+        <div class="dropdown-container" id="bandingContainer">
+          <label for="banding" class="input-label">科目 Course</label>
+          <select id="banding" name="banding" class="dropdown">
+            <option value="">选择科目 Select Course</option>
+            <option value="G3">G3</option>
+            <option value="G2">G2</option>
+            <option value="G1">G1</option>
+            <option value="HCL">HCL</option>
+          </select>
+        </div>
+        <div class="dropdown-container" id="levelContainer">
+          <label for="level" class="input-label">年级 Level</label>
+          <select id="level" name="level" class="dropdown">
+            <option value="">选择年级 Select Level</option>
+            <option value="中一">中一</option>
+            <option value="中二">中二</option>
+            <option value="中三">中三</option>
+            <option value="中四">中四</option>
+          </select>
+        </div>
+        <div class="dropdown-container" id="unitContainer">
+          <label for="unit" class="input-label">单元 Unit</label>
+          <select id="unit" name="unit" class="dropdown">
+            <option value="">选择单元 Select Unit</option>
+            <option value="单元一">单元一</option>
+            <option value="单元二">单元二</option>
+            <option value="单元三">单元三</option>
+            <option value="单元四">单元四</option>
+            <option value="单元五">单元五</option>
+            <option value="单元六">单元六</option>
+          </select>
+        </div>
+        <div class="dropdown-container" id="passageContainer">
+          <label for="passage" class="input-label">课文 Passage</label>
+          <select id="passage" name="passage" class="dropdown">
+            <option value="">选择课文 Select Passage</option>
+            <option value="生活空间">生活空间</option>
+            <option value="核心">核心</option>
+            <option value="巩固">巩固</option>
+            <option value="进阶">进阶</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Google Sheet import UI (hidden by default) -->
+      <div id="googleSheetSection" class="hidden">
+        <p>Enter the URL of your Google Sheet to import flashcard data</p>
+        <p>Format: 3 columns (Front text, Definition, Image URL)</p>
+        <div class="dropdown-container">
+          <label for="googleSheetUrl">Google Sheet URL</label>
+          <input type="text" id="googleSheetUrl" class="google-sheet-input" 
+                 placeholder="https://docs.google.com/spreadsheets/d/...">
+        </div>
+        <button onclick="importFromGoogleSheet()" class="import-btn">Import from Google Sheet</button>
+      </div>
+      
+      <!-- Start button remains at the bottom of the input section -->
+      <button onclick="initDeck()" class="start-btn">开始 Start</button>
+      
+      <!-- Spinner container (hidden by default) -->
+      <div id="spinner-container" class="hidden">
+        <div class="spinner"></div>
+        <p class="loading-text">Loading... Please wait!</p>
+      </div>
+    </div>
+
+    <!-- Flashcard Container: Initially hidden; displays flashcard once deck is initialized -->
+    <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
+      <div class="flashcard-inner">
+        <!-- Front Side of the Flashcard -->
+        <div class="front"></div>
+        <!-- Back Side of the Flashcard -->
+        <div class="back"></div>
+      </div>
+    </div>
+
+    <!-- Progress Indicator: Shows current flashcard progress -->
+    <div id="progress" class="hidden"></div>
+
+    <!-- Controls: Navigation, flip, return, and shuffle buttons; initially hidden -->
+    <div class="controls hidden" id="controls">
+      <div class="top-row">
+        <button onclick="prevCard()" class="prev-btn">← Previous</button>
+        <button onclick="flipCard()" class="flip-btn">Flip</button>   
+        <button onclick="nextCard()" class="next-btn">Next →</button>
+      </div>
+      <div class="bottom-row">
+        <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
+        <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
+      </div>
+    </div>
+    
+  </div>
+  
+  <footer>
+    <div id="visitor-counter">
+      Welcome! You're visitor #<span id="pageviews">Loading...</span> 
+    </div>
+
+    <div id="other-chinese-tools">
+      <a href="https://linsnotes.com/apps/">Other Chinese Learning Tools</a>
+    </div>
+  </footer>
+
+  <!-- JavaScript Section -->
+  <script>
+    // Data source ID constant - replace with your actual data source ID
+    const DATA_SOURCE_ID = '17v5FSgIQbGiMbseAYWbTAncfW-XNnk7iknssc1hGaTs';
+    
+    // Global variables: current card index and the deck array.
+    let currentIndex = 0;
+    let deck = [];
+    let fullWordData = []; // Will store full word data including Chinese, English, and Pinyin
+    let isBuiltInMode = false; // Flag to track if we're using built-in or custom mode
+    let isGoogleSheetMode = false; // Flag to track if we're using Google Sheet import mode
+
+    // --------------------------------------------------
+    // Function: initCustomPinyin
+    // Purpose: Add custom pinyin mappings for specific Chinese characters.
+    // --------------------------------------------------
+    function initCustomPinyin() {
+      if (window.pinyinPro && window.pinyinPro.addDict) {
+        window.pinyinPro.addDict({
+          '嗯': 'ḿ',
+          '嗄': 'á',
+          '咯': 'lo',
+          '谁': 'shéi',
+          '〇': 'líng'
+        });
+      }
+    }
+
+    // --------------------------------------------------
+    // Utility: Check if all dropdowns have a selection.
+    // --------------------------------------------------
+    function isDropdownMode() {
+      return document.getElementById('banding').value !== "" &&
+             document.getElementById('level').value !== "" &&
+             document.getElementById('unit').value !== "" &&
+             document.getElementById('passage').value !== "";
+    }
+
+    // --------------------------------------------------
+    // Function: fetchVocabularyData
+    // Purpose: Fetch and parse vocabulary data from the remote source
+    // --------------------------------------------------
+    async function fetchVocabularyData() {
+      try {
+        // Show spinner
+        document.getElementById('spinner-container').classList.remove('hidden');
+        
+        // Construct URL to export the spreadsheet as XLSX
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${DATA_SOURCE_ID}/export?format=xlsx`;
+        
+        // Fetch the XLSX file
+        const response = await fetch(exportUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch vocabulary data: ${response.status} ${response.statusText}`);
+        }
+        
+        // Convert the response to array buffer for XLSX parsing
+        const data = await response.arrayBuffer();
+        
+        // Parse the spreadsheet using SheetJS
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Get the first sheet
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Hide spinner
+        document.getElementById('spinner-container').classList.add('hidden');
+        
+        return jsonData;
+      } catch (error) {
+        // Hide spinner in case of error
+        document.getElementById('spinner-container').classList.add('hidden');
+        console.error('Error fetching vocabulary data:', error);
+        alert(`Failed to fetch word data: ${error.message}`);
+        return [];
+      }
+    }
+
+    // --------------------------------------------------
+    // Function: fetchGoogleSheetData
+    // Purpose: Fetch and parse data from a user-provided Google Sheet URL
+    // --------------------------------------------------
+    async function fetchGoogleSheetData(url) {
+      try {
+        // Show spinner
+        document.getElementById('spinner-container').classList.remove('hidden');
+        
+        // Extract the Google Sheet ID from the URL
+        const sheetId = extractGoogleSheetId(url);
+        if (!sheetId) {
+          throw new Error('Invalid Google Sheet URL. Please check the URL and try again.');
+        }
+        
+        // Construct URL to export the spreadsheet as XLSX
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+        
+        // Fetch the XLSX file
+        const response = await fetch(exportUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch Google Sheet data: ${response.status} ${response.statusText}`);
+        }
+        
+        // Convert the response to array buffer for XLSX parsing
+        const data = await response.arrayBuffer();
+        
+        // Parse the spreadsheet using SheetJS
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Get the first sheet
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert to JSON
+        const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        // Process the data to extract the three columns
+        // Skip header row if it exists (assuming first row might be headers)
+        const startIndex = (rawData[0] && typeof rawData[0][0] === 'string' && 
+                           !rawData[0][0].match(/[\u3400-\u9FBF]/)) ? 1 : 0;
+        
+        const processedData = [];
+        for (let i = startIndex; i < rawData.length; i++) {
+          const row = rawData[i];
+          if (row && row.length >= 2) {
+            // Extract front, definition, and image URL (if available)
+            const front = row[0] || '';
+            const definition = row[1] || '';
+            let imageUrl = row[2] || '';
+            
+            // Convert Google Drive URL if necessary
+            if (imageUrl && imageUrl.includes('drive.google.com')) {
+              imageUrl = convertDriveUrl(imageUrl);
+            }
+            
+            processedData.push({
+              chinese: front,
+              english: definition,
+              imageUrl: imageUrl
+            });
+          }
+        }
+        
+        // Hide spinner
+        document.getElementById('spinner-container').classList.add('hidden');
+        
+        return processedData;
+      } catch (error) {
+        // Hide spinner in case of error
+        document.getElementById('spinner-container').classList.add('hidden');
+        console.error('Error fetching Google Sheet data:', error);
+        alert(`Failed to fetch Google Sheet data: ${error.message}`);
+        return [];
+      }
+    }
+
+    // --------------------------------------------------
+    // Function: extractGoogleSheetId
+    // Purpose: Extract the Google Sheet ID from a URL
+    // --------------------------------------------------
+    function extractGoogleSheetId(url) {
+      // Match patterns like /d/SHEET_ID/ or /spreadsheets/d/SHEET_ID/
+      const regex = /\/d\/([a-zA-Z0-9-_]+)/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    // --------------------------------------------------
+    // Function: convertDriveUrl
+    // Purpose: Convert a Google Drive file URL to a direct view URL
+    // --------------------------------------------------
+    function convertDriveUrl(url) {
+      // Extract the file ID from the URL
+      // This regex assumes the ID is between '/d/' and '/view'
+      const regex = /\/d\/(.*?)\/view/;
+      const match = url.match(regex);
+      if (match && match[1]) {
+        const fileId = match[1];
+        return `https://drive.google.com/uc?export=view&id=${fileId}`;
+      }
+      // If the URL doesn't match the expected pattern, return it as is.
+      return url;
+    }
+
+    // --------------------------------------------------
+    // Function: importFromGoogleSheet
+    // Purpose: Import flashcard data from a Google Sheet provided by the user
+    // --------------------------------------------------
+    async function importFromGoogleSheet() {
+      const googleSheetUrl = document.getElementById('googleSheetUrl').value.trim();
+      
+      if (!googleSheetUrl) {
+        alert('Please enter a valid Google Sheet URL.');
+        return;
+      }
+      
+      try {
+        // Fetch data from the Google Sheet
+        const googleSheetData = await fetchGoogleSheetData(googleSheetUrl);
+        
+        if (googleSheetData.length === 0) {
+          alert('No data found in the Google Sheet or data format is incorrect.');
+          return;
+        }
+        
+        // Set the imported data as our deck
+        isGoogleSheetMode = true;
+        isBuiltInMode = false;
+        fullWordData = googleSheetData;
+        deck = googleSheetData.map(item => item.chinese);
+        
+        // Hide the input section and show the flashcard and controls
+        document.getElementById('inputSection').classList.add('hidden');
+        document.getElementById('controls').classList.remove('hidden');
+        document.getElementById('flashcard').classList.remove('hidden');
+        document.getElementById('progress').classList.remove('hidden');
+        
+        // Initialize and display the first card
+        currentIndex = 0;
+        updateCard();
+        
+      } catch (error) {
+        console.error('Error importing from Google Sheet:', error);
+        alert(`Failed to import from Google Sheet: ${error.message}`);
+      }
+    }
+
+    // --------------------------------------------------
+    // Function: filterWordsBySelections
+    // Purpose: Filter words based on dropdown selections
+    // --------------------------------------------------
+    function filterWordsBySelections(allWords, banding, level, unit, passage) {
+      return allWords.filter(word => {
+        return word.banding === banding && 
+               word.level === level && 
+               word.unit === unit && 
+               word.passage === passage;
+      });
+    }
+
+    // --------------------------------------------------
+    // Function: initDeck
+    // Purpose: Initialize the flashcard deck using user input or filtered data from data source
+    // --------------------------------------------------
+    async function initDeck() {
+      const dropdownSectionVisible = !document.getElementById("dropdownSection").classList.contains("hidden");
+      const googleSheetSectionVisible = !document.getElementById("googleSheetSection").classList.contains("hidden");
+      
+      if (googleSheetSectionVisible) {
+        // Google Sheet import is handled separately by the importFromGoogleSheet function
+        importFromGoogleSheet();
+        return;
+      }
+      
+      if (dropdownSectionVisible) {
+        isBuiltInMode = true; // Set flag for built-in mode
+        isGoogleSheetMode = false;
+        
+        if (!isDropdownMode()) {
+          alert("Please select all dropdown options to retrieve the vocabulary.");
+          return;
+        }
+        
+        // Show spinner before starting the fetch
+        document.getElementById('spinner-container').classList.remove('hidden');
+        
+        try {
+          // Fetch all words from data source
+          const allWords = await fetchVocabularyData();
+          
+          if (allWords.length === 0) {
+            alert("No data was retrieved from the database. Please try again later.");
+            document.getElementById('spinner-container').classList.add('hidden');
+            return;
+          }
+          
+          // Get selected filter values
+          const banding = document.getElementById('banding').value;
+          const level = document.getElementById('level').value;
+          const unit = document.getElementById('unit').value;
+          const passage = document.getElementById('passage').value;
+          
+          // Filter words based on selections
+          const filteredWords = filterWordsBySelections(allWords, banding, level, unit, passage);
+          
+          if (filteredWords.length === 0) {
+            alert("No vocabulary found matching your selection criteria. Please try different selections.");
+            document.getElementById('spinner-container').classList.add('hidden');
+            return;
+          }
+          
+          // Store full word data and create simplified deck for display
+          fullWordData = filteredWords;
+          deck = filteredWords.map(word => word.chinese);
+          
+          // Hide spinner
+          document.getElementById('spinner-container').classList.add('hidden');
+          
+          // Hide the input section and show the flashcard and controls
+          document.getElementById('inputSection').classList.add('hidden');
+          document.getElementById('controls').classList.remove('hidden');
+          document.getElementById('flashcard').classList.remove('hidden');
+          document.getElementById('progress').classList.remove('hidden');
+          
+          // Initialize and display the first card
+          currentIndex = 0;
+          updateCard();
+        } catch (error) {
+          // Hide spinner in case of error
+          document.getElementById('spinner-container').classList.add('hidden');
+          alert("An error occurred while retrieving the vocabulary: " + error.message);
+        }
+      } else {
+        isBuiltInMode = false; // Set flag for custom mode
+        isGoogleSheetMode = false;
+        
+        // Manual input mode: use comma-separated words from the textarea
+        const input = document.getElementById('input-words').value;
+        const manualWords = input.split(/[,，]/)
+                          .map(word => word.trim())
+                          .filter(word => word);
+        
+        if (manualWords.length === 0) {
+          alert("Please enter valid Chinese vocabulary or select an existing vocabulary list.");
+          return;
+        }
+        
+        // For manual input, we create simple word objects with just the Chinese text
+        fullWordData = manualWords.map(word => ({ 
+          chinese: word,
+          english: "", // Not needed for custom mode
+          pinyin: ""   // Will be generated using pinyinPro
+        }));
+        
+        deck = manualWords;
+        
+        document.getElementById('inputSection').classList.add('hidden');
+        document.getElementById('controls').classList.remove('hidden');
+        document.getElementById('flashcard').classList.remove('hidden');
+        document.getElementById('progress').classList.remove('hidden');
+        
+        initCustomPinyin();
+        currentIndex = 0;
+        updateCard();
+      }
+    }
+
+    // --------------------------------------------------
+    // Function: toggleDropdownSection
+    // Purpose: Toggle the visibility of the dropdown section and update the toggle button text.
+    //          When hiding the dropdowns, reset all dropdown values to default.
+    // --------------------------------------------------
+    function toggleDropdownSection() {
+      const dropdownSection = document.getElementById("dropdownSection");
+      const googleSheetSection = document.getElementById("googleSheetSection");
+      const toggleButton = document.getElementById("toggleDropdown");
+      const inputTextarea = document.getElementById("input-words");
+      
+      if (dropdownSection.classList.contains("hidden")) {
+        // Show dropdown section, hide textarea and Google Sheet section, and update button label.
+        dropdownSection.classList.remove("hidden");
+        googleSheetSection.classList.add("hidden");
+        inputTextarea.classList.add("hidden");
+        toggleButton.textContent = "Use a custom word list";     
+      } else {
+        // Hide dropdown section, show textarea, reset dropdown values, and update button label.
+        dropdownSection.classList.add("hidden");
+        inputTextarea.classList.remove("hidden");
+        toggleButton.textContent = "Use a built-in word list from the SG Chinese Textbook";
+        document.getElementById("banding").value = "";
+        document.getElementById("level").value = "";
+        document.getElementById("unit").value = "";
+        document.getElementById("passage").value = "";       
+      }
+    }
+
+    // --------------------------------------------------
+    // Function: toggleGoogleSheetSection
+    // Purpose: Toggle the visibility of the Google Sheet import section
+    // --------------------------------------------------
+    function toggleGoogleSheetSection() {
+      const dropdownSection = document.getElementById("dropdownSection");
+      const googleSheetSection = document.getElementById("googleSheetSection");
+      const toggleButton = document.getElementById("toggleGoogleSheet");
+      const inputTextarea = document.getElementById("input-words");
+      
+      if (googleSheetSection.classList.contains("hidden")) {
+        // Show Google Sheet section, hide textarea and dropdown section
+        googleSheetSection.classList.remove("hidden");
+        dropdownSection.classList.add("hidden");
+        inputTextarea.classList.add("hidden");
+        toggleButton.textContent = "Use a custom word list";
+      } else {
+        // Hide Google Sheet section, show textarea
+        googleSheetSection.classList.add("hidden");
+        inputTextarea.classList.remove("hidden");
+        toggleButton.textContent = "Import from Google Sheet";
+        document.getElementById("googleSheetUrl").value = "";
+      }
+    }
+
+    // --------------------------------------------------
+    // Function: returnToEdit
+    // Purpose: Return to the input mode by showing the input section and hiding flashcard, progress indicator, and controls.
+    // --------------------------------------------------
+    function returnToEdit() {
+      document.getElementById('inputSection').classList.remove('hidden');
+      document.getElementById('controls').classList.add('hidden');
+      document.getElementById('flashcard').classList.add('hidden');
+      // Hide progress indicator when returning to edit mode.
+      document.getElementById('progress').classList.add('hidden');
+    }
+
+    // --------------------------------------------------
+    // Function: calculateEnglishFontSize
+    // Purpose: Dynamically calculate font size based on text length
+    // --------------------------------------------------
+    function calculateEnglishFontSize(text) {
+      const baseSize = window.innerWidth <= 576 ? 1.5 : 3; // Starting sizes in rem
+      
+      if (text.length > 80) return '1rem';
+      if (text.length > 50) return (baseSize * 0.5) + 'rem';
+      if (text.length > 30) return (baseSize * 0.7) + 'rem';
+      return baseSize + 'rem';
+    }
+
+    // --------------------------------------------------
+    // Function: updateCard
+    // Purpose: Update the flashcard content (both front and back) based on the current index,
+    //          and update the progress indicator.
+    // --------------------------------------------------
+    function updateCard() {
+      const front = document.querySelector('.front');
+      const back = document.querySelector('.back');
+      const progress = document.getElementById('progress');
+      
+      if (deck[currentIndex]) {
+        const currentWord = deck[currentIndex];
+        // Find the full word data in our array
+        const wordData = fullWordData[currentIndex];
+        
+        // Set the front to display the Chinese text
+        front.textContent = currentWord;
+        
+        // Generate HTML for the back of the card based on mode
+        let backHtml = '';
+        
+        if (isGoogleSheetMode) {
+          // For Google Sheet mode, show definition and image if available
+          let pinyinText = getPinyin(currentWord);
+          let definitionText = wordData.english || '';
+          let imageUrl = wordData.imageUrl || '';
+          
+          // Calculate appropriate font size based on text length
+          const definitionFontSize = calculateEnglishFontSize(definitionText);
+          
+          backHtml = `<div>
+                        <div class="pinyin">${pinyinText}</div>
+                        <div class="english" style="font-size: ${definitionFontSize};">${definitionText}</div>
+                        ${imageUrl ? `<img src="${imageUrl}" alt="Flashcard image" class="card-image">` : ''}
+                      </div>`;
+        } else if (isBuiltInMode) {
+          // For built-in mode, show both pinyin and English
+          let pinyinText = wordData.pinyin || getPinyin(currentWord);
+          let englishText = wordData.english || currentWord;
+          
+          // Calculate appropriate font size based on text length
+          const englishFontSize = calculateEnglishFontSize(englishText);
+          
+          backHtml = `<div>
+                        <div class="pinyin">${pinyinText}</div>
+                        <div class="english" style="font-size: ${englishFontSize};">${englishText}</div>
+                      </div>`;
+        } else {
+          // For custom mode, show ONLY pinyin
+          let pinyinText = wordData.pinyin || getPinyin(currentWord);
+          
+          backHtml = `<div>
+                        <div class="pinyin">${pinyinText}</div>
+                      </div>`;
+        }
+        
+        // Set the back of the card
+        back.innerHTML = backHtml;
+                          
+        // Update the progress indicator text
+        progress.textContent = `Card ${currentIndex + 1} of ${deck.length}`;
+        progress.classList.remove('hidden');
+      }
+    }
+
+    // --------------------------------------------------
+    // Function: getPinyin
+    // Purpose: Convert a Chinese word to its pinyin representation using the pinyinPro library.
+    // --------------------------------------------------
+    function getPinyin(word) {
+      if (window.pinyinPro && window.pinyinPro.pinyin) {
+        return window.pinyinPro.pinyin(word, {
+          toneType: 'symbol', // Use tone symbols
+          type: 'array',      // Output as an array of strings
+          multiple: true,     // Allow multiple pronunciations if applicable
+          mode: 'surname'     // Use surname mode if applicable
+        }).join(' ');
+      }
+      // Fallback: return the original word if conversion is not possible.
+      return word;
+    }
+
+    // --------------------------------------------------
+    // Function: flipCard
+    // Purpose: Toggle the flip effect on the flashcard.
+    // --------------------------------------------------
+    function flipCard() {
+      document.getElementById('flashcard').classList.toggle('flipped');
+    }
+
+    // --------------------------------------------------
+    // Function: prevCard
+    // Purpose: Navigate to the previous flashcard.
+    // --------------------------------------------------
+    function prevCard() {
+      currentIndex = Math.max(0, currentIndex - 1);
+      // Remove any flipped state before updating.
+      document.getElementById('flashcard').classList.remove('flipped');
+      updateCard();
+    }
+
+    // --------------------------------------------------
+    // Function: nextCard
+    // Purpose: Navigate to the next flashcard.
+    //          If on the last card, ask the user if they want to restart.
+    // --------------------------------------------------
+    function nextCard() {
+      if (currentIndex >= deck.length - 1) {
+        // Use confirm to allow user to cancel restarting.
+        if (confirm("You've reached the end of the flashcards! Restart from the beginning?")) {
+          currentIndex = 0;
+        } else {
+          // If the user chooses 'No', do not restart.
+          return;
+        }
+      } else {
+        currentIndex++;
+      }
+      // Remove any flipped state before updating.
+      document.getElementById('flashcard').classList.remove('flipped');
+      updateCard();
+    }
+
+    // --------------------------------------------------
+    // Function: shuffleDeck
+    // Purpose: Randomize the order of the flashcards using the Fisher-Yates algorithm.
+    // --------------------------------------------------
+    function shuffleDeck() {
+      // Create an array of indices
+      const indices = Array.from({ length: deck.length }, (_, i) => i);
+      
+      // Shuffle the indices
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      
+      // Create new arrays based on shuffled indices
+      const shuffledDeck = indices.map(i => deck[i]);
+      const shuffledFullWordData = indices.map(i => fullWordData[i]);
+      
+      // Replace the original arrays with shuffled ones
+      deck = shuffledDeck;
+      fullWordData = shuffledFullWordData;
+      
+      // Reset to the first card after shuffling
+      currentIndex = 0;
+      
+      // Remove any flipped state before updating
+      document.getElementById('flashcard').classList.remove('flipped');
+      updateCard();
+    }
+
+    // --------------------------------------------------
+    // Event Listener: Window Load
+    // Purpose: Ensure the pinyinPro library has loaded and initialize custom pinyin mappings.
+    // --------------------------------------------------
+    window.addEventListener('load', () => {
+      if (!window.pinyinPro) {
+        alert("An error occurred while loading the pinyin-pro library. Please refresh the page.");
+      }
+      initCustomPinyin();
+    });
+
+    // --------------------------------------------------
+    // Event Listener: Keyboard Controls
+    // Purpose: Enable keyboard navigation and flip controls.
+    // --------------------------------------------------
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') prevCard();
+      if (e.key === 'ArrowRight') nextCard();
+      if (e.key === ' ' || e.key === 'Enter') flipCard();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const pv = document.getElementById('pageviews');
+
+      if (pv !== null) {
+        const uri = location.pathname.replace(/\/$/, '');
+        const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const count = data.count.replace(/\s/g, '');
+            pv.innerText = new Intl.NumberFormat().format(count);
+          })
+          .catch((error) => {
+            pv.innerText = '1';
+          });
+      }
+    });
+  </script>
+
+  <!-- Banner Dismissal Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const banner = document.getElementById('banner');
+      const dismissButton = document.getElementById('dismiss-banner');
+      let dismissed = false;
+      
+      // Auto-dismiss the banner after 15 seconds if the user never clicks "Noted"
+      const autoDismissTimer = setTimeout(() => {
+        if (!dismissed) {
+          banner.classList.add('fade-out');
+          banner.addEventListener('transitionend', function() {
+            banner.style.display = 'none';
+          }, { once: true });
+        }
+      }, 15000);
+      
+      // Dismiss the banner when the user clicks "Noted"
+      dismissButton.addEventListener('click', function() {
+        dismissed = true; // Mark as dismissed to cancel the auto-dismiss timer
+        clearTimeout(autoDismissTimer);
+        banner.classList.add('fade-out');
+        banner.addEventListener('transitionend', function() {
+          banner.style.display = 'none';
+        }, { once: true });
+      });
+    });
+  </script>
+</body>
+</html>
