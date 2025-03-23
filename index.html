@@ -104,13 +104,38 @@
        Header Styles
        - Styles for the page header.
     ----------------------------------------------------- */
+    @keyframes gradientMove {
+      0% {
+        background-position: 0%;
+      }
+      50% {
+        background-position: 100%;
+      }
+      100% {
+        background-position: 0%;
+      }
+    }
+
     h1 {
       text-align: center;
       margin-bottom: 24px;
       font-weight: 600;
-      color: var(--text);
+      font-style: italic;
+      background: linear-gradient(90deg,
+        #4285F4 0%,
+        #34A853 20%,
+        #60C99A 35%,
+        #A6D96A 50%,
+        #F5A623 65%,
+        #FBBC05 80%,
+        #EA4335 100%
+      );
+      background-size: 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientMove 3s ease-in-out infinite;
     }
-
+    
     /* --------------------------------------------------
        Input Section Styles
        - Styles for the textarea, dropdown selection, toggle button, and start button.
@@ -565,7 +590,7 @@
   <!-- Main container for all content -->
   <div class="container">
     <!-- Header: Displays the title -->
-    <h1>中文闪卡<br>Chinese Flashcards</h1>
+    <h1>My Flashcards</h1>
     
     <!-- Input Section: Contains tabbed interface for input selection and start button -->
     <div class="input-section" id="inputSection">
