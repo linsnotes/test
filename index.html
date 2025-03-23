@@ -122,33 +122,7 @@
       padding: 16px;
       margin-bottom: 24px;
       border-radius: 12px;
-      opacity: 1;
-      transition: opacity 0.5s ease;
       border: 1px solid rgba(0, 102, 204, 0.2);
-    }
-    
-    /* Fade-out effect when dismissed */
-    #banner.fade-out {
-      opacity: 0;
-    }
-    
-    /* Style for the "Noted" button */
-    #banner button {
-      background-color: var(--apple-accent);
-      color: white;
-      border: none;
-      padding: 8px 18px;
-      margin-top: 12px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-weight: 500;
-      font-size: 0.9rem;
-    }
-    
-    #banner button:hover {
-      background-color: #0055b3;
-      transform: translateY(-1px);
     }
 
     /* --------------------------------------------------
@@ -565,10 +539,9 @@
     <!-- Header: Displays the title -->
     <h1>中文闪卡<br>Chinese Flashcards</h1>
     
-    <!-- Banner Section -->
+    <!-- Banner Section - Simplified without the "Noted" button -->
     <div id="banner">
       <p>Please note that the custom word list only shows Pinyin on the back of the flashcard.</p>
-      <button id="dismiss-banner">Noted</button>
     </div>
     
     <!-- Input Section: Contains tabbed interface for input selection and start button -->
@@ -1230,36 +1203,5 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 });
-
-// --------------------------------------------------
-// Banner Dismissal
-// --------------------------------------------------
-document.addEventListener('DOMContentLoaded', function() {
-  const banner = document.getElementById('banner');
-  const dismissButton = document.getElementById('dismiss-banner');
-  let dismissed = false;
-  
-  // Auto-dismiss the banner after 15 seconds if the user never clicks "Noted"
-  const autoDismissTimer = setTimeout(() => {
-    if (!dismissed) {
-      banner.classList.add('fade-out');
-      banner.addEventListener('transitionend', function() {
-        banner.style.display = 'none';
-      }, { once: true });
-    }
-  }, 15000);
-  
-  // Dismiss the banner when the user clicks "Noted"
-  dismissButton.addEventListener('click', function() {
-    dismissed = true; // Mark as dismissed to cancel the auto-dismiss timer
-    clearTimeout(autoDismissTimer);
-    banner.classList.add('fade-out');
-    banner.addEventListener('transitionend', function() {
-      banner.style.display = 'none';
-    }, { once: true });
-  });
-});
-
-
-    
   </script>
+</html>
