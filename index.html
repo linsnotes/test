@@ -266,7 +266,8 @@
                 }
             } else {
                 if (confirm('Wrong! Try again?')) {
-                    loadQuestion(); // Reset both containers
+                    // Modified section: Reset the question completely
+                    loadQuestion();  // This line changed from clearing answerZone
                     startTimer();
                 } else {
                     alert(`Correct answer: ${quizData[currentQuestion].correct}`);
