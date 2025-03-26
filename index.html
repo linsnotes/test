@@ -959,6 +959,15 @@
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+            
+            // Show/hide header and footer based on screen
+            if (screenId === 'quizScreen') {
+                document.querySelector('.app-header').style.display = 'none';
+                document.querySelector('.app-footer').style.display = 'none';
+            } else {
+                document.querySelector('.app-header').style.display = 'block';
+                document.querySelector('.app-footer').style.display = 'block';
+            }
         }
 
         function shuffle(array) {
