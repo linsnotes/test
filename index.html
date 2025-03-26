@@ -17,6 +17,7 @@
         button:hover { background: #0056b3; }
         #resultsTable { width: 100%; border-collapse: collapse; margin: 20px 0; }
         #resultsTable td, #resultsTable th { border: 1px solid #ddd; padding: 8px; }
+        .instructions { margin-bottom: 15px; font-style: italic; color: #666; }
     </style>
 </head>
 <body>
@@ -39,6 +40,7 @@
         <div id="quizScreen" class="screen">
             <div class="timer">Time: <span id="timer">0</span>s</div>
             <div id="questionNumber"></div>
+            <div class="instructions">Drag words or double-click them to move between boxes</div>
             <div id="wordContainer" class="drop-zone" ondrop="handleSourceDrop(event)" ondragover="allowDrop(event)"></div>
             <div class="drop-zone" id="answerZone" ondrop="handleAnswerDrop(event)" ondragover="allowDrop(event)"></div>
             <button onclick="checkAnswer()">Confirm</button>
@@ -77,8 +79,10 @@
             ev.dataTransfer.effectAllowed = 'move';
         }
         function dragEnd() {
-            draggedElement.classList.remove('dragging');
-            draggedElement = null;
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement = null;
+            }
         }
         function handleSourceDrop(ev) {
             ev.preventDefault();
@@ -105,6 +109,22 @@
                 return (offset < 0 && offset > closest.offset) ? 
                     { offset: offset, element: child } : closest;
             }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Double-click Functions
+        function setupDoubleClickHandlers() {
+            // Use event delegation to handle double-clicks
+            document.getElementById('wordContainer').addEventListener('dblclick', function(e) {
+                if (e.target.classList.contains('word-box')) {
+                    document.getElementById('answerZone').appendChild(e.target);
+                }
+            });
+            
+            document.getElementById('answerZone').addEventListener('dblclick', function(e) {
+                if (e.target.classList.contains('word-box')) {
+                    document.getElementById('wordContainer').appendChild(e.target);
+                }
+            });
         }
 
         // Core Quiz Functions
@@ -150,6 +170,10 @@
         function startQuiz() {
             userData.name = document.getElementById('userName').value.trim();
             if (!userData.name) return alert('Please enter your name');
+            
+            // Set up double-click handlers
+            setupDoubleClickHandlers();
+            
             showScreen('quizScreen');
             loadQuestion();
             startTimer();
