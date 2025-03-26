@@ -581,6 +581,9 @@
         </div>
 
         <footer class="app-footer">
+            <div id="visitor-counter">
+               Welcome! You're visitor #<span id="pageviews">Loading...</span> 
+            </div>
             <p><a href="https://linsnotes.com">Linsnotes.com</a></p>
         </footer>
     </div>
@@ -1036,6 +1039,24 @@
                 }
             });
         }
+        document.addEventListener('DOMContentLoaded', () => {
+            const pv = document.getElementById('pageviews');
+
+            if (pv !== null) {
+              const uri = location.pathname.replace(/\/$/, '');
+              const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
+
+              fetch(url)
+                .then((response) => response.json())
+                .then((data) => {
+                  const count = data.count.replace(/\s/g, '');
+                  pv.innerText = new Intl.NumberFormat().format(count);
+                })
+                .catch((error) => {
+                  pv.innerText = '1';
+                });
+            }
+          });
     </script>
 </body>
 </html>
