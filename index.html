@@ -573,9 +573,6 @@
                     <button onclick="screenshotResults()" class="btn btn-secondary">
                         <i class="fas fa-camera"></i> Screenshot Results
                     </button>
-                    <button onclick="saveReport()" class="btn btn-secondary">
-                        <i class="fas fa-file-download"></i> Save Report
-                    </button>
                     <button onclick="reviewQuestions()" class="btn btn-primary">
                         <i class="fas fa-redo"></i> Try Again
                     </button>
@@ -1008,22 +1005,6 @@
                     icon: 'success',
                     confirmButtonColor: '#1a73e8',
                 });
-            });
-        }
-
-        function saveReport() {
-            const data = JSON.stringify(userData, null, 2);
-            const blob = new Blob([data], {type: 'application/json'});
-            const link = document.createElement('a');
-            link.download = 'quiz-report.json';
-            link.href = URL.createObjectURL(blob);
-            link.click();
-            
-            Swal.fire({
-                title: 'Report Saved!',
-                text: 'Your quiz report has been downloaded',
-                icon: 'success',
-                confirmButtonColor: '#1a73e8',
             });
         }
 
