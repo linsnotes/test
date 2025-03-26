@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Language Puzzle Quiz</title>
     <style>
-        /* (CSS remains unchanged) */
         body { font-family: Arial, sans-serif; margin: 20px; background: #f0f2f5; }
         .container { max-width: 800px; margin: 0 auto; }
         .screen { display: none; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -63,8 +62,12 @@
         let quizData = [];
         let userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 };
         let timerInterval;
+        let timerPaused = false;
+        let elapsedTime = 0;
+        let pausedAt = 0;
         const BUILT_IN_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII';
         let draggedElement = null;
+        let questionAttempts = {};
 
         // Drag & Drop Functions
         function allowDrop(ev) { ev.preventDefault(); }
@@ -104,7 +107,7 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // Core Quiz Functions (Fixed data loading)
+        // Core Quiz Functions
         async function loadSheetData(sheetId) {
             try {
                 const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
@@ -136,6 +139,11 @@
                 shuffled: null
             }));
             
+            questionAttempts = {};
+            quizData.forEach((_, idx) => {
+                questionAttempts[idx] = { attempts: 0, correct: false };
+            });
+            
             showScreen('nameScreen');
         }
 
@@ -147,16 +155,16 @@
             startTimer();
         }
 
-        // Remaining functions unchanged
         function loadQuestion() {
             const question = quizData[currentQuestion];
-            if (!question.shuffled) question.shuffled = shuffle([...question.parts]);
+            if (!question.shuffled) {
+                question.shuffled = shuffle([...question.parts]);
+            }
             
             document.getElementById('questionNumber').textContent = 
                 `Question ${currentQuestion + 1} of ${quizData.length}`;
             
             const wordContainer = document.getElementById('wordContainer');
-            // Removed .trim() so that spaces are preserved
             wordContainer.innerHTML = question.shuffled.map(word => 
                 `<div class="word-box" draggable="true" 
                     ondragstart="dragStart(event)" 
@@ -167,47 +175,106 @@
         }
 
         function startTimer() {
-            userData.startTime = Date.now();
+            if (pausedAt > 0) {
+                // Resume timer
+                elapsedTime = pausedAt;
+                pausedAt = 0;
+            } else {
+                // Start new timer
+                elapsedTime = 0;
+                userData.startTime = Date.now();
+            }
+            
+            timerPaused = false;
             clearInterval(timerInterval);
+            
             timerInterval = setInterval(() => {
-                document.getElementById('timer').textContent = 
-                    Math.floor((Date.now() - userData.startTime) / 1000);
+                if (!timerPaused) {
+                    elapsedTime = Math.floor((Date.now() - userData.startTime) / 1000);
+                    document.getElementById('timer').textContent = elapsedTime;
+                }
             }, 1000);
         }
 
+        function pauseTimer() {
+            timerPaused = true;
+            pausedAt = elapsedTime;
+        }
+
+        function resumeTimer() {
+            timerPaused = false;
+            userData.startTime = Date.now() - (pausedAt * 1000);
+        }
+
         function checkAnswer() {
-            const timeSpent = Math.floor((Date.now() - userData.startTime) / 1000);
+            const timeSpent = elapsedTime;
             const userAnswer = [...document.querySelectorAll('#answerZone .word-box')]
                 .map(node => node.textContent).join('');
             
             const isCorrect = userAnswer === quizData[currentQuestion].correct;
-            const points = isCorrect ? calculatePoints(timeSpent) : 0;
-            
-            userData.attempts.push({
-                question: currentQuestion + 1,
-                time: timeSpent,
-                points,
-                userAnswer,
-                correctAnswer: quizData[currentQuestion].correct
-            });
+            questionAttempts[currentQuestion].attempts++;
             
             if (isCorrect) {
+                questionAttempts[currentQuestion].correct = true;
+                const points = calculatePoints(timeSpent);
+                
+                // Only add to userData.attempts if this is the first time it's correct
+                if (!userData.attempts.some(a => a.question === currentQuestion + 1)) {
+                    userData.attempts.push({
+                        question: currentQuestion + 1,
+                        time: timeSpent,
+                        points,
+                        userAnswer,
+                        correctAnswer: quizData[currentQuestion].correct,
+                        attempts: questionAttempts[currentQuestion].attempts
+                    });
+                } else {
+                    // Update the existing attempt with the new data
+                    const idx = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
+                    if (idx !== -1) {
+                        userData.attempts[idx] = {
+                            question: currentQuestion + 1,
+                            time: timeSpent,
+                            points,
+                            userAnswer,
+                            correctAnswer: quizData[currentQuestion].correct,
+                            attempts: questionAttempts[currentQuestion].attempts
+                        };
+                    }
+                }
+                
                 alert(`Correct! (+${points} points)`);
                 if (currentQuestion < quizData.length - 1) {
                     currentQuestion++;
+                    pausedAt = 0;
+                    elapsedTime = 0;
                     loadQuestion();
                     startTimer();
                 } else {
                     showResults();
                 }
             } else {
+                pauseTimer();
                 if (confirm('Wrong! Try again?')) {
-                    loadQuestion();
-                    startTimer();
+                    resumeTimer();
+                    // Do not reset the question or timer
                 } else {
+                    // User doesn't want to retry, mark as incorrect attempt
+                    userData.attempts.push({
+                        question: currentQuestion + 1,
+                        time: timeSpent,
+                        points: 0,
+                        userAnswer,
+                        correctAnswer: quizData[currentQuestion].correct,
+                        attempts: questionAttempts[currentQuestion].attempts
+                    });
+                    
                     alert(`Correct answer: ${quizData[currentQuestion].correct}`);
                     currentQuestion++;
+                    
                     if (currentQuestion < quizData.length) {
+                        pausedAt = 0;
+                        elapsedTime = 0;
                         loadQuestion();
                         startTimer();
                     } else {
@@ -232,11 +299,12 @@
                 `Total Score: ${userData.totalPoints} points (${userData.attempts.filter(a => a.points > 0).length}/${quizData.length} correct)`;
             
             const table = document.getElementById('resultsTable');
-            table.innerHTML = `<tr><th>Question</th><th>Time</th><th>Points</th><th>Your Answer</th><th>Correct Answer</th></tr>
+            table.innerHTML = `<tr><th>Question</th><th>Time</th><th>Points</th><th>Attempts</th><th>Your Answer</th><th>Correct Answer</th></tr>
                 ${userData.attempts.map(a => `<tr>
                     <td>${a.question}</td>
                     <td>${a.time}s</td>
                     <td>${a.points}</td>
+                    <td>${a.attempts}</td>
                     <td>${a.userAnswer}</td>
                     <td>${a.correctAnswer}</td>
                 </tr>`).join('')}`;
@@ -277,6 +345,12 @@
             currentQuestion = 0;
             quizData.forEach(q => q.shuffled = null);
             userData.attempts = [];
+            questionAttempts = {};
+            quizData.forEach((_, idx) => {
+                questionAttempts[idx] = { attempts: 0, correct: false };
+            });
+            pausedAt = 0;
+            elapsedTime = 0;
             showScreen('quizScreen');
             loadQuestion();
             startTimer();
