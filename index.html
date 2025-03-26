@@ -6,78 +6,22 @@
     <title>Language Puzzle Quiz</title>
     <style>
         /* (CSS remains unchanged) */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: #f0f2f5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .screen {
-            display: none;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .active {
-            display: block;
-        }
-        .drop-zone {
-            min-height: 60px;
-            border: 2px dashed #ccc;
-            padding: 10px;
-            margin: 20px 0;
-            background: #f8f9fa;
-        }
-        .word-box {
-            display: inline-block;
-            padding: 8px 15px;
-            margin: 5px;
-            background: #e9ecef;
-            border-radius: 5px;
-            cursor: move;
-            user-select: none;
-            transition: all 0.3s;
-        }
-        .word-box.dragging {
-            opacity: 0.5;
-            background: #cfe2ff;
-        }
-        .timer {
-            font-size: 1.2em;
-            color: #666;
-            margin: 10px 0;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        #resultsTable {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        #resultsTable td, #resultsTable th {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f2f5; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .screen { display: none; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .active { display: block; }
+        .drop-zone { min-height: 60px; border: 2px dashed #ccc; padding: 10px; margin: 20px 0; background: #f8f9fa; }
+        .word-box { display: inline-block; padding: 8px 15px; margin: 5px; background: #e9ecef; border-radius: 5px; cursor: move; user-select: none; transition: all 0.3s; }
+        .word-box.dragging { opacity: 0.5; background: #cfe2ff; }
+        .timer { font-size: 1.2em; color: #666; margin: 10px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        #resultsTable { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        #resultsTable td, #resultsTable th { border: 1px solid #ddd; padding: 8px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Screen elements remain unchanged -->
-        <!-- Landing Screen -->
         <div id="landingScreen" class="screen active">
             <h1>Language Puzzle Quiz</h1>
             <button onclick="startBuiltInQuiz()">Start Built-in Quiz</button>
@@ -87,14 +31,12 @@
             <p>Note: Get Quiz ID from your teacher</p>
         </div>
 
-        <!-- Name Input Screen -->
         <div id="nameScreen" class="screen">
             <h2>Enter Your Name</h2>
             <input type="text" id="userName" required>
             <button onclick="startQuiz()">Start Quiz</button>
         </div>
 
-        <!-- Quiz Screen -->
         <div id="quizScreen" class="screen">
             <div class="timer">Time: <span id="timer">0</span>s</div>
             <div id="questionNumber"></div>
@@ -103,7 +45,6 @@
             <button onclick="checkAnswer()">Confirm</button>
         </div>
 
-        <!-- Results Screen -->
         <div id="resultsScreen" class="screen">
             <h2>Quiz Results</h2>
             <p id="resultSummary"></p>
@@ -120,12 +61,7 @@
     <script>
         let currentQuestion = 0;
         let quizData = [];
-        let userData = {
-            name: '',
-            startTime: 0,
-            attempts: [],
-            totalPoints: 0
-        };
+        let userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 };
         let timerInterval;
         const BUILT_IN_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII';
         let draggedElement = null;
@@ -168,15 +104,15 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // Core Quiz Functions
+        // Core Quiz Functions (Fixed data loading)
         async function loadSheetData(sheetId) {
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
                 const response = await fetch(url);
                 const csv = await response.text();
                 const workbook = XLSX.read(csv, {type: 'string'});
-                return XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header:1})
-                    .map(row => row[0]);
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+                return rows.slice(1).map(row => row[0]); // Skip header row
             } catch (error) {
                 alert('Error loading quiz data. Please check Quiz ID');
                 return null;
@@ -211,11 +147,10 @@
             startTimer();
         }
 
+        // Remaining functions unchanged
         function loadQuestion() {
             const question = quizData[currentQuestion];
-            if (!question.shuffled) {
-                question.shuffled = shuffle([...question.parts]);
-            }
+            if (!question.shuffled) question.shuffled = shuffle([...question.parts]);
             
             document.getElementById('questionNumber').textContent = 
                 `Question ${currentQuestion + 1} of ${quizData.length}`;
@@ -266,8 +201,7 @@
                 }
             } else {
                 if (confirm('Wrong! Try again?')) {
-                    // Modified section: Reset the question completely
-                    loadQuestion();  // This line changed from clearing answerZone
+                    loadQuestion();
                     startTimer();
                 } else {
                     alert(`Correct answer: ${quizData[currentQuestion].correct}`);
@@ -282,18 +216,70 @@
             }
         }
 
-        // Remaining functions unchanged
+        // Utility functions
         function calculatePoints(seconds) {
             const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[35,4],[40,3],[60,2],[Infinity,1]];
             return brackets.find(([max]) => seconds <= max)[1];
         }
 
-        function showResults() { /* unchanged */ }
-        function showScreen(screenId) { /* unchanged */ }
-        function shuffle(array) { /* unchanged */ }
-        function screenshotResults() { /* unchanged */ }
-        function saveReport() { /* unchanged */ }
-        function reviewQuestions() { /* unchanged */ }
+        function showResults() {
+            clearInterval(timerInterval);
+            showScreen('resultsScreen');
+            userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
+            
+            document.getElementById('resultSummary').textContent = 
+                `Total Score: ${userData.totalPoints} points (${userData.attempts.filter(a => a.points > 0).length}/${quizData.length} correct)`;
+            
+            const table = document.getElementById('resultsTable');
+            table.innerHTML = `<tr><th>Question</th><th>Time</th><th>Points</th><th>Your Answer</th><th>Correct Answer</th></tr>
+                ${userData.attempts.map(a => `<tr>
+                    <td>${a.question}</td>
+                    <td>${a.time}s</td>
+                    <td>${a.points}</td>
+                    <td>${a.userAnswer}</td>
+                    <td>${a.correctAnswer}</td>
+                </tr>`).join('')}`;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function screenshotResults() {
+            html2canvas(document.querySelector('#resultsScreen')).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'quiz-results.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        function saveReport() {
+            const data = JSON.stringify(userData, null, 2);
+            const blob = new Blob([data], {type: 'application/json'});
+            const link = document.createElement('a');
+            link.download = 'quiz-report.json';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+
+        function reviewQuestions() {
+            currentQuestion = 0;
+            quizData.forEach(q => q.shuffled = null);
+            userData.attempts = [];
+            showScreen('quizScreen');
+            loadQuestion();
+            startTimer();
+        }
     </script>
 </body>
 </html>
