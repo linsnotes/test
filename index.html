@@ -58,6 +58,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         let currentQuestion = 0;
@@ -137,7 +138,12 @@
                 const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
                 return rows.slice(1).map(row => row[0]); // Skip header row
             } catch (error) {
-                alert('Error loading quiz data. Please check Quiz ID');
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error loading quiz data. Please check Quiz ID',
+                    icon: 'error',
+                    confirmButtonColor: '#007bff'
+                });
                 return null;
             }
         }
@@ -145,7 +151,12 @@
         function startBuiltInQuiz() { startQuizFlow(BUILT_IN_SHEET_ID); }
         async function startCustomQuiz() {
             const sheetId = document.getElementById('quizId').value;
-            if (!sheetId) return alert('Please enter Quiz ID');
+            if (!sheetId) return Swal.fire({
+                title: 'Missing Input',
+                text: 'Please enter Quiz ID',
+                icon: 'warning',
+                confirmButtonColor: '#007bff'
+            });
             startQuizFlow(sheetId);
         }
 
@@ -169,7 +180,12 @@
 
         function startQuiz() {
             userData.name = document.getElementById('userName').value.trim();
-            if (!userData.name) return alert('Please enter your name');
+            if (!userData.name) return Swal.fire({
+                title: 'Missing Input',
+                text: 'Please enter your name',
+                icon: 'warning',
+                confirmButtonColor: '#007bff'
+            });
             
             // Set up double-click handlers
             setupDoubleClickHandlers();
@@ -267,7 +283,13 @@
                     }
                 }
                 
-                alert(`Correct! (+${points} points)`);
+                Swal.fire({
+                    title: 'Correct!',
+                    text: `(+${points} points)`,
+                    icon: 'success',
+                    confirmButtonColor: '#007bff',
+                    timer: 1500
+                });
                 if (currentQuestion < quizData.length - 1) {
                     currentQuestion++;
                     pausedAt = 0;
@@ -279,32 +301,49 @@
                 }
             } else {
                 pauseTimer();
-                if (confirm('Wrong! Try again?')) {
-                    resumeTimer();
-                    // Do not reset the question or timer
-                } else {
-                    // User doesn't want to retry, mark as incorrect attempt
-                    userData.attempts.push({
-                        question: currentQuestion + 1,
-                        time: timeSpent,
-                        points: 0,
-                        userAnswer,
-                        correctAnswer: quizData[currentQuestion].correct,
-                        attempts: questionAttempts[currentQuestion].attempts
-                    });
-                    
-                    alert(`Correct answer: ${quizData[currentQuestion].correct}`);
-                    currentQuestion++;
-                    
-                    if (currentQuestion < quizData.length) {
-                        pausedAt = 0;
-                        elapsedTime = 0;
-                        loadQuestion();
-                        startTimer();
+                Swal.fire({
+                    title: 'Wrong!',
+                    text: 'Would you like to try again?',
+                    icon: 'error',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, try again',
+                    cancelButtonText: 'No, next question',
+                    confirmButtonColor: '#007bff',
+                    cancelButtonColor: '#dc3545'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        resumeTimer();
+                        // Do not reset the question or timer
                     } else {
-                        showResults();
+                        // User doesn't want to retry, mark as incorrect attempt
+                        userData.attempts.push({
+                            question: currentQuestion + 1,
+                            time: timeSpent,
+                            points: 0,
+                            userAnswer,
+                            correctAnswer: quizData[currentQuestion].correct,
+                            attempts: questionAttempts[currentQuestion].attempts
+                        });
+                        
+                        Swal.fire({
+                            title: 'Answer',
+                            text: `Correct answer: ${quizData[currentQuestion].correct}`,
+                            icon: 'info',
+                            confirmButtonColor: '#007bff'
+                        }).then(() => {
+                            currentQuestion++;
+                            
+                            if (currentQuestion < quizData.length) {
+                                pausedAt = 0;
+                                elapsedTime = 0;
+                                loadQuestion();
+                                startTimer();
+                            } else {
+                                showResults();
+                            }
+                        });
                     }
-                }
+                });
             }
         }
 
