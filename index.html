@@ -319,7 +319,20 @@
             showScreen('resultsScreen');
             userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
             
-            document.getElementById('resultSummary').textContent = 
+            // Get completion timestamp
+            const completionDate = new Date();
+            const day = completionDate.getDate().toString().padStart(2, '0');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const month = monthNames[completionDate.getMonth()];
+            const year = completionDate.getFullYear();
+            const hours = completionDate.getHours().toString().padStart(2, '0');
+            const minutes = completionDate.getMinutes().toString().padStart(2, '0');
+            const seconds = completionDate.getSeconds().toString().padStart(2, '0');
+            const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`;
+            
+            document.getElementById('resultSummary').innerHTML = 
+                `Name: ${userData.name}<br>` +
+                `Completed: ${completionTimestamp}<br>` +
                 `Total Score: ${userData.totalPoints} points (${userData.attempts.filter(a => a.points > 0).length}/${quizData.length} correct)`;
             
             const table = document.getElementById('resultsTable');
