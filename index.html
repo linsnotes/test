@@ -873,7 +873,8 @@
                         
                         Swal.fire({
                             title: 'Answer',
-                            text: `Correct answer: ${quizData[currentQuestion].correct}`,
+                            html: `<p style="text-align: left; margin-bottom: 8px;">Correct answer:</p> 
+                                  <p style="text-align: left; font-weight: bold;">${quizData[currentQuestion].correct}</p>`,
                             icon: 'info',
                             confirmButtonColor: '#1a73e8'
                         }).then(() => {
