@@ -903,7 +903,8 @@
 
         // Utility functions
         function calculatePoints(seconds) {
-            const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[35,4],[40,3],[60,2],[Infinity,1]];
+            // const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[35,4],[40,3],[60,2],[Infinity,1]];
+            const brackets = [[10,10],[20,9],[30,8],[40,7],[50,6],[60,5],[70,4],[80,3],[90,2],[Infinity,1]];
             return brackets.find(([max]) => seconds <= max)[1];
         }
 
