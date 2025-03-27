@@ -876,7 +876,7 @@
         const data = await loadSheetData(sheetId);
 
         if (data === null) { // Check if loading failed
-            Swal.close(); // Close loading indicator if loadSheetData handled the error popup
+             // Close loading indicator if loadSheetData handled the error popup - Swal.close();
             return; // Stop execution if data loading failed
         }
 
