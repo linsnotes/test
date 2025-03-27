@@ -25,9 +25,16 @@
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius: 0.5rem;
             --transition: all 0.3s ease;
+
+            /* Dark Mode Colors */
+            --background-dark: #121212;
+            --card-dark: #1e1e1e;
+            --text-primary-dark: #ffffff;
+            --text-secondary-dark: #a8a8a8;
+            --border-dark: #333333;
         }
 
-        /* Typography */
+        /* Common Styles */
         body {
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
@@ -35,12 +42,14 @@
             background-color: #f3f4f6;
             color: var(--text-primary);
             line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         h1, h2, h3, h4, h5, h6 {
             font-weight: 600;
             margin-top: 0;
             color: var(--dark);
+            transition: color 0.3s;
         }
 
         h1 {
@@ -51,6 +60,80 @@
         h2 {
             font-size: 1.5rem;
             margin-bottom: 1rem;
+        }
+
+        /* Dark Mode Specific Styles */
+        body.dark-mode {
+            background-color: var(--background-dark);
+            color: var(--text-primary-dark);
+        }
+
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode h5,
+        body.dark-mode h6 {
+            color: var(--text-primary-dark);
+        }
+
+        body.dark-mode .card {
+            background-color: var(--card-dark);
+            box-shadow: none;
+            border: 1px solid var(--border-dark);
+        }
+
+        body.dark-mode .card-header {
+            border-bottom-color: var(--border-dark);
+        }
+
+        body.dark-mode .card-footer {
+            border-top-color: var(--border-dark);
+        }
+
+        body.dark-mode .screen {
+            color: var(--text-primary-dark);
+        }
+
+        body.dark-mode .form-control {
+            background-color: #333;
+            color: var(--text-primary-dark);
+            border-color: var(--border-dark);
+        }
+
+        body.dark-mode .drop-zone {
+            background-color: #333;
+            border-color: #555;
+            color: var(--text-primary-dark);
+        }
+
+        body.dark-mode .drop-zone:hover {
+            border-color: var(--primary); /* Keep primary color for hover state */
+        }
+
+        body.dark-mode .result-summary {
+            background-color: #333;
+            color: var(--text-primary-dark);
+        }
+
+        body.dark-mode .results-table th {
+            background-color: #444;
+            color: var(--text-primary-dark);
+        }
+
+        body.dark-mode .results-table td {
+            border-bottom-color: var(--border-dark);
+            color: var(--text-primary-dark);
+        }
+
+        body.dark-mode .results-table tr:hover td {
+            background-color: #555;
+        }
+
+        body.dark-mode .word-box {
+            background-color: #333;
+            color: var(--text-primary-dark);
+            border-color: var(--border-dark);
         }
 
         /* Layout */
@@ -68,6 +151,11 @@
             padding: 1rem 0;
             border-bottom: 1px solid var(--secondary);
             margin-bottom: 2rem;
+            transition: border-color 0.3s;
+        }
+
+        body.dark-mode .app-header {
+            border-bottom-color: var(--border-dark);
         }
 
         .app-footer {
@@ -77,11 +165,22 @@
             font-size: 0.875rem;
             color: var(--text-secondary);
             border-top: 1px solid var(--secondary);
+            transition: border-color 0.3s, color 0.3s;
         }
-        
+
+        body.dark-mode .app-footer {
+            border-top-color: var(--border-dark);
+            color: var(--text-secondary-dark);
+        }
+
         .app-footer a {
             color: #6b7280; /* Gray color */
             text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        body.dark-mode .app-footer a {
+            color: var(--text-secondary-dark);
         }
 
         /* Cards and Screens */
@@ -104,13 +203,14 @@
             box-shadow: var(--shadow);
             padding: 2rem;
             margin-bottom: 1.5rem;
-            transition: var(--transition);
+            transition: var(--transition), background-color 0.3s, box-shadow 0.3s;
         }
 
         .card-header {
             margin-bottom: 1.5rem;
             border-bottom: 1px solid var(--secondary);
             padding-bottom: 1rem;
+            transition: border-color 0.3s;
         }
 
         .card-title {
@@ -129,6 +229,7 @@
             justify-content: center; /* Center all buttons in card footer */
             flex-wrap: wrap;
             gap: 0.5rem;
+            transition: border-color 0.3s;
         }
 
         /* Form Elements */
@@ -143,7 +244,7 @@
             font-size: 1rem;
             border: 1px solid var(--secondary);
             border-radius: var(--radius);
-            transition: var(--transition);
+            transition: var(--transition), border-color 0.3s, background-color 0.3s, color 0.3s;
         }
 
         .form-control:focus {
@@ -159,7 +260,7 @@
             margin: 0;
             padding: 0.75rem;
         }
-        
+
         /* Fix alignment for the quiz ID container */
         .form-group {
             padding: 0;
@@ -283,7 +384,7 @@
             margin-bottom: 1.5rem;
             background: #f9fafb;
             border-radius: var(--radius);
-            transition: var(--transition);
+            transition: var(--transition), background-color 0.3s, border-color 0.3s, color 0.3s;
         }
 
         .drop-zone:hover {
@@ -295,6 +396,7 @@
             margin-bottom: 0.5rem;
             font-weight: 500;
             color: var(--text-secondary);
+            transition: color 0.3s;
         }
 
         .word-box {
@@ -306,7 +408,7 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
             cursor: move;
             user-select: none;
-            transition: var(--transition);
+            transition: var(--transition), background-color 0.3s, border-color 0.3s, color 0.3s;
             border: 1px solid #e5e7eb;
         }
 
@@ -321,12 +423,23 @@
             border-color: var(--primary);
         }
 
+        .word-box.dropped {
+            animation: dropAnimation 0.3s ease-in-out;
+        }
+
+        @keyframes dropAnimation {
+            0% { transform: scale(1); background-color: rgba(26, 115, 232, 0.1);}
+            50% { transform: scale(1.1); background-color: rgba(26, 115, 232, 0.3); }
+            100% { transform: scale(1); background-color: white; }
+        }
+
         /* Results Screen */
         .result-summary {
             padding: 1.5rem;
             background-color: #f3f4f6;
             border-radius: var(--radius);
             margin-bottom: 1.5rem;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .result-stat {
@@ -358,6 +471,7 @@
             padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid var(--secondary);
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
         }
 
         .results-table th {
@@ -377,6 +491,7 @@
             margin: 1.5rem 0;
             color: var(--text-secondary);
             font-size: 0.875rem;
+            transition: color 0.3s;
         }
 
         .divider::before,
@@ -384,6 +499,7 @@
             content: "";
             flex: 1;
             border-bottom: 1px solid var(--secondary);
+            transition: border-color 0.3s;
         }
 
         .divider::before {
@@ -408,6 +524,60 @@
             height: 100%;
             background-color: var(--primary);
             transition: width 0.3s ease;
+        }
+
+        /* Theme Toggle Styles */
+        .theme-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary);
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
         }
 
         /* Responsive Adjustments */
@@ -445,11 +615,11 @@
             .app-header h1 {
                 margin-bottom: 0.75rem; /* Smaller gap below h1 on mobile */
             }
-            
+
             .card-footer {
                 justify-content: center;
             }
-            
+
             .btn {
                 width: 100%;
                 margin-bottom: 0.5rem;
@@ -466,14 +636,19 @@
 <body>
     <div class="app-container">
         <header class="app-header">
-            <h1><i class="fas fa-puzzle-piece"></i> Language Puzzle</h1>
+            <h1><i class="fas fa-puzzle-piece"></i> <span id="quizTitle">Language Puzzle</span></h1>
+            <label class="theme-toggle">
+                <input type="checkbox" id="themeToggle">
+                <span class="slider"></span>
+            </label>
         </header>
 
         <!-- Landing Screen -->
         <div id="landingScreen" class="screen active">
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Welcome to Language Puzzle</h2>
+                    <h2 class="card-title" id="landingTitle">Welcome to Language Puzzle</h2>
+                    <p id="quizDescription"></p>
                 </div>
                 <div class="card-body">
                     <p>Test your language skills by arranging words in the correct order.</p>
@@ -482,9 +657,9 @@
                             <i class="fas fa-play"></i> Start Built-in Quiz
                         </button>
                     </div>
-                    
+
                     <div class="divider">OR</div>
-                    
+
                     <div class="form-group">
                         <label for="quizId" class="form-label">Have a custom quiz?</label>
                         <p class="form-text" style="margin-top: 0.25rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
@@ -507,6 +682,9 @@
                 <div class="card-header">
                     <h2 class="card-title">Let's Get Started</h2>
                 </div>
+                <div class="quiz-instructions">
+                    <i class="fas fa-info-circle"></i> After you click ‘Start Quiz’, use double-tap or double-click to move words. Dragging works on PC only.
+                </div>
                 <div class="card-body">
                     <div class="form-group">
                         <label for="userName" class="form-label">Enter Your Name</label>
@@ -514,6 +692,9 @@
                     </div>
                 </div>
                 <div class="card-footer">
+                    <button onclick="showScreen('landingScreen')" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
                     <button onclick="startQuiz()" class="btn btn-primary">
                         <i class="fas fa-arrow-right"></i> Start Quiz
                     </button>
@@ -535,7 +716,7 @@
                     <div id="progressBar" class="progress-bar" style="width: 0%"></div>
                 </div>
                 <div class="quiz-instructions">
-                    <i class="fas fa-info-circle"></i> Drag words or double-click them to move between boxes
+                    <i class="fas fa-info-circle"></i> Double-tap (or double-click with a mouse) to move words. Dragging works on PC only.
                 </div>
                 <div class="card-body">
                     <div class="form-group">
@@ -565,7 +746,7 @@
                     <div class="result-summary" id="resultSummary">
                         <!-- Results summary will be inserted here -->
                     </div>
-                    
+
                     <div class="results-table-container">
                         <table id="resultsTable" class="results-table">
                             <!-- Results table will be inserted here -->
@@ -573,6 +754,9 @@
                     </div>
                 </div>
                 <div class="card-footer">
+                    <button onclick="showScreen('landingScreen')" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Back to Home
+                    </button>
                     <button onclick="screenshotResults()" class="btn btn-secondary">
                         <i class="fas fa-camera"></i> Screenshot Results
                     </button>
@@ -585,7 +769,7 @@
 
         <footer class="app-footer">
             <div id="visitor-counter">
-               Welcome! You're visitor #<span id="pageviews">Loading...</span> 
+               Welcome! You're visitor #<span id="pageviews">Loading...</span>
             </div>
             <p><a href="https://linsnotes.com">linsnotes.com</a></p>
         </footer>
@@ -607,6 +791,42 @@
         const BUILT_IN_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII';
         let draggedElement = null;
         let questionAttempts = {};
+        let quizTitle = '';
+        let quizDescription = '';
+
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        // Function to set the theme based on localStorage or system preference
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            } else {
+                body.classList.remove('dark-mode');
+                themeToggle.checked = false;
+            }
+        }
+
+        // Check localStorage for saved theme, otherwise use system preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setTheme('dark');
+        }
+
+        // Event listener for the theme toggle
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        });
 
         // Drag & Drop Functions
         function allowDrop(ev) { ev.preventDefault(); }
@@ -634,8 +854,15 @@
             if (draggedElement) {
                 const afterElement = getDragAfterElement(ev.currentTarget, ev.clientX);
                 const container = ev.currentTarget;
-                if (afterElement) container.insertBefore(draggedElement, afterElement);
-                else container.appendChild(draggedElement);
+                if (afterElement) {
+                    container.insertBefore(draggedElement, afterElement);
+                } else {
+                    container.appendChild(draggedElement);
+                }
+                draggedElement.classList.add('dropped');
+                setTimeout(() => {
+                    draggedElement.classList.remove('dropped');
+                }, 300); // Duration should match the animation duration
             }
         }
         function getDragAfterElement(container, x) {
@@ -643,7 +870,7 @@
             return draggableElements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
                 const offset = x - box.left - box.width / 2;
-                return (offset < 0 && offset > closest.offset) ? 
+                return (offset < 0 && offset > closest.offset) ?
                     { offset: offset, element: child } : closest;
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
@@ -654,12 +881,20 @@
             document.getElementById('wordContainer').addEventListener('dblclick', function(e) {
                 if (e.target.classList.contains('word-box')) {
                     document.getElementById('answerZone').appendChild(e.target);
+                    e.target.classList.add('dropped');
+                    setTimeout(() => {
+                        e.target.classList.remove('dropped');
+                    }, 300); // Duration should match the animation duration
                 }
             });
-            
+
             document.getElementById('answerZone').addEventListener('dblclick', function(e) {
                 if (e.target.classList.contains('word-box')) {
                     document.getElementById('wordContainer').appendChild(e.target);
+                    e.target.classList.add('dropped');
+                    setTimeout(() => {
+                        e.target.classList.remove('dropped');
+                    }, 300); // Duration should match the animation duration
                 }
             });
         }
@@ -671,8 +906,17 @@
                 const response = await fetch(url);
                 const csv = await response.text();
                 const workbook = XLSX.read(csv, {type: 'string'});
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+                // Extract quiz title from A1
+                quizTitle = sheet['A1'] ? sheet['A1'].v : 'Language Puzzle';
+
+                // Extract quiz description from B1 (or leave empty if not present)
+                quizDescription = sheet['B1'] ? sheet['B1'].v : '';
+
+                const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
                 return rows.slice(1).map(row => row[0]); // Skip header row
+
             } catch (error) {
                 Swal.fire({
                     title: 'Error',
@@ -690,7 +934,7 @@
             if (!sheetId) return Swal.fire({
                 title: 'Missing Input',
                 text: 'Please enter Quiz ID',
-                icon: 'warning',
+                                icon: 'warning',
                 confirmButtonColor: '#1a73e8'
             });
             startQuizFlow(sheetId);
@@ -707,23 +951,28 @@
                     Swal.showLoading();
                 }
             });
-            
+
             const data = await loadSheetData(sheetId);
             Swal.close();
-            
+
             if (!data) return;
-            
+
             quizData = data.map(question => ({
                 parts: question.split('#').filter(p => p.trim()),
                 correct: question.replace(/#/g, ''),
                 shuffled: null
             }));
-            
+
             questionAttempts = {};
             quizData.forEach((_, idx) => {
                 questionAttempts[idx] = { attempts: 0, correct: false };
             });
-            
+
+            // Update quiz title and description on the landing screen
+            document.getElementById('quizTitle').textContent = quizTitle;
+            document.getElementById('landingTitle').textContent = quizTitle;
+            document.getElementById('quizDescription').textContent = quizDescription;
+
             showScreen('nameScreen');
         }
 
@@ -735,10 +984,10 @@
                 icon: 'warning',
                 confirmButtonColor: '#1a73e8'
             });
-            
+
             // Set up double-click handlers
             setupDoubleClickHandlers();
-            
+
             showScreen('quizScreen');
             loadQuestion();
             startTimer();
@@ -749,21 +998,21 @@
             if (!question.shuffled) {
                 question.shuffled = shuffle([...question.parts]);
             }
-            
+
             // Update progress bar
             const progressPercentage = (currentQuestion / quizData.length) * 100;
             document.getElementById('progressBar').style.width = `${progressPercentage}%`;
-            
-            document.getElementById('questionNumber').textContent = 
+
+            document.getElementById('questionNumber').textContent =
                 `Question ${currentQuestion + 1} of ${quizData.length}`;
-            
+
             const wordContainer = document.getElementById('wordContainer');
-            wordContainer.innerHTML = question.shuffled.map(word => 
-                `<div class="word-box" draggable="true" 
-                    ondragstart="dragStart(event)" 
+            wordContainer.innerHTML = question.shuffled.map(word =>
+                `<div class="word-box" draggable="true"
+                    ondragstart="dragStart(event)"
                     ondragend="dragEnd(event)">${word}</div>`
             ).join('');
-            
+
             document.getElementById('answerZone').innerHTML = '';
         }
 
@@ -777,10 +1026,10 @@
                 elapsedTime = 0;
                 userData.startTime = Date.now();
             }
-            
+
             timerPaused = false;
             clearInterval(timerInterval);
-            
+
             timerInterval = setInterval(() => {
                 if (!timerPaused) {
                     elapsedTime = Math.floor((Date.now() - userData.startTime) / 1000);
@@ -803,14 +1052,14 @@
             const timeSpent = elapsedTime;
             const userAnswer = [...document.querySelectorAll('#answerZone .word-box')]
                 .map(node => node.textContent).join('');
-            
+
             const isCorrect = userAnswer === quizData[currentQuestion].correct;
             questionAttempts[currentQuestion].attempts++;
-            
+
             if (isCorrect) {
                 questionAttempts[currentQuestion].correct = true;
                 const points = calculatePoints(timeSpent);
-                
+
                 // Only add to userData.attempts if this is the first time it's correct
                 if (!userData.attempts.some(a => a.question === currentQuestion + 1)) {
                     userData.attempts.push({
@@ -835,7 +1084,7 @@
                         };
                     }
                 }
-                
+
                 Swal.fire({
                     title: 'Correct!',
                     text: `(+${points} points)`,
@@ -877,16 +1126,16 @@
                             correctAnswer: quizData[currentQuestion].correct,
                             attempts: questionAttempts[currentQuestion].attempts
                         });
-                        
+
                         Swal.fire({
                             title: 'Answer',
-                            html: `<p style="text-align: left; margin-bottom: 8px;">Correct answer:</p> 
+                            html: `<p style="text-align: left; margin-bottom: 8px;">Correct answer:</p>
                                   <p style="text-align: left; font-weight: bold;">${quizData[currentQuestion].correct}</p>`,
                             icon: 'info',
                             confirmButtonColor: '#1a73e8'
                         }).then(() => {
                             currentQuestion++;
-                            
+
                             if (currentQuestion < quizData.length) {
                                 pausedAt = 0;
                                 elapsedTime = 0;
@@ -912,7 +1161,7 @@
             clearInterval(timerInterval);
             showScreen('resultsScreen');
             userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
-            
+
             // Get completion timestamp
             const completionDate = new Date();
             const day = completionDate.getDate().toString().padStart(2, '0');
@@ -923,7 +1172,7 @@
             const minutes = completionDate.getMinutes().toString().padStart(2, '0');
             const seconds = completionDate.getSeconds().toString().padStart(2, '0');
             const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`;
-            
+
             // Update the resultSummary with improved styling
             document.getElementById('resultSummary').innerHTML = `
                 <div class="result-stat">
@@ -943,7 +1192,7 @@
                     <span><strong>Correct Answers:</strong> ${userData.attempts.filter(a => a.points > 0).length}/${quizData.length}</span>
                 </div>
             `;
-            
+
             const table = document.getElementById('resultsTable');
             table.innerHTML = `
                 <tr>
@@ -970,7 +1219,7 @@
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
-            
+
             // Show/hide header and footer based on screen
             if (screenId === 'quizScreen') {
                 document.querySelector('.app-header').style.display = 'none';
@@ -1000,14 +1249,14 @@
                     Swal.showLoading();
                 }
             });
-            
+
             html2canvas(document.querySelector('#resultsScreen')).then(canvas => {
                 Swal.close();
                 const link = document.createElement('a');
                 link.download = 'quiz-results.png';
                 link.href = canvas.toDataURL();
                 link.click();
-                
+
                 Swal.fire({
                     title: 'Success!',
                     text: 'Your results have been saved as an image',
