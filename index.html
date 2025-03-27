@@ -78,7 +78,7 @@
         color: var(--text-secondary);
         border-top: 1px solid var(--secondary);
     }
-    
+
     .app-footer a {
         color: #6b7280; /* Gray color */
         text-decoration: none;
@@ -159,7 +159,7 @@
         margin: 0;
         padding: 0.75rem;
     }
-    
+
     /* Fix alignment for the quiz ID container */
     .form-group {
         padding: 0;
@@ -456,11 +456,11 @@
         .app-header h1 {
             margin-bottom: 0.75rem; /* Smaller gap below h1 on mobile */
         }
-        
+
         .card-footer {
             justify-content: center;
         }
-        
+
         .btn {
             width: 100%;
             margin-bottom: 0.5rem;
@@ -530,6 +530,11 @@
                 </div>
             </div>
             <div class="card-footer">
+                 <!-- ADDED Start Built-in Quiz Button -->
+                <button onclick="startSelectedQuiz()" class="btn btn-primary">
+                    <i class="fas fa-play-circle"></i> Start Built-in Quiz
+                </button>
+                <!-- End ADDED Button -->
                 <button onclick="startCustomQuiz()" class="btn btn-secondary">
                     <i class="fas fa-file-import"></i> Start Custom Quiz
                 </button>
@@ -644,10 +649,11 @@
     let timerPaused = false;
     let elapsedTime = 0;
     let pausedAt = 0;
-    const DEFAULT_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII'; // Default sheet id
+    const DEFAULT_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII'; // Default sheet id for quiz list
+    const QUIZ_LIST_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII'; // Explicitly define quiz list sheet ID
     let questionAttempts = {};
     let quizTitlesAndIds = [];
-    let currentSheetId = DEFAULT_SHEET_ID; // Track the current sheet ID
+    let currentSheetId = ''; // Track the current sheet ID, start empty
 
     // Initialize SortableJS instances
     let sortableWordContainer;
@@ -719,51 +725,92 @@
         try {
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
             const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const csv = await response.text();
             const workbook = XLSX.read(csv, {type: 'string'});
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
-            return rows.slice(1).map(row => row[0]); // Skip header row
+            const sheetName = workbook.SheetNames[0];
+            if (!sheetName) {
+                 throw new Error('No sheet found in the workbook.');
+            }
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
+            // Ensure rows is an array and has data
+             if (!Array.isArray(rows) || rows.length <= 1) {
+                console.warn('Sheet is empty or has only a header row.');
+                return []; // Return empty array if no data after header
+            }
+            return rows.slice(1).map(row => row[0]).filter(cell => cell != null && cell.trim() !== ''); // Skip header row and filter out empty/null cells
+
         } catch (error) {
+            console.error('Error loading sheet data:', error);
             Swal.fire({
-                title: 'Error',
-                text: 'Error loading quiz data. Please check Quiz ID',
+                title: 'Error Loading Quiz',
+                text: `Could not load quiz data. Please check the Quiz ID [${sheetId}] or network connection. Details: ${error.message}`,
                 icon: 'error',
                 confirmButtonColor: '#1a73e8'
             });
-            return null;
+            return null; // Return null to indicate failure
         }
     }
 
     // Load Quiz Titles and IDs from Google Sheet
     async function loadQuizTitlesAndIds() {
         try {
-            const sheetId = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII'; // Replace with YOUR Google Sheet ID
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+            const url = `https://docs.google.com/spreadsheets/d/${QUIZ_LIST_SHEET_ID}/export?format=csv`;
             const response = await fetch(url);
+             if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const csv = await response.text();
             const workbook = XLSX.read(csv, {type: 'string'});
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+            const sheetName = workbook.SheetNames[0];
+            if (!sheetName) {
+                 throw new Error('No sheet found in the workbook for quiz list.');
+            }
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
 
-            quizTitlesAndIds = rows.slice(1).map(row => ({
-                title: row[0],
-                id: row[1]
-            }));
+            quizTitlesAndIds = rows.slice(1) // Skip header
+                                  .map(row => ({ title: row[0], id: row[1] }))
+                                  .filter(quiz => quiz.title && quiz.id); // Ensure both title and id exist
 
             populateQuizSelect();
         } catch (error) {
             console.error('Error loading quiz titles:', error);
             Swal.fire({
                 title: 'Error',
-                text: 'Error loading quiz list. Using default quiz.',
+                text: `Could not load the list of available quizzes. Details: ${error.message}`,
                 icon: 'error',
                 confirmButtonColor: '#1a73e8'
             });
+             // Optionally disable the dropdown and built-in quiz button if list fails to load
+            document.getElementById('quizSelect').disabled = true;
+            document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = true;
         }
     }
 
     function populateQuizSelect() {
         const selectElement = document.getElementById('quizSelect');
         selectElement.innerHTML = ''; // Clear existing options
+
+        if (quizTitlesAndIds.length === 0) {
+             const option = document.createElement('option');
+             option.textContent = "No quizzes available";
+             option.disabled = true;
+             selectElement.appendChild(option);
+             selectElement.disabled = true; // Disable select if empty
+             document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = true; // Disable button
+             return;
+        }
+
+        // Add a default prompt option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = "";
+        defaultOption.textContent = "-- Select a Quiz --";
+        defaultOption.disabled = true; // Make it non-selectable
+        defaultOption.selected = true; // Make it the default display
+        selectElement.appendChild(defaultOption);
+
 
         quizTitlesAndIds.forEach(quiz => {
             const option = document.createElement('option');
@@ -772,20 +819,45 @@
             selectElement.appendChild(option);
         });
 
+        // Set the initial currentSheetId to the first available quiz ID if any, otherwise keep it empty
+        // currentSheetId = quizTitlesAndIds.length > 0 ? quizTitlesAndIds[0].id : '';
+        currentSheetId = ''; // Start with no selection
+
         // Add event listener to the select element to update currentSheetId
         selectElement.addEventListener('change', function() {
             currentSheetId = this.value; // Update currentSheetId when the selection changes
+            // Enable the "Start Built-in Quiz" button only when a valid quiz is selected
+            document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = !this.value;
         });
+
+        // Initially disable the button until a selection is made
+        document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = true;
     }
 
+    // ADDED function to start quiz from dropdown selection
+    function startSelectedQuiz() {
+        if (!currentSheetId) {
+             Swal.fire({
+                title: 'No Quiz Selected',
+                text: 'Please select a quiz from the dropdown list.',
+                icon: 'warning',
+                confirmButtonColor: '#1a73e8'
+            });
+            return;
+        }
+        startQuizFlow(currentSheetId);
+    }
+
+
     async function startCustomQuiz() {
-        const sheetId = document.getElementById('quizId').value;
+        const sheetId = document.getElementById('quizId').value.trim(); // Trim whitespace
         if (!sheetId) return Swal.fire({
             title: 'Missing Input',
-            text: 'Please enter Quiz ID',
+            text: 'Please enter a Custom Quiz ID.',
             icon: 'warning',
             confirmButtonColor: '#1a73e8'
         });
+        currentSheetId = sheetId; // Update currentSheetId for custom quiz as well
         startQuizFlow(sheetId);
     }
 
@@ -802,20 +874,62 @@
         });
 
         const data = await loadSheetData(sheetId);
-        Swal.close();
 
-        if (!data) return;
+        if (data === null) { // Check if loading failed
+            Swal.close(); // Close loading indicator if loadSheetData handled the error popup
+            return; // Stop execution if data loading failed
+        }
 
-        quizData = data.map(question => ({
-            parts: question.split('#').filter(p => p.trim()),
-            correct: question.replace(/#/g, ''),
-            shuffled: null
-        }));
+        if (!data || data.length === 0) {
+             Swal.close();
+             Swal.fire({
+                title: 'Empty Quiz',
+                text: 'The selected quiz appears to be empty or could not be loaded correctly.',
+                icon: 'warning',
+                confirmButtonColor: '#1a73e8'
+            });
+            return; // Stop if quiz data is empty
+        }
+
+
+        quizData = data.map(question => {
+            // Ensure question is a string before splitting
+            const questionText = String(question || '');
+            return {
+                parts: questionText.split('#').map(p => p.trim()).filter(p => p), // Trim parts and filter empty ones
+                correct: questionText.replace(/#/g, ' ').trim(), // Replace # with space and trim
+                shuffled: null
+            };
+        }).filter(q => q.parts.length > 0); // Filter out questions that became empty
+
+        if (quizData.length === 0) {
+             Swal.close();
+             Swal.fire({
+                title: 'Invalid Quiz Data',
+                text: 'No valid questions found in the loaded quiz data.',
+                icon: 'warning',
+                confirmButtonColor: '#1a73e8'
+            });
+            return;
+        }
+
+        Swal.close(); // Close loading indicator *after* processing data
 
         questionAttempts = {};
         quizData.forEach((_, idx) => {
             questionAttempts[idx] = { attempts: 0, correct: false };
         });
+
+        // Reset quiz state
+        currentQuestion = 0;
+        userData.attempts = [];
+        userData.totalPoints = 0;
+        pausedAt = 0;
+        elapsedTime = 0;
+        // Clear previous results if any
+        document.getElementById('resultSummary').innerHTML = '';
+        document.getElementById('resultsTable').innerHTML = '';
+
 
         showScreen('nameScreen');
     }
@@ -838,43 +952,67 @@
     }
 
     function loadQuestion() {
+        // Ensure currentQuestion is within bounds
+        if (currentQuestion >= quizData.length) {
+            console.error("Attempted to load question beyond quiz length.");
+            showResults(); // Go to results if out of questions
+            return;
+        }
+
         const question = quizData[currentQuestion];
         if (!question.shuffled) {
             question.shuffled = shuffle([...question.parts]);
         }
 
         // Update progress bar
-        const progressPercentage = (currentQuestion / quizData.length) * 100;
+        const progressPercentage = ((currentQuestion + 1) / quizData.length) * 100;
         document.getElementById('progressBar').style.width = `${progressPercentage}%`;
 
         document.getElementById('questionNumber').textContent =
             `Question ${currentQuestion + 1} of ${quizData.length}`;
 
         const wordContainer = document.getElementById('wordContainer');
-        wordContainer.innerHTML = question.shuffled.map(word =>
-            `<div class="word-box">${word}</div>`
-        ).join('');
+        // Clear previous words carefully if using SortableJS
+        while (wordContainer.firstChild) {
+            wordContainer.removeChild(wordContainer.firstChild);
+        }
+        question.shuffled.forEach(word => {
+             const wordBox = document.createElement('div');
+             wordBox.className = 'word-box';
+             wordBox.textContent = word;
+             wordContainer.appendChild(wordBox);
+        });
 
-        // Clear answer zone
-        document.getElementById('answerZone').innerHTML = '';
+
+        // Clear answer zone carefully if using SortableJS
+         const answerZone = document.getElementById('answerZone');
+         while (answerZone.firstChild) {
+            answerZone.removeChild(answerZone.firstChild);
+        }
+
+        // Re-enable confirm button if it was disabled
+        document.querySelector('#quizScreen .btn-primary').disabled = false;
     }
 
     function startTimer() {
+        clearInterval(timerInterval); // Clear any existing interval first
         if (pausedAt > 0) {
             // Resume timer
-            elapsedTime = pausedAt;
+            userData.startTime = Date.now() - (pausedAt * 1000); // Adjust start time based on paused duration
+            elapsedTime = pausedAt; // Restore elapsed time
             pausedAt = 0;
         } else {
             // Start new timer
-            elapsedTime = 0;
             userData.startTime = Date.now();
+            elapsedTime = 0; // Reset elapsed time for new question/start
         }
 
+        document.getElementById('timer').textContent = elapsedTime; // Update display immediately
         timerPaused = false;
-        clearInterval(timerInterval);
 
         timerInterval = setInterval(() => {
             if (!timerPaused) {
+                // Calculate elapsed time based on the difference from the start time
                 elapsedTime = Math.floor((Date.now() - userData.startTime) / 1000);
                 document.getElementById('timer').textContent = elapsedTime;
             }
@@ -882,139 +1020,152 @@
     }
 
     function pauseTimer() {
-        timerPaused = true;
-        pausedAt = elapsedTime;
+        if (!timerPaused) { // Only pause if not already paused
+            timerPaused = true;
+            pausedAt = elapsedTime; // Store the current elapsed time when paused
+            // No need to clear interval here, just stop updating elapsedTime
+        }
     }
 
     function resumeTimer() {
-        timerPaused = false;
-        userData.startTime = Date.now() - (pausedAt * 1000);
+         if (timerPaused) { // Only resume if paused
+            timerPaused = false;
+            // Adjust startTime based on how long it was paused
+            userData.startTime = Date.now() - (pausedAt * 1000);
+            // The interval continues running, it will pick up the correct time difference
+        }
     }
 
    function checkAnswer() {
-        const timeSpent = elapsedTime;
-        const userAnswer = [...document.querySelectorAll('#answerZone .word-box')]
-            .map(node => node.textContent).join('');
+        // Disable button to prevent multiple submissions
+        const confirmButton = document.querySelector('#quizScreen .btn-primary');
+        confirmButton.disabled = true;
 
-        const isCorrect = userAnswer === quizData[currentQuestion].correct;
-        questionAttempts[currentQuestion].attempts++;
+        pauseTimer(); // Pause timer while checking/showing feedback
 
-        // Clear previous correct/incorrect styles
-        document.querySelectorAll('.word-box').forEach(box => {
+        const timeSpent = elapsedTime; // Use the time when paused
+        const answerZone = document.getElementById('answerZone');
+        const userAnswerWords = [...answerZone.querySelectorAll('.word-box')]
+                                .map(node => node.textContent.trim());
+        const userAnswer = userAnswerWords.join(' ');
+
+        const currentQuizItem = quizData[currentQuestion];
+        const correctAnswer = currentQuizItem.correct;
+
+        const isCorrect = userAnswer === correctAnswer;
+        const currentAttemptRecord = questionAttempts[currentQuestion];
+        currentAttemptRecord.attempts++;
+
+        // Clear previous correct/incorrect styles from answer zone only
+        answerZone.querySelectorAll('.word-box').forEach(box => {
             box.classList.remove('correct', 'incorrect');
         });
 
+        // Find the attempt index if it exists
+        let attemptIndex = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
+
         if (isCorrect) {
-            questionAttempts[currentQuestion].correct = true;
+            currentAttemptRecord.correct = true;
             const points = calculatePoints(timeSpent);
 
-            // Only add to userData.attempts if this is the first time it's correct
-            if (!userData.attempts.some(a => a.question === currentQuestion + 1)) {
-                userData.attempts.push({
-                    question: currentQuestion + 1,
-                    time: timeSpent,
-                    points,
-                    userAnswer,
-                    correctAnswer: quizData[currentQuestion].correct,
-                    attempts: questionAttempts[currentQuestion].attempts
-                });
+            const attemptData = {
+                question: currentQuestion + 1,
+                time: timeSpent,
+                points,
+                userAnswer,
+                correctAnswer,
+                attempts: currentAttemptRecord.attempts
+            };
+
+            // Add or update the attempt in userData
+            if (attemptIndex === -1) {
+                userData.attempts.push(attemptData);
             } else {
-                // Update the existing attempt with the new data
-                const idx = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
-                if (idx !== -1) {
-                    userData.attempts[idx] = {
-                        question: currentQuestion + 1,
-                        time: timeSpent,
-                        points,
-                        userAnswer,
-                        correctAnswer: quizData[currentQuestion].correct,
-                        attempts: questionAttempts[currentQuestion].attempts
-                    };
-                }
+                // Update only if this new correct attempt is better (e.g., fewer attempts, though logic might vary)
+                // For simplicity, let's just update with the latest correct info
+                 userData.attempts[attemptIndex] = attemptData;
             }
+
 
             Swal.fire({
                 title: 'Correct!',
                 text: `(+${points} points)`,
                 icon: 'success',
                 confirmButtonColor: '#1a73e8',
-                timer: 1500
-            });
-            if (currentQuestion < quizData.length - 1) {
-                currentQuestion++;
-                pausedAt = 0;
-                elapsedTime = 0;
-                loadQuestion();
-                startTimer();
-            } else {
-                showResults();
-            }
-        } else {
-            pauseTimer();
-
-            // Get the correct answer and split it into words
-            const correctAnswerWords = quizData[currentQuestion].correct.split(' ');
-
-            // Get the user's answer words
-            const userAnswerWords = userAnswer.split(' ');
-
-            // Iterate through the words and add the correct/incorrect classes
-            const allWordBoxes = document.querySelectorAll('#answerZone .word-box');
-
-            allWordBoxes.forEach((box, index) => {
-                if (index < correctAnswerWords.length) {
-                    if (box.textContent === correctAnswerWords[index]) {
-                        box.classList.add('correct');
-                    } else {
-                        box.classList.add('incorrect');
-                    }
+                timer: 1500,
+                timerProgressBar: true,
+                allowOutsideClick: false // Prevent dismissal until timer runs out or manually closed
+            }).then(() => {
+                // Move to next question or results
+                if (currentQuestion < quizData.length - 1) {
+                    currentQuestion++;
+                    pausedAt = 0; // Reset pause state for next question
+                    loadQuestion();
+                    startTimer(); // Restart timer for the new question
                 } else {
-                    box.classList.add('incorrect'); // Mark extra words as incorrect
+                    showResults();
                 }
             });
 
+        } else { // Incorrect Answer
+             // Add visual feedback for incorrect words
+            const correctAnswerWords = correctAnswer.split(' ');
+            answerZone.querySelectorAll('.word-box').forEach((box, index) => {
+                 if (index < correctAnswerWords.length && box.textContent.trim() === correctAnswerWords[index]) {
+                    // Correct word in the correct position (though overall answer is wrong) - optional styling
+                    // box.classList.add('correct'); // Maybe confusing, stick to just 'incorrect' for wrong answers
+                 } else {
+                    box.classList.add('incorrect');
+                 }
+             });
+
+            // Record the incorrect attempt if it's the first attempt or if no correct answer recorded yet
+             if (attemptIndex === -1 || userData.attempts[attemptIndex].points === 0) {
+                 const attemptData = {
+                    question: currentQuestion + 1,
+                    time: timeSpent,
+                    points: 0, // Incorrect answer gets 0 points
+                    userAnswer,
+                    correctAnswer,
+                    attempts: currentAttemptRecord.attempts
+                 };
+                 if (attemptIndex === -1) {
+                    userData.attempts.push(attemptData);
+                 } else {
+                    userData.attempts[attemptIndex] = attemptData; // Update existing incorrect attempt record
+                 }
+             }
+
+
             Swal.fire({
-                title: 'Wrong!',
-                text: 'Would you like to try again?',
+                title: 'Incorrect!',
+                html: `Would you like to try again?<br><small>Correct Answer: ${correctAnswer}</small>`, // Show correct answer immediately
                 icon: 'error',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, try again',
-                cancelButtonText: 'No, next question',
+                confirmButtonText: 'Try Again',
+                cancelButtonText: 'Next Question',
                 confirmButtonColor: '#1a73e8',
-                cancelButtonColor: '#ef4444'
+                cancelButtonColor: '#ef4444',
+                allowOutsideClick: false
             }).then((result) => {
                 if (result.isConfirmed) {
-                    resumeTimer();
-                    // Do not reset the question or timer
+                    // User wants to try again
+                    resumeTimer(); // Resume timer
+                    // Clear feedback styles before retry
+                     answerZone.querySelectorAll('.word-box').forEach(box => {
+                         box.classList.remove('correct', 'incorrect');
+                     });
+                    confirmButton.disabled = false; // Re-enable button for retry
                 } else {
-                    // User doesn't want to retry, mark as incorrect attempt
-                    userData.attempts.push({
-                        question: currentQuestion + 1,
-                        time: timeSpent,
-                        points: 0,
-                        userAnswer,
-                        correctAnswer: quizData[currentQuestion].correct,
-                        attempts: questionAttempts[currentQuestion].attempts
-                    });
-
-                    Swal.fire({
-                        title: 'Answer',
-                        html: `<p style="text-align: left; margin-bottom: 8px;">Correct answer:</p>
-                              <p style="text-align: left; font-weight: bold;">${quizData[currentQuestion].correct}</p>`,
-                        icon: 'info',
-                        confirmButtonColor: '#1a73e8'
-                    }).then(() => {
+                    // User wants to move to the next question
+                    if (currentQuestion < quizData.length - 1) {
                         currentQuestion++;
-
-                        if (currentQuestion < quizData.length) {
-                            pausedAt = 0;
-                            elapsedTime = 0;
-                            loadQuestion();
-                            startTimer();
-                        } else {
-                            showResults();
-                        }
-                    });
+                        pausedAt = 0; // Reset pause state
+                        loadQuestion();
+                        startTimer(); // Restart timer for new question
+                    } else {
+                        showResults(); // End of quiz
+                    }
                 }
             });
         }
@@ -1024,18 +1175,26 @@
     function calculatePoints(seconds) {
         // const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[35,4],[40,3],[60,2],[Infinity,1]];
         const brackets = [[10,10],[20,9],[30,8],[40,7],[50,6],[60,5],[70,4],[80,3],[90,2],[Infinity,1]];
-        return brackets.find(([max]) => seconds <= max)[1];
+        for (const [max, points] of brackets) {
+            if (seconds <= max) {
+                return points;
+            }
+        }
+        return 0; // Should not happen with Infinity, but good practice
     }
 
     function showResults() {
-        clearInterval(timerInterval);
+        clearInterval(timerInterval); // Ensure timer is stopped
         showScreen('resultsScreen');
+
+        // Calculate total points based on the LATEST recorded points for each question attempt
         userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
+        const correctCount = userData.attempts.filter(a => a.points > 0).length;
 
         // Get completion timestamp
         const completionDate = new Date();
         const day = completionDate.getDate().toString().padStart(2, '0');
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const month = monthNames[completionDate.getMonth()];
         const year = completionDate.getFullYear();
         const hours = completionDate.getHours().toString().padStart(2, '0');
@@ -1047,7 +1206,7 @@
         document.getElementById('resultSummary').innerHTML = `
             <div class="result-stat">
                 <i class="fas fa-user"></i>
-                <span><strong>Name:</strong> ${userData.name}</span>
+                <span><strong>Name:</strong> ${userData.name || 'N/A'}</span>
             </div>
             <div class="result-stat">
                 <i class="fas fa-calendar-check"></i>
@@ -1058,46 +1217,82 @@
                 <span><strong>Total Score:</strong> ${userData.totalPoints} points</span>
             </div>
             <div class="result-stat">
-                <i class="fas fa-check-circle"></i>
-                <span><strong>Correct Answers:</strong> ${userData.attempts.filter(a => a.points > 0).length}/${quizData.length}</span>
+                <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                <span><strong>Correct Answers:</strong> ${correctCount} / ${quizData.length}</span>
             </div>
         `;
 
         const table = document.getElementById('resultsTable');
-        table.innerHTML = `
-            <tr>
-                <th>Question</th>
-                <th>Time</th>
-                <th>Points</th>
-                <th>Attempts</th>
-                <th>Your Answer</th>
-                <th>Correct Answer</th>
-            </tr>
-            ${userData.attempts.map(a => `
+        // Ensure header is always present
+        let tableHTML = `
+            <thead>
                 <tr>
-                    <td>${a.question}</td>
-                    <td>${a.time}s</td>
-                    <td>${a.points}</td>
-                    <td>${a.attempts}</td>
-                    <td>${a.userAnswer}</td>
-                    <td>${a.correctAnswer}</td>
+                    <th>#</th>
+                    <th>Time (s)</th>
+                    <th>Points</th>
+                    <th>Attempts</th>
+                    <th>Your Answer</th>
+                    <th>Correct Answer</th>
                 </tr>
-            `).join('')}
-        `;
+            </thead>
+            <tbody>`;
+
+        // Populate table rows - create rows for ALL questions, even if not attempted/skipped incorrectly
+         for (let i = 0; i < quizData.length; i++) {
+            const questionNum = i + 1;
+            const attempt = userData.attempts.find(a => a.question === questionNum);
+            if (attempt) {
+                 // Highlight correct vs incorrect rows subtly
+                 const rowClass = attempt.points > 0 ? 'table-success' : 'table-danger-light';
+                 tableHTML += `
+                    <tr class="${rowClass}">
+                        <td>${attempt.question}</td>
+                        <td>${attempt.time}</td>
+                        <td>${attempt.points}</td>
+                        <td>${attempt.attempts}</td>
+                        <td style="color: ${attempt.points > 0 ? 'inherit' : 'var(--danger)'};">${attempt.userAnswer || 'N/A'}</td>
+                        <td>${attempt.correctAnswer}</td>
+                    </tr>
+                 `;
+            } else {
+                 // Question likely skipped or not reached if quiz ended early
+                 tableHTML += `
+                    <tr>
+                        <td>${questionNum}</td>
+                        <td>-</td>
+                        <td>0</td>
+                        <td>${questionAttempts[i]?.attempts || 0}</td>
+                        <td>Not Answered</td>
+                        <td>${quizData[i].correct}</td>
+                    </tr>
+                 `;
+            }
+        }
+
+        tableHTML += `</tbody>`;
+        table.innerHTML = tableHTML;
+
+         // Add some light styling for success/danger rows if needed in CSS
+         // e.g., .table-success td { background-color: rgba(16, 185, 129, 0.1); }
+         //       .table-danger-light td { background-color: rgba(239, 68, 68, 0.05); }
     }
 
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
+        const targetScreen = document.getElementById(screenId);
+        if (targetScreen) {
+             targetScreen.classList.add('active');
+        } else {
+             console.error(`Screen with ID ${screenId} not found.`);
+             // Optionally default to landing screen
+             document.getElementById('landingScreen').classList.add('active');
+        }
+
 
         // Show/hide header and footer based on screen
-        if (screenId === 'quizScreen') {
-            document.querySelector('.app-header').style.display = 'none';
-            document.querySelector('.app-footer').style.display = 'none';
-        } else {
-            document.querySelector('.app-header').style.display = 'block';
-            document.querySelector('.app-footer').style.display = 'block';
-        }
+        const showHeaderFooter = (screenId !== 'quizScreen');
+        document.querySelector('.app-header').style.display = showHeaderFooter ? 'block' : 'none';
+        document.querySelector('.app-footer').style.display = showHeaderFooter ? 'block' : 'none';
     }
 
     function shuffle(array) {
@@ -1120,46 +1315,75 @@
             }
         });
 
-        html2canvas(document.querySelector('#resultsScreen')).then(canvas => {
+        const resultsElement = document.querySelector('#resultsScreen .card'); // Target the card for better framing
+
+        html2canvas(resultsElement, {
+             scale: 2, // Increase resolution for better quality
+             useCORS: true // If any external images/fonts are used indirectly
+             }).then(canvas => {
             Swal.close();
             const link = document.createElement('a');
-            link.download = 'quiz-results.png';
-            link.href = canvas.toDataURL();
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            link.download = `LanguagePuzzle-Results-${userData.name || 'User'}-${timestamp}.png`;
+            link.href = canvas.toDataURL("image/png"); // Use PNG for better quality
             link.click();
 
             Swal.fire({
                 title: 'Success!',
-                text: 'Your results have been saved as an image',
+                text: 'Your results screenshot has been downloaded.',
                 icon: 'success',
                 confirmButtonColor: '#1a73e8',
             });
+        }).catch(err => {
+             Swal.close();
+             console.error("Screenshot error:", err);
+             Swal.fire({
+                title: 'Error',
+                text: 'Could not generate screenshot.',
+                icon: 'error',
+                confirmButtonColor: '#1a73e8',
+             });
         });
     }
 
     function reviewQuestions() {
         Swal.fire({
             title: 'Try Again?',
-            text: 'You are about to restart the quiz. Your current progress will be reset.',
+            text: 'Do you want to restart the same quiz? Your previous results for this session will be cleared.',
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Yes, restart',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: 'Yes, Restart Quiz',
+            cancelButtonText: 'No, Go Home',
             confirmButtonColor: '#1a73e8',
-            cancelButtonColor: '#6b7280'
+            cancelButtonColor: '#6b7280',
+            reverseButtons: true // Puts 'Yes' on the right
         }).then((result) => {
             if (result.isConfirmed) {
-                currentQuestion = 0;
-                quizData.forEach(q => q.shuffled = null);
-                userData.attempts = [];
-                questionAttempts = {};
-                quizData.forEach((_, idx) => {
-                    questionAttempts[idx] = { attempts: 0, correct: false };
-                });
-                pausedAt = 0;
-                elapsedTime = 0;
-                showScreen('quizScreen');
-                loadQuestion();
-                startTimer();
+                // Restart the same quiz using the stored currentSheetId
+                if (!currentSheetId) {
+                     Swal.fire("Error", "Cannot determine which quiz to restart.", "error");
+                     showScreen('landingScreen'); // Go back home if ID is lost
+                     return;
+                }
+                // Re-use startQuizFlow to reset and load, then go to name screen again
+                 startQuizFlow(currentSheetId);
+                 // Note: startQuizFlow now handles resetting state and goes to nameScreen
+
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                 // User clicked 'No, Go Home'
+                 // Reset necessary states before going home
+                 currentQuestion = 0;
+                 quizData = [];
+                 userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 };
+                 timerInterval = null;
+                 pausedAt = 0;
+                 elapsedTime = 0;
+                 currentSheetId = ''; // Clear selected sheet ID
+                 document.getElementById('quizId').value = ''; // Clear custom ID input
+                 document.getElementById('quizSelect').selectedIndex = 0; // Reset dropdown
+                 document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = true; // Disable built-in start button again
+
+                 showScreen('landingScreen'); // Go back to the beginning
             }
         });
     }
