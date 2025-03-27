@@ -8,33 +8,26 @@
     <meta http-equiv="Expires" content="0">
     <title>Language Puzzle</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-    /* Base Styles */
-    :root {
-        --primary: #1a73e8; /* Modern blue color (Google style) */
-        --primary-hover: #0b5fdb; /* Darker shade for hover */
-        --secondary: #e5e7eb;
-        --accent: #8b5cf6;
-        --text-primary: #1f2937;
-        --text-secondary: #6b7280;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --light: #f9fafb;
-        --dark: #111827;
-        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --radius: 0.5rem;
-        --transition: all 0.3s ease;
-
-        /* Dark Mode Colors */
-        --background-dark: #121212;
-        --card-dark: #1e1e1e;
-        --text-primary-dark: #ffffff;
-        --text-secondary-dark: #a8a8a8;
-        --border-dark: #333333;
-    }
-
-    /* Common Styles */
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.css"> <!-- SortableJS -->
+    <style>
+        /* Base Styles (Same as your original CSS, but repeated for clarity) */
+        :root {
+            --primary: #1a73e8; /* Modern blue color (Google style) */
+            --primary-hover: #0b5fdb; /* Darker shade for hover */
+            --secondary: #e5e7eb;
+            --accent: #8b5cf6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --light: #f9fafb;
+            --dark: #111827;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 0.5rem;
+            --transition: all 0.3s ease;
+        }
+/* Typography */
     body {
         font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         margin: 0;
@@ -42,14 +35,12 @@
         background-color: #f3f4f6;
         color: var(--text-primary);
         line-height: 1.5;
-        transition: background-color 0.3s, color 0.3s;
     }
 
     h1, h2, h3, h4, h5, h6 {
         font-weight: 600;
         margin-top: 0;
         color: var(--dark);
-        transition: color 0.3s;
     }
 
     h1 {
@@ -60,80 +51,6 @@
     h2 {
         font-size: 1.5rem;
         margin-bottom: 1rem;
-    }
-
-    /* Dark Mode Specific Styles */
-    body.dark-mode {
-        background-color: var(--background-dark);
-        color: var(--text-primary-dark);
-    }
-
-    body.dark-mode h1,
-    body.dark-mode h2,
-    body.dark-mode h3,
-    body.dark-mode h4,
-    body.dark-mode h5,
-    body.dark-mode h6 {
-        color: var(--text-primary-dark);
-    }
-
-    body.dark-mode .card {
-        background-color: var(--card-dark);
-        box-shadow: none;
-        border: 1px solid var(--border-dark);
-    }
-
-    body.dark-mode .card-header {
-        border-bottom-color: var(--border-dark);
-    }
-
-    body.dark-mode .card-footer {
-        border-top-color: var(--border-dark);
-    }
-
-    body.dark-mode .screen {
-        color: var(--text-primary-dark);
-    }
-
-    body.dark-mode .form-control {
-        background-color: #333;
-        color: var(--text-primary-dark);
-        border-color: var(--border-dark);
-    }
-
-    body.dark-mode .drop-zone {
-        background-color: #333;
-        border-color: #555;
-        color: var(--text-primary-dark);
-    }
-
-    body.dark-mode .drop-zone:hover {
-        border-color: var(--primary); /* Keep primary color for hover state */
-    }
-
-    body.dark-mode .result-summary {
-        background-color: #333;
-        color: var(--text-primary-dark);
-    }
-
-    body.dark-mode .results-table th {
-        background-color: #444;
-        color: var(--text-primary-dark);
-    }
-
-    body.dark-mode .results-table td {
-        border-bottom-color: var(--border-dark);
-        color: var(--text-primary-dark);
-    }
-
-    body.dark-mode .results-table tr:hover td {
-        background-color: #555;
-    }
-
-    body.dark-mode .word-box {
-        background-color: #333;
-        color: var(--text-primary-dark);
-        border-color: var(--border-dark);
     }
 
     /* Layout */
@@ -147,17 +64,10 @@
     }
 
     .app-header {
-        display: flex;  /* ADDED: Flexbox for layout */
-        align-items: center; /* ADDED: Vertical alignment */
-        justify-content: space-between; /* ADDED: Space out title and toggle */
+        text-align: center;
         padding: 1rem 0;
         border-bottom: 1px solid var(--secondary);
         margin-bottom: 2rem;
-        transition: border-color 0.3s;
-    }
-
-    body.dark-mode .app-header {
-        border-bottom-color: var(--border-dark);
     }
 
     .app-footer {
@@ -167,22 +77,11 @@
         font-size: 0.875rem;
         color: var(--text-secondary);
         border-top: 1px solid var(--secondary);
-        transition: border-color 0.3s, color 0.3s;
     }
-
-    body.dark-mode .app-footer {
-        border-top-color: var(--border-dark);
-        color: var(--text-secondary-dark);
-    }
-
+    
     .app-footer a {
         color: #6b7280; /* Gray color */
         text-decoration: none;
-        transition: color 0.3s;
-    }
-
-    body.dark-mode .app-footer a {
-        color: var(--text-secondary-dark);
     }
 
     /* Cards and Screens */
@@ -205,14 +104,13 @@
         box-shadow: var(--shadow);
         padding: 2rem;
         margin-bottom: 1.5rem;
-        transition: var(--transition), background-color 0.3s, box-shadow 0.3s;
+        transition: var(--transition);
     }
 
     .card-header {
         margin-bottom: 1.5rem;
         border-bottom: 1px solid var(--secondary);
         padding-bottom: 1rem;
-        transition: border-color 0.3s;
     }
 
     .card-title {
@@ -231,7 +129,6 @@
         justify-content: center; /* Center all buttons in card footer */
         flex-wrap: wrap;
         gap: 0.5rem;
-        transition: border-color 0.3s;
     }
 
     /* Form Elements */
@@ -246,7 +143,7 @@
         font-size: 1rem;
         border: 1px solid var(--secondary);
         border-radius: var(--radius);
-        transition: var(--transition), border-color 0.3s, background-color 0.3s, color 0.3s;
+        transition: var(--transition);
     }
 
     .form-control:focus {
@@ -262,7 +159,7 @@
         margin: 0;
         padding: 0.75rem;
     }
-
+    
     /* Fix alignment for the quiz ID container */
     .form-group {
         padding: 0;
@@ -386,7 +283,7 @@
         margin-bottom: 1.5rem;
         background: #f9fafb;
         border-radius: var(--radius);
-        transition: var(--transition), background-color 0.3s, border-color 0.3s, color 0.3s;
+        transition: var(--transition);
     }
 
     .drop-zone:hover {
@@ -398,7 +295,6 @@
         margin-bottom: 0.5rem;
         font-weight: 500;
         color: var(--text-secondary);
-        transition: color 0.3s;
     }
 
     .word-box {
@@ -410,7 +306,7 @@
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         cursor: move;
         user-select: none;
-        transition: var(--transition), background-color 0.3s, border-color 0.3s, color 0.3s;
+        transition: var(--transition);
         border: 1px solid #e5e7eb;
     }
 
@@ -425,23 +321,12 @@
         border-color: var(--primary);
     }
 
-    .word-box.dropped {
-        animation: dropAnimation 0.3s ease-in-out;
-    }
-
-    @keyframes dropAnimation {
-        0% { transform: scale(1); background-color: rgba(26, 115, 232, 0.1);}
-        50% { transform: scale(1.1); background-color: rgba(26, 115, 232, 0.3); }
-        100% { transform: scale(1); background-color: white; }
-    }
-
     /* Results Screen */
     .result-summary {
         padding: 1.5rem;
         background-color: #f3f4f6;
         border-radius: var(--radius);
         margin-bottom: 1.5rem;
-        transition: background-color 0.3s, color 0.3s;
     }
 
     .result-stat {
@@ -473,7 +358,6 @@
         padding: 0.75rem;
         text-align: left;
         border-bottom: 1px solid var(--secondary);
-        transition: border-color 0.3s, background-color 0.3s, color 0.3s;
     }
 
     .results-table th {
@@ -493,7 +377,6 @@
         margin: 1.5rem 0;
         color: var(--text-secondary);
         font-size: 0.875rem;
-        transition: color 0.3s;
     }
 
     .divider::before,
@@ -501,7 +384,6 @@
         content: "";
         flex: 1;
         border-bottom: 1px solid var(--secondary);
-        transition: border-color 0.3s;
     }
 
     .divider::before {
@@ -528,76 +410,15 @@
         transition: width 0.3s ease;
     }
 
-    /* Theme Toggle Styles */
-    .theme-toggle {
-        position: relative;
-        display: inline-block;
-        width: 60px;
-        height: 34px;
+    /* Correct/Incorrect Styling */
+    .word-box.correct {
+        background-color: var(--success);
+        color: white;
     }
 
-    .theme-toggle input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        -webkit-transition: .4s;
-        transition: .4s;
-        border-radius: 34px;
-    }
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        -webkit-transition: .4s;
-        transition: .4s;
-        border-radius: 50%;
-    }
-
-    input:checked + .slider {
-        background-color: var(--primary);
-    }
-
-    input:focus + .slider {
-        box-shadow: 0 0 1px var(--primary);
-    }
-
-    input:checked + .slider:before {
-        -webkit-transform: translateX(26px);
-        -ms-transform: translateX(26px);
-        transform: translateX(26px);
-    }
-
-    /* Theme Toggle Container Styles */  /* ADDED:  Grouping toggle and label */
-    .theme-toggle-container {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    /* Theme Toggle Label Styles */  /* ADDED: Styling the label text */
-    .theme-toggle-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        transition: color 0.3s;
-    }
-
-    body.dark-mode .theme-toggle-label {
-        color: var(--text-secondary-dark);
+    .word-box.incorrect {
+        background-color: var(--danger);
+        color: white;
     }
 
     /* Responsive Adjustments */
@@ -632,25 +453,14 @@
     }
 
     @media (max-width: 480px) {
-        .app-header {
-            flex-direction: column;  /* Stack items vertically on small screens */
-            align-items: center;    /* Center items horizontally */
-            text-align: center;  /* Center heading text */
-        }
-
         .app-header h1 {
             margin-bottom: 0.75rem; /* Smaller gap below h1 on mobile */
-            text-align: center;  /* center the heading text */
         }
-
-        .theme-toggle-container {
-            margin-top: 0.5rem; /* Add space between title and toggle */
-        }
-
+        
         .card-footer {
             justify-content: center;
         }
-
+        
         .btn {
             width: 100%;
             margin-bottom: 0.5rem;
@@ -662,689 +472,697 @@
             font-size: 0.875rem;
         }
     }
+
+    /* Google Sheet Dropdown Styling */
+    #quizSelect {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        border: 1px solid var(--secondary);
+        border-radius: var(--radius);
+        transition: var(--transition);
+        background-color: white;
+        color: var(--text-primary);
+        appearance: none; /* Remove default arrow in some browsers */
+        -webkit-appearance: none; /* Remove default arrow in Chrome/Safari */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem top 50%;
+        background-size: 1.25rem;
+    }
+
+    #quizSelect:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+    }
 </style>
 </head>
 <body>
     <div class="app-container">
         <header class="app-header">
-            <h1><i class="fas fa-puzzle-piece"></i> <span id="quizTitle">Language Puzzle</span></h1>
-            <div class="theme-toggle-container">
-                <label class="theme-toggle">
-                    <input type="checkbox" id="themeToggle" aria-label="Toggle Dark Mode">
-                    <span class="slider"></span>
-                </label>
-                <span class="theme-toggle-label">Dark Mode</span>
-            </div>
+            <h1><i class="fas fa-puzzle-piece"></i> Language Puzzle</h1>
         </header>
 
-        <!-- Landing Screen -->
-        <div id="landingScreen" class="screen active">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title" id="landingTitle">Welcome to Language Puzzle</h2>
-                    <p id="quizDescription"></p>
-                </div>
-                <div class="card-body">
-                    <p>Test your language skills by arranging words in the correct order.</p>
-                    <div class="form-group">
-                        <button onclick="startBuiltInQuiz()" class="btn btn-primary btn-lg" style="width: 100%;">
-                            <i class="fas fa-play"></i> Start Built-in Quiz
-                        </button>
-                    </div>
+    <!-- Landing Screen -->
+    <div id="landingScreen" class="screen active">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Welcome to Language Puzzle</h2>
+            </div>
+            <div class="card-body">
+                <p>Test your language skills by arranging words in the correct order.</p>
 
-                    <div class="divider">OR</div>
+                <!-- Google Sheet Quiz Selection -->
+                <div class="form-group">
+                    <label for="quizSelect" class="form-label">Select a Quiz:</label>
+                    <select id="quizSelect" class="form-control"></select>
+                </div>
 
-                    <div class="form-group">
-                        <label for="quizId" class="form-label">Have a custom quiz?</label>
-                        <p class="form-text" style="margin-top: 0.25rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
-                            <i class="fas fa-info-circle"></i> Custom Quiz ID is provided by your teacher
-                        </p>
-                        <input type="text" id="quizId" placeholder="Enter Quiz ID" class="form-control">
-                    </div>
+                <div class="divider">OR</div>
+
+                <div class="form-group">
+                    <label for="quizId" class="form-label">Have a custom quiz?</label>
+                    <p class="form-text" style="margin-top: 0.25rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+                        <i class="fas fa-info-circle"></i> Custom Quiz ID is provided by your teacher
+                    </p>
+                    <input type="text" id="quizId" placeholder="Enter Quiz ID" class="form-control">
                 </div>
-                <div class="card-footer">
-                    <button onclick="startCustomQuiz()" class="btn btn-secondary">
-                        <i class="fas fa-file-import"></i> Start Custom Quiz
-                    </button>
-                </div>
+            </div>
+            <div class="card-footer">
+                <button onclick="startCustomQuiz()" class="btn btn-secondary">
+                    <i class="fas fa-file-import"></i> Start Custom Quiz
+                </button>
             </div>
         </div>
-
-        <!-- Name Screen -->
-        <div id="nameScreen" class="screen">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Let's Get Started</h2>
-                </div>
-                <div class="quiz-instructions">
-                    <i class="fas fa-info-circle"></i> After you click ‘Start Quiz’, use double-tap or double-click to move words. Dragging works on PC only.
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="userName" class="form-label">Enter Your Name</label>
-                        <input type="text" id="userName" required class="form-control" placeholder="Your Name">
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <button onclick="showScreen('landingScreen')" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </button>
-                    <button onclick="startQuiz()" class="btn btn-primary">
-                        <i class="fas fa-arrow-right"></i> Start Quiz
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quiz Screen -->
-        <div id="quizScreen" class="screen">
-            <div class="card">
-                <div class="quiz-header">
-                    <div class="timer-container">
-                        <i class="fas fa-clock"></i>
-                        Time: <span id="timer" class="timer-value">0</span>s
-                    </div>
-                    <div class="question-counter" id="questionNumber"></div>
-                </div>
-                <div id="progressContainer" class="progress-container">
-                    <div id="progressBar" class="progress-bar" style="width: 0%"></div>
-                </div>
-                <div class="quiz-instructions">
-                    <i class="fas fa-info-circle"></i> Double-tap (or double-click with a mouse) to move words. Dragging works on PC only.
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label class="drop-zone-label">Available Words:</label>
-                        <div id="wordContainer" class="drop-zone" ondrop="handleSourceDrop(event)" ondragover="allowDrop(event)"></div>
-                    </div>
-                    <div class="form-group">
-                        <label class="drop-zone-label">Your Answer:</label>
-                        <div class="drop-zone" id="answerZone" ondrop="handleAnswerDrop(event)" ondragover="allowDrop(event)"></div>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <button onclick="checkAnswer()" class="btn btn-primary">
-                        <i class="fas fa-check-circle"></i> Confirm Answer
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Results Screen -->
-        <div id="resultsScreen" class="screen">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Quiz Results</h2>
-                </div>
-                <div class="card-body">
-                    <div class="result-summary" id="resultSummary">
-                        <!-- Results summary will be inserted here -->
-                    </div>
-
-                    <div class="results-table-container">
-                        <table id="resultsTable" class="results-table">
-                            <!-- Results table will be inserted here -->
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <button onclick="showScreen('landingScreen')" class="btn btn-secondary">
-                        <i class="fas fa-home"></i> Back to Home
-                    </button>
-                    <button onclick="screenshotResults()" class="btn btn-secondary">
-                        <i class="fas fa-camera"></i> Screenshot Results
-                    </button>
-                    <button onclick="reviewQuestions()" class="btn btn-primary">
-                        <i class="fas fa-redo"></i> Try Again
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <footer class="app-footer">
-            <div id="visitor-counter">
-               Welcome! You're visitor #<span id="pageviews">Loading...</span>
-            </div>
-            <p><a href="https://linsnotes.com">linsnotes.com</a></p>
-        </footer>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+    <!-- Name Screen -->
+    <div id="nameScreen" class="screen">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Let's Get Started</h2>
+            </div>
+            <div class="quiz-instructions">
+                <i class="fas fa-info-circle"></i> Drag and drop the words into the correct order. Double-tap or double-click as an alternative.
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="userName" class="form-label">Enter Your Name</label>
+                    <input type="text" id="userName" required class="form-control" placeholder="Your Name">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button onclick="startQuiz()" class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Start Quiz
+                </button>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        let currentQuestion = 0;
-        let quizData = [];
-        let userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 };
-        let timerInterval;
-        let timerPaused = false;
-        let elapsedTime = 0;
-        let pausedAt = 0;
-        const BUILT_IN_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII';
-        let draggedElement = null;
-        let questionAttempts = {};
-        let quizTitle = '';
-        let quizDescription = '';
+    <!-- Quiz Screen -->
+    <div id="quizScreen" class="screen">
+        <div class="card">
+            <div class="quiz-header">
+                <div class="timer-container">
+                    <i class="fas fa-clock"></i>
+                    Time: <span id="timer" class="timer-value">0</span>s
+                </div>
+                <div class="question-counter" id="questionNumber"></div>
+            </div>
+            <div id="progressContainer" class="progress-container">
+                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            <div class="quiz-instructions">
+                <i class="fas fa-info-circle"></i> Drag and drop the words into the correct order. Double-tap or double-click as an alternative.
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="drop-zone-label">Available Words:</label>
+                    <div id="wordContainer" class="drop-zone"></div>
+                </div>
+                <div class="form-group">
+                    <label class="drop-zone-label">Your Answer:</label>
+                    <div class="drop-zone" id="answerZone"></div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button onclick="checkAnswer()" class="btn btn-primary">
+                    <i class="fas fa-check-circle"></i> Confirm Answer
+                </button>
+            </div>
+        </div>
+    </div>
 
-        // Theme Toggle Functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
+    <!-- Results Screen -->
+    <div id="resultsScreen" class="screen">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Quiz Results</h2>
+            </div>
+            <div class="card-body">
+                <div class="result-summary" id="resultSummary">
+                    <!-- Results summary will be inserted here -->
+                </div>
 
-        // Function to set the theme based on localStorage or system preference
-        function setTheme(theme) {
-            if (theme === 'dark') {
-                body.classList.add('dark-mode');
-                themeToggle.checked = true;
-            } else {
-                body.classList.remove('dark-mode');
-                themeToggle.checked = false;
-            }
-        }
+                <div class="results-table-container">
+                    <table id="resultsTable" class="results-table">
+                        <!-- Results table will be inserted here -->
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button onclick="screenshotResults()" class="btn btn-secondary">
+                    <i class="fas fa-camera"></i> Screenshot Results
+                </button>
+                <button onclick="reviewQuestions()" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+            </div>
+        </div>
+    </div>
 
-        // Check localStorage for saved theme, otherwise use system preference
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            setTheme('dark');
-        }
+    <footer class="app-footer">
+        <div id="visitor-counter">
+           Welcome! You're visitor #<span id="pageviews">Loading...</span>
+        </div>
+        <p><a href="https://linsnotes.com">linsnotes.com</a></p>
+    </footer>
+</div>
 
-        // Event listener for the theme toggle
-        themeToggle.addEventListener('change', () => {
-            if (themeToggle.checked) {
-                body.classList.add('dark-mode');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                body.classList.remove('dark-mode');
-                localStorage.setItem('theme', 'light');
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>  <!-- SortableJS -->
+
+<script>
+    let currentQuestion = 0;
+    let quizData = [];
+    let userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 };
+    let timerInterval;
+    let timerPaused = false;
+    let elapsedTime = 0;
+    let pausedAt = 0;
+    const DEFAULT_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII'; // Default sheet id
+    let questionAttempts = {};
+    let quizTitlesAndIds = [];
+    let currentSheetId = DEFAULT_SHEET_ID; // Track the current sheet ID
+
+    // Initialize SortableJS instances
+    let sortableWordContainer;
+    let sortableAnswerZone;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize SortableJS
+        sortableWordContainer = Sortable.create(document.getElementById('wordContainer'), {
+            group: 'shared', // Allows dragging between the two lists
+            animation: 0,    // Disable smooth animations
+            easing: "linear",
+            swapThreshold: 0.7,
+            onAdd: function (evt) {
+                // Animate word box on drop
+                evt.item.classList.add('animate-drop');
+                setTimeout(() => evt.item.classList.remove('animate-drop'), 300);
             }
         });
 
-        // Drag & Drop Functions
-        function allowDrop(ev) { ev.preventDefault(); }
-        function dragStart(ev) {
-            draggedElement = ev.target;
-            draggedElement.classList.add('dragging');
-            ev.dataTransfer.effectAllowed = 'move';
-        }
-        function dragEnd() {
-            if (draggedElement) {
-                draggedElement.classList.remove('dragging');
-                draggedElement = null;
+        sortableAnswerZone = Sortable.create(document.getElementById('answerZone'), {
+            group: 'shared',
+            animation: 0,    // Disable smooth animations
+            easing: "linear",
+            swapThreshold: 0.7,
+            onAdd: function (evt) {
+                // Animate word box on drop
+                evt.item.classList.add('animate-drop');
+                setTimeout(() => evt.item.classList.remove('animate-drop'), 300);
             }
-        }
-        function handleSourceDrop(ev) {
-            ev.preventDefault();
-            if (draggedElement && draggedElement.parentElement.id === 'answerZone') {
-                const afterElement = getDragAfterElement(ev.currentTarget, ev.clientX);
-                if (afterElement) ev.currentTarget.insertBefore(draggedElement, afterElement);
-                else ev.currentTarget.appendChild(draggedElement);
-            }
-        }
-        function handleAnswerDrop(ev) {
-            ev.preventDefault();
-            if (draggedElement) {
-                const afterElement = getDragAfterElement(ev.currentTarget, ev.clientX);
-                const container = ev.currentTarget;
-                if (afterElement) {
-                    container.insertBefore(draggedElement, afterElement);
-                } else {
-                    container.appendChild(draggedElement);
-                }
-                draggedElement.classList.add('dropped');
-                setTimeout(() => {
-                    draggedElement.classList.remove('dropped');
-                }, 300); // Duration should match the animation duration
-            }
-        }
-        function getDragAfterElement(container, x) {
-            const draggableElements = [...container.querySelectorAll('.word-box:not(.dragging)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = x - box.left - box.width / 2;
-                return (offset < 0 && offset > closest.offset) ?
-                    { offset: offset, element: child } : closest;
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
+        });
 
-        // Double-click Functions
-        function setupDoubleClickHandlers() {
-            // Use event delegation to handle double-clicks
-            document.getElementById('wordContainer').addEventListener('dblclick', function(e) {
-                if (e.target.classList.contains('word-box')) {
-                    document.getElementById('answerZone').appendChild(e.target);
-                    e.target.classList.add('dropped');
-                    setTimeout(() => {
-                        e.target.classList.remove('dropped');
-                    }, 300); // Duration should match the animation duration
-                }
-            });
+        loadQuizTitlesAndIds(); // Load quiz options from Google Sheet
+        const pv = document.getElementById('pageviews');
 
-            document.getElementById('answerZone').addEventListener('dblclick', function(e) {
-                if (e.target.classList.contains('word-box')) {
-                    document.getElementById('wordContainer').appendChild(e.target);
-                    e.target.classList.add('dropped');
-                    setTimeout(() => {
-                        e.target.classList.remove('dropped');
-                    }, 300); // Duration should match the animation duration
-                }
+        if (pv !== null) {
+          const uri = location.pathname.replace(/\/$/, '');
+          const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
+
+          fetch(url)
+            .then((response) => response.json())
+            .then((data) => {
+              const count = data.count.replace(/\s/g, '');
+              pv.innerText = new Intl.NumberFormat().format(count);
+            })
+            .catch((error) => {
+              pv.innerText = '1';
             });
         }
+    });
 
-        // Core Quiz Functions
-        async function loadSheetData(sheetId) {
-            try {
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-                const response = await fetch(url);
-                const csv = await response.text();
-                const workbook = XLSX.read(csv, {type: 'string'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-                // Extract quiz title from A1
-                quizTitle = sheet['A1'] ? sheet['A1'].v : 'Language Puzzle';
-
-                // Extract quiz description from B1 (or leave empty if not present)
-                quizDescription = sheet['B1'] ? sheet['B1'].v : '';
-
-                const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
-                return rows.slice(1).map(row => row[0]); // Skip header row
-
-            } catch (error) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error loading quiz data. Please check Quiz ID',
-                    icon: 'error',
-                    confirmButtonColor: '#1a73e8'
-                });
-                return null;
+    // Double-click Functions
+    function setupDoubleClickHandlers() {
+        // Use event delegation to handle double-clicks
+        document.getElementById('wordContainer').addEventListener('dblclick', function(e) {
+            if (e.target.classList.contains('word-box')) {
+                document.getElementById('answerZone').appendChild(e.target);
             }
-        }
+        });
 
-        function startBuiltInQuiz() { startQuizFlow(BUILT_IN_SHEET_ID); }
-        async function startCustomQuiz() {
-            const sheetId = document.getElementById('quizId').value;
-            if (!sheetId) return Swal.fire({
-                title: 'Missing Input',
-                text: 'Please enter Quiz ID',
-                                icon: 'warning',
+        document.getElementById('answerZone').addEventListener('dblclick', function(e) {
+            if (e.target.classList.contains('word-box')) {
+                document.getElementById('wordContainer').appendChild(e.target);
+            }
+        });
+    }
+
+    // Core Quiz Functions
+    async function loadSheetData(sheetId) {
+        try {
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+            const response = await fetch(url);
+            const csv = await response.text();
+            const workbook = XLSX.read(csv, {type: 'string'});
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+            return rows.slice(1).map(row => row[0]); // Skip header row
+        } catch (error) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Error loading quiz data. Please check Quiz ID',
+                icon: 'error',
                 confirmButtonColor: '#1a73e8'
             });
-            startQuizFlow(sheetId);
+            return null;
         }
+    }
 
-        async function startQuizFlow(sheetId) {
-            // Show loading indicator
-            Swal.fire({
-                title: 'Loading Quiz',
-                text: 'Please wait...',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                willOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+    // Load Quiz Titles and IDs from Google Sheet
+    async function loadQuizTitlesAndIds() {
+        try {
+            const sheetId = '1-W8rY28i_4l26a69XJ0e1_P6KqV9k0N6-i5e_M_6m0'; // Replace with YOUR Google Sheet ID
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+            const response = await fetch(url);
+            const csv = await response.text();
+            const workbook = XLSX.read(csv, {type: 'string'});
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
 
-            const data = await loadSheetData(sheetId);
-            Swal.close();
-
-            if (!data) return;
-
-            quizData = data.map(question => ({
-                parts: question.split('#').filter(p => p.trim()),
-                correct: question.replace(/#/g, ''),
-                shuffled: null
+            quizTitlesAndIds = rows.slice(1).map(row => ({
+                title: row[0],
+                id: row[1]
             }));
 
-            questionAttempts = {};
-            quizData.forEach((_, idx) => {
-                questionAttempts[idx] = { attempts: 0, correct: false };
-            });
-
-            // Update quiz title and description on the landing screen
-            document.getElementById('quizTitle').textContent = quizTitle;
-            document.getElementById('landingTitle').textContent = quizTitle;
-            document.getElementById('quizDescription').textContent = quizDescription;
-
-            showScreen('nameScreen');
-        }
-
-        function startQuiz() {
-            userData.name = document.getElementById('userName').value.trim();
-            if (!userData.name) return Swal.fire({
-                title: 'Missing Input',
-                text: 'Please enter your name',
-                icon: 'warning',
+            populateQuizSelect();
+        } catch (error) {
+            console.error('Error loading quiz titles:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Error loading quiz list. Using default quiz.',
+                icon: 'error',
                 confirmButtonColor: '#1a73e8'
             });
-
-            // Set up double-click handlers
-            setupDoubleClickHandlers();
-
-            showScreen('quizScreen');
-            loadQuestion();
-            startTimer();
         }
+    }
 
-        function loadQuestion() {
-            const question = quizData[currentQuestion];
-            if (!question.shuffled) {
-                question.shuffled = shuffle([...question.parts]);
+    function populateQuizSelect() {
+        const selectElement = document.getElementById('quizSelect');
+        selectElement.innerHTML = ''; // Clear existing options
+
+        quizTitlesAndIds.forEach(quiz => {
+            const option = document.createElement('option');
+            option.value = quiz.id;
+            option.textContent = quiz.title;
+            selectElement.appendChild(option);
+        });
+
+        // Add event listener to the select element to update currentSheetId
+        selectElement.addEventListener('change', function() {
+            currentSheetId = this.value; // Update currentSheetId when the selection changes
+        });
+    }
+
+    async function startCustomQuiz() {
+        const sheetId = document.getElementById('quizId').value;
+        if (!sheetId) return Swal.fire({
+            title: 'Missing Input',
+            text: 'Please enter Quiz ID',
+            icon: 'warning',
+            confirmButtonColor: '#1a73e8'
+        });
+        startQuizFlow(sheetId);
+    }
+
+    async function startQuizFlow(sheetId) {
+        // Show loading indicator
+        Swal.fire({
+            title: 'Loading Quiz',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
             }
+        });
 
-            // Update progress bar
-            const progressPercentage = (currentQuestion / quizData.length) * 100;
-            document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+        const data = await loadSheetData(sheetId);
+        Swal.close();
 
-            document.getElementById('questionNumber').textContent =
-                `Question ${currentQuestion + 1} of ${quizData.length}`;
+        if (!data) return;
 
-            const wordContainer = document.getElementById('wordContainer');
-            wordContainer.innerHTML = question.shuffled.map(word =>
-                `<div class="word-box" draggable="true"
-                    ondragstart="dragStart(event)"
-                    ondragend="dragEnd(event)">${word}</div>`
-            ).join('');
+        quizData = data.map(question => ({
+            parts: question.split('#').filter(p => p.trim()),
+            correct: question.replace(/#/g, ''),
+            shuffled: null
+        }));
 
-            document.getElementById('answerZone').innerHTML = '';
+        questionAttempts = {};
+        quizData.forEach((_, idx) => {
+            questionAttempts[idx] = { attempts: 0, correct: false };
+        });
+
+        showScreen('nameScreen');
+    }
+
+    function startQuiz() {
+        userData.name = document.getElementById('userName').value.trim();
+        if (!userData.name) return Swal.fire({
+            title: 'Missing Input',
+            text: 'Please enter your name',
+            icon: 'warning',
+            confirmButtonColor: '#1a73e8'
+        });
+
+        // Set up double-click handlers
+        setupDoubleClickHandlers();
+
+        showScreen('quizScreen');
+        loadQuestion();
+        startTimer();
+    }
+
+    function loadQuestion() {
+        const question = quizData[currentQuestion];
+        if (!question.shuffled) {
+            question.shuffled = shuffle([...question.parts]);
         }
 
-        function startTimer() {
-            if (pausedAt > 0) {
-                // Resume timer
-                elapsedTime = pausedAt;
-                pausedAt = 0;
+        // Update progress bar
+        const progressPercentage = (currentQuestion / quizData.length) * 100;
+        document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+
+        document.getElementById('questionNumber').textContent =
+            `Question ${currentQuestion + 1} of ${quizData.length}`;
+
+        const wordContainer = document.getElementById('wordContainer');
+        wordContainer.innerHTML = question.shuffled.map(word =>
+            `<div class="word-box">${word}</div>`
+        ).join('');
+
+        // Clear answer zone
+        document.getElementById('answerZone').innerHTML = '';
+    }
+
+    function startTimer() {
+        if (pausedAt > 0) {
+            // Resume timer
+            elapsedTime = pausedAt;
+            pausedAt = 0;
+        } else {
+            // Start new timer
+            elapsedTime = 0;
+            userData.startTime = Date.now();
+        }
+
+        timerPaused = false;
+        clearInterval(timerInterval);
+
+        timerInterval = setInterval(() => {
+            if (!timerPaused) {
+                elapsedTime = Math.floor((Date.now() - userData.startTime) / 1000);
+                document.getElementById('timer').textContent = elapsedTime;
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        timerPaused = true;
+        pausedAt = elapsedTime;
+    }
+
+    function resumeTimer() {
+        timerPaused = false;
+        userData.startTime = Date.now() - (pausedAt * 1000);
+    }
+
+   function checkAnswer() {
+        const timeSpent = elapsedTime;
+        const userAnswer = [...document.querySelectorAll('#answerZone .word-box')]
+            .map(node => node.textContent).join('');
+
+        const isCorrect = userAnswer === quizData[currentQuestion].correct;
+        questionAttempts[currentQuestion].attempts++;
+
+        // Clear previous correct/incorrect styles
+        document.querySelectorAll('.word-box').forEach(box => {
+            box.classList.remove('correct', 'incorrect');
+        });
+
+        if (isCorrect) {
+            questionAttempts[currentQuestion].correct = true;
+            const points = calculatePoints(timeSpent);
+
+            // Only add to userData.attempts if this is the first time it's correct
+            if (!userData.attempts.some(a => a.question === currentQuestion + 1)) {
+                userData.attempts.push({
+                    question: currentQuestion + 1,
+                    time: timeSpent,
+                    points,
+                    userAnswer,
+                    correctAnswer: quizData[currentQuestion].correct,
+                    attempts: questionAttempts[currentQuestion].attempts
+                });
             } else {
-                // Start new timer
-                elapsedTime = 0;
-                userData.startTime = Date.now();
-            }
-
-            timerPaused = false;
-            clearInterval(timerInterval);
-
-            timerInterval = setInterval(() => {
-                if (!timerPaused) {
-                    elapsedTime = Math.floor((Date.now() - userData.startTime) / 1000);
-                    document.getElementById('timer').textContent = elapsedTime;
-                }
-            }, 1000);
-        }
-
-        function pauseTimer() {
-            timerPaused = true;
-            pausedAt = elapsedTime;
-        }
-
-        function resumeTimer() {
-            timerPaused = false;
-            userData.startTime = Date.now() - (pausedAt * 1000);
-        }
-
-        function checkAnswer() {
-            const timeSpent = elapsedTime;
-            const userAnswer = [...document.querySelectorAll('#answerZone .word-box')]
-                .map(node => node.textContent).join('');
-
-            const isCorrect = userAnswer === quizData[currentQuestion].correct;
-            questionAttempts[currentQuestion].attempts++;
-
-            if (isCorrect) {
-                questionAttempts[currentQuestion].correct = true;
-                const points = calculatePoints(timeSpent);
-
-                // Only add to userData.attempts if this is the first time it's correct
-                if (!userData.attempts.some(a => a.question === currentQuestion + 1)) {
-                    userData.attempts.push({
+                // Update the existing attempt with the new data
+                const idx = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
+                if (idx !== -1) {
+                    userData.attempts[idx] = {
                         question: currentQuestion + 1,
                         time: timeSpent,
                         points,
                         userAnswer,
                         correctAnswer: quizData[currentQuestion].correct,
                         attempts: questionAttempts[currentQuestion].attempts
-                    });
-                } else {
-                    // Update the existing attempt with the new data
-                    const idx = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
-                    if (idx !== -1) {
-                        userData.attempts[idx] = {
-                            question: currentQuestion + 1,
-                            time: timeSpent,
-                            points,
-                            userAnswer,
-                            correctAnswer: quizData[currentQuestion].correct,
-                            attempts: questionAttempts[currentQuestion].attempts
-                        };
-                    }
+                    };
                 }
-
-                Swal.fire({
-                    title: 'Correct!',
-                    text: `(+${points} points)`,
-                    icon: 'success',
-                    confirmButtonColor: '#1a73e8',
-                    timer: 1500
-                });
-                if (currentQuestion < quizData.length - 1) {
-                    currentQuestion++;
-                    pausedAt = 0;
-                    elapsedTime = 0;
-                    loadQuestion();
-                    startTimer();
-                } else {
-                    showResults();
-                }
-            } else {
-                pauseTimer();
-                Swal.fire({
-                    title: 'Wrong!',
-                    text: 'Would you like to try again?',
-                    icon: 'error',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, try again',
-                    cancelButtonText: 'No, next question',
-                    confirmButtonColor: '#1a73e8',
-                    cancelButtonColor: '#ef4444'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        resumeTimer();
-                        // Do not reset the question or timer
-                    } else {
-                        // User doesn't want to retry, mark as incorrect attempt
-                        userData.attempts.push({
-                            question: currentQuestion + 1,
-                            time: timeSpent,
-                            points: 0,
-                            userAnswer,
-                            correctAnswer: quizData[currentQuestion].correct,
-                            attempts: questionAttempts[currentQuestion].attempts
-                        });
-
-                        Swal.fire({
-                            title: 'Answer',
-                            html: `<p style="text-align: left; margin-bottom: 8px;">Correct answer:</p>
-                                  <p style="text-align: left; font-weight: bold;">${quizData[currentQuestion].correct}</p>`,
-                            icon: 'info',
-                            confirmButtonColor: '#1a73e8'
-                        }).then(() => {
-                            currentQuestion++;
-
-                            if (currentQuestion < quizData.length) {
-                                pausedAt = 0;
-                                elapsedTime = 0;
-                                loadQuestion();
-                                startTimer();
-                            } else {
-                                showResults();
-                            }
-                        });
-                    }
-                });
             }
-        }
 
-        // Utility functions
-        function calculatePoints(seconds) {
-            // const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[35,4],[40,3],[60,2],[Infinity,1]];
-            const brackets = [[10,10],[20,9],[30,8],[40,7],[50,6],[60,5],[70,4],[80,3],[90,2],[Infinity,1]];
-            return brackets.find(([max]) => seconds <= max)[1];
-        }
-
-        function showResults() {
-            clearInterval(timerInterval);
-            showScreen('resultsScreen');
-            userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
-
-            // Get completion timestamp
-            const completionDate = new Date();
-            const day = completionDate.getDate().toString().padStart(2, '0');
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            const month = monthNames[completionDate.getMonth()];
-            const year = completionDate.getFullYear();
-            const hours = completionDate.getHours().toString().padStart(2, '0');
-            const minutes = completionDate.getMinutes().toString().padStart(2, '0');
-            const seconds = completionDate.getSeconds().toString().padStart(2, '0');
-            const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`;
-
-            // Update the resultSummary with improved styling
-            document.getElementById('resultSummary').innerHTML = `
-                <div class="result-stat">
-                    <i class="fas fa-user"></i>
-                    <span><strong>Name:</strong> ${userData.name}</span>
-                </div>
-                <div class="result-stat">
-                    <i class="fas fa-calendar-check"></i>
-                    <span><strong>Completed:</strong> ${completionTimestamp}</span>
-                </div>
-                <div class="result-stat">
-                    <i class="fas fa-trophy"></i>
-                    <span><strong>Total Score:</strong> ${userData.totalPoints} points</span>
-                </div>
-                <div class="result-stat">
-                    <i class="fas fa-check-circle"></i>
-                    <span><strong>Correct Answers:</strong> ${userData.attempts.filter(a => a.points > 0).length}/${quizData.length}</span>
-                </div>
-            `;
-
-            const table = document.getElementById('resultsTable');
-            table.innerHTML = `
-                <tr>
-                    <th>Question</th>
-                    <th>Time</th>
-                    <th>Points</th>
-                    <th>Attempts</th>
-                    <th>Your Answer</th>
-                    <th>Correct Answer</th>
-                </tr>
-                ${userData.attempts.map(a => `
-                    <tr>
-                        <td>${a.question}</td>
-                        <td>${a.time}s</td>
-                        <td>${a.points}</td>
-                        <td>${a.attempts}</td>
-                        <td>${a.userAnswer}</td>
-                        <td>${a.correctAnswer}</td>
-                    </tr>
-                `).join('')}
-            `;
-        }
-
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-
-            // Show/hide header and footer based on screen
-            if (screenId === 'quizScreen') {
-                document.querySelector('.app-header').style.display = 'none';
-                document.querySelector('.app-footer').style.display = 'none';
-            } else {
-                document.querySelector('.app-header').style.display = 'block';
-                document.querySelector('.app-footer').style.display = 'block';
-            }
-        }
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        function screenshotResults() {
-            // Show loading indicator
             Swal.fire({
-                title: 'Generating Screenshot',
-                text: 'Please wait...',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                willOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            html2canvas(document.querySelector('#resultsScreen')).then(canvas => {
-                Swal.close();
-                const link = document.createElement('a');
-                link.download = 'quiz-results.png';
-                link.href = canvas.toDataURL();
-                link.click();
-
-                Swal.fire({
-                    title: 'Success!',
-                    text: 'Your results have been saved as an image',
-                    icon: 'success',
-                    confirmButtonColor: '#1a73e8',
-                });
-            });
-        }
-
-        function reviewQuestions() {
-            Swal.fire({
-                title: 'Try Again?',
-                text: 'You are about to restart the quiz. Your current progress will be reset.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, restart',
-                cancelButtonText: 'Cancel',
+                title: 'Correct!',
+                text: `(+${points} points)`,
+                icon: 'success',
                 confirmButtonColor: '#1a73e8',
-                cancelButtonColor: '#6b7280'
+                timer: 1500
+            });
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                pausedAt = 0;
+                elapsedTime = 0;
+                loadQuestion();
+                startTimer();
+            } else {
+                showResults();
+            }
+        } else {
+            pauseTimer();
+
+            // Get the correct answer and split it into words
+            const correctAnswerWords = quizData[currentQuestion].correct.split(' ');
+
+            // Get the user's answer words
+            const userAnswerWords = userAnswer.split(' ');
+
+            // Iterate through the words and add the correct/incorrect classes
+            const allWordBoxes = document.querySelectorAll('#answerZone .word-box');
+
+            allWordBoxes.forEach((box, index) => {
+                if (index < correctAnswerWords.length) {
+                    if (box.textContent === correctAnswerWords[index]) {
+                        box.classList.add('correct');
+                    } else {
+                        box.classList.add('incorrect');
+                    }
+                } else {
+                    box.classList.add('incorrect'); // Mark extra words as incorrect
+                }
+            });
+
+            Swal.fire({
+                title: 'Wrong!',
+                text: 'Would you like to try again?',
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, try again',
+                cancelButtonText: 'No, next question',
+                confirmButtonColor: '#1a73e8',
+                cancelButtonColor: '#ef4444'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    currentQuestion = 0;
-                    quizData.forEach(q => q.shuffled = null);
-                    userData.attempts = [];
-                    questionAttempts = {};
-                    quizData.forEach((_, idx) => {
-                        questionAttempts[idx] = { attempts: 0, correct: false };
+                    resumeTimer();
+                    // Do not reset the question or timer
+                } else {
+                    // User doesn't want to retry, mark as incorrect attempt
+                    userData.attempts.push({
+                        question: currentQuestion + 1,
+                        time: timeSpent,
+                        points: 0,
+                        userAnswer,
+                        correctAnswer: quizData[currentQuestion].correct,
+                        attempts: questionAttempts[currentQuestion].attempts
                     });
-                    pausedAt = 0;
-                    elapsedTime = 0;
-                    showScreen('quizScreen');
-                    loadQuestion();
-                    startTimer();
+
+                    Swal.fire({
+                        title: 'Answer',
+                        html: `<p style="text-align: left; margin-bottom: 8px;">Correct answer:</p>
+                              <p style="text-align: left; font-weight: bold;">${quizData[currentQuestion].correct}</p>`,
+                        icon: 'info',
+                        confirmButtonColor: '#1a73e8'
+                    }).then(() => {
+                        currentQuestion++;
+
+                        if (currentQuestion < quizData.length) {
+                            pausedAt = 0;
+                            elapsedTime = 0;
+                            loadQuestion();
+                            startTimer();
+                        } else {
+                            showResults();
+                        }
+                    });
                 }
             });
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            const pv = document.getElementById('pageviews');
+    }
 
-            if (pv !== null) {
-              const uri = location.pathname.replace(/\/$/, '');
-              const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
+    // Utility functions
+    function calculatePoints(seconds) {
+        // const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[35,4],[40,3],[60,2],[Infinity,1]];
+        const brackets = [[10,10],[20,9],[30,8],[40,7],[50,6],[60,5],[70,4],[80,3],[90,2],[Infinity,1]];
+        return brackets.find(([max]) => seconds <= max)[1];
+    }
 
-              fetch(url)
-                .then((response) => response.json())
-                .then((data) => {
-                  const count = data.count.replace(/\s/g, '');
-                  pv.innerText = new Intl.NumberFormat().format(count);
-                })
-                .catch((error) => {
-                  pv.innerText = '1';
-                });
+    function showResults() {
+        clearInterval(timerInterval);
+        showScreen('resultsScreen');
+        userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
+
+        // Get completion timestamp
+        const completionDate = new Date();
+        const day = completionDate.getDate().toString().padStart(2, '0');
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const month = monthNames[completionDate.getMonth()];
+        const year = completionDate.getFullYear();
+        const hours = completionDate.getHours().toString().padStart(2, '0');
+        const minutes = completionDate.getMinutes().toString().padStart(2, '0');
+        const seconds = completionDate.getSeconds().toString().padStart(2, '0');
+        const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`;
+
+        // Update the resultSummary with improved styling
+        document.getElementById('resultSummary').innerHTML = `
+            <div class="result-stat">
+                <i class="fas fa-user"></i>
+                <span><strong>Name:</strong> ${userData.name}</span>
+            </div>
+            <div class="result-stat">
+                <i class="fas fa-calendar-check"></i>
+                <span><strong>Completed:</strong> ${completionTimestamp}</span>
+            </div>
+            <div class="result-stat">
+                <i class="fas fa-trophy"></i>
+                <span><strong>Total Score:</strong> ${userData.totalPoints} points</span>
+            </div>
+            <div class="result-stat">
+                <i class="fas fa-check-circle"></i>
+                <span><strong>Correct Answers:</strong> ${userData.attempts.filter(a => a.points > 0).length}/${quizData.length}</span>
+            </div>
+        `;
+
+        const table = document.getElementById('resultsTable');
+        table.innerHTML = `
+            <tr>
+                <th>Question</th>
+                <th>Time</th>
+                <th>Points</th>
+                <th>Attempts</th>
+                <th>Your Answer</th>
+                <th>Correct Answer</th>
+            </tr>
+            ${userData.attempts.map(a => `
+                <tr>
+                    <td>${a.question}</td>
+                    <td>${a.time}s</td>
+                    <td>${a.points}</td>
+                    <td>${a.attempts}</td>
+                    <td>${a.userAnswer}</td>
+                    <td>${a.correctAnswer}</td>
+                </tr>
+            `).join('')}
+        `;
+    }
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+
+        // Show/hide header and footer based on screen
+        if (screenId === 'quizScreen') {
+            document.querySelector('.app-header').style.display = 'none';
+            document.querySelector('.app-footer').style.display = 'none';
+        } else {
+            document.querySelector('.app-header').style.display = 'block';
+            document.querySelector('.app-footer').style.display = 'block';
+        }
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function screenshotResults() {
+        // Show loading indicator
+        Swal.fire({
+            title: 'Generating Screenshot',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
             }
-          });
-    </script>
+        });
+
+        html2canvas(document.querySelector('#resultsScreen')).then(canvas => {
+            Swal.close();
+            const link = document.createElement('a');
+            link.download = 'quiz-results.png';
+            link.href = canvas.toDataURL();
+            link.click();
+
+            Swal.fire({
+                title: 'Success!',
+                text: 'Your results have been saved as an image',
+                icon: 'success',
+                confirmButtonColor: '#1a73e8',
+            });
+        });
+    }
+
+    function reviewQuestions() {
+        Swal.fire({
+            title: 'Try Again?',
+            text: 'You are about to restart the quiz. Your current progress will be reset.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, restart',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#1a73e8',
+            cancelButtonColor: '#6b7280'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                currentQuestion = 0;
+                quizData.forEach(q => q.shuffled = null);
+                userData.attempts = [];
+                questionAttempts = {};
+                quizData.forEach((_, idx) => {
+                    questionAttempts[idx] = { attempts: 0, correct: false };
+                });
+                pausedAt = 0;
+                elapsedTime = 0;
+                showScreen('quizScreen');
+                loadQuestion();
+                startTimer();
+            }
+        });
+    }
+</script>
 </body>
 </html>
