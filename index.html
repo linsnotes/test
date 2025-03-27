@@ -737,7 +737,7 @@
     // Load Quiz Titles and IDs from Google Sheet
     async function loadQuizTitlesAndIds() {
         try {
-            const sheetId = '1-W8rY28i_4l26a69XJ0e1_P6KqV9k0N6-i5e_M_6m0'; // Replace with YOUR Google Sheet ID
+            const sheetId = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII'; // Replace with YOUR Google Sheet ID
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
             const response = await fetch(url);
             const csv = await response.text();
