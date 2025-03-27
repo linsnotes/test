@@ -825,6 +825,7 @@
         // Add event listener to the select element to update currentSheetId
         selectElement.addEventListener('change', function() {
             currentSheetId = this.value; // Update currentSheetId when the selection changes
+            document.getElementById('quizId').value = ''; // Clear any previously entered custom Quiz ID
             // Enable the "Start Built-in Quiz" button only when a valid quiz is selected
             document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = !this.value;
         });
