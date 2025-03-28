@@ -1103,32 +1103,31 @@
         }
     }
 
-   function checkAnswer() {
-        // Disable button to prevent multiple submissions
+    let removeColorTimeout;
+
+    function checkAnswer() {
         const confirmButton = document.querySelector('#quizScreen .btn-primary');
         confirmButton.disabled = true;
+        pauseTimer(); // Pause timer while checking feedback
 
-        pauseTimer(); // Pause timer while checking/showing feedback
-
-        const timeSpent = elapsedTime; // Use the time when paused
+        const timeSpent = elapsedTime;
         const answerZone = document.getElementById('answerZone');
         const userAnswerWords = [...answerZone.querySelectorAll('.word-box')]
-                                .map(node => node.textContent.trim());
+                                  .map(node => node.textContent.trim());
         const userAnswer = userAnswerWords.join(' ');
 
         const currentQuizItem = quizData[currentQuestion];
         const correctAnswer = currentQuizItem.correct;
-
         const isCorrect = userAnswer === correctAnswer;
         const currentAttemptRecord = questionAttempts[currentQuestion];
         currentAttemptRecord.attempts++;
 
-        // Clear previous correct/incorrect styles from answer zone only
+        // Remove any previous feedback classes
         answerZone.querySelectorAll('.word-box').forEach(box => {
             box.classList.remove('correct', 'incorrect');
         });
 
-        // Find the attempt index if it exists
+        // Determine if we've already recorded an attempt for this question
         let attemptIndex = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
 
         if (isCorrect) {
@@ -1144,15 +1143,11 @@
                 attempts: currentAttemptRecord.attempts
             };
 
-            // Add or update the attempt in userData
             if (attemptIndex === -1) {
                 userData.attempts.push(attemptData);
             } else {
-                // Update only if this new correct attempt is better (e.g., fewer attempts, though logic might vary)
-                // For simplicity, let's just update with the latest correct info
-                 userData.attempts[attemptIndex] = attemptData;
+                userData.attempts[attemptIndex] = attemptData;
             }
-
 
             Swal.fire({
                 title: 'Correct!',
@@ -1161,52 +1156,59 @@
                 confirmButtonColor: '#1a73e8',
                 timer: 1500,
                 timerProgressBar: true,
-                allowOutsideClick: false // Prevent dismissal until timer runs out or manually closed
+                allowOutsideClick: false
             }).then(() => {
-                // Move to next question or results
                 if (currentQuestion < quizData.length - 1) {
                     currentQuestion++;
-                    pausedAt = 0; // Reset pause state for next question
+                    pausedAt = 0;
                     loadQuestion();
-                    startTimer(); // Restart timer for the new question
+                    startTimer();
                 } else {
                     showResults();
                 }
             });
+        } else {
+            // Apply red styling to indicate incorrect answers
+            answerZone.querySelectorAll('.word-box').forEach(box => {
+                box.classList.add('incorrect');
+                // Attach an event listener to remove the red styling immediately upon interaction
+                box.addEventListener('click', function clearFeedback() {
+                    box.classList.remove('incorrect');
+                    clearTimeout(removeColorTimeout);
+                    confirmButton.disabled = false;
+                    // Remove this listener after it's triggered once
+                    box.removeEventListener('click', clearFeedback);
+                });
+            });
 
-        } else { // Incorrect Answer
-             // Add visual feedback for incorrect words
-            const correctAnswerWords = correctAnswer.split(' ');
-            answerZone.querySelectorAll('.word-box').forEach((box, index) => {
-                 if (index < correctAnswerWords.length && box.textContent.trim() === correctAnswerWords[index]) {
-                    // Correct word in the correct position (though overall answer is wrong) - optional styling
-                    // box.classList.add('correct'); // Maybe confusing, stick to just 'incorrect' for wrong answers
-                 } else {
-                    box.classList.add('incorrect');
-                 }
-             });
+            // Fallback: Remove red styling after 5 seconds if there's no interaction
+            removeColorTimeout = setTimeout(() => {
+                answerZone.querySelectorAll('.word-box').forEach(box => {
+                    box.classList.remove('incorrect');
+                });
+                confirmButton.disabled = false;
+            }, 5000);
 
-            // Record the incorrect attempt if it's the first attempt or if no correct answer recorded yet
-             if (attemptIndex === -1 || userData.attempts[attemptIndex].points === 0) {
-                 const attemptData = {
+            // Record the incorrect attempt if not already recorded as correct
+            if (attemptIndex === -1 || userData.attempts[attemptIndex].points === 0) {
+                const attemptData = {
                     question: currentQuestion + 1,
                     time: timeSpent,
-                    points: 0, // Incorrect answer gets 0 points
+                    points: 0,
                     userAnswer,
                     correctAnswer,
                     attempts: currentAttemptRecord.attempts
-                 };
-                 if (attemptIndex === -1) {
+                };
+                if (attemptIndex === -1) {
                     userData.attempts.push(attemptData);
-                 } else {
-                    userData.attempts[attemptIndex] = attemptData; // Update existing incorrect attempt record
-                 }
-             }
-
+                } else {
+                    userData.attempts[attemptIndex] = attemptData;
+                }
+            }
 
             Swal.fire({
                 title: 'Incorrect!',
-                html: `Would you like to try again?`,
+                html: 'Would you like to try again?',
                 icon: 'error',
                 showCancelButton: true,
                 confirmButtonText: 'Try Again',
@@ -1216,36 +1218,22 @@
                 allowOutsideClick: false
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // User wants to try again
-                    resumeTimer(); // Resume timer
-                    // Clear feedback styles before retry
-                    /*
-                     answerZone.querySelectorAll('.word-box').forEach(box => {
-                         box.classList.remove('correct', 'incorrect');
-                     });
-                    confirmButton.disabled = false; // Re-enable button for retry
-                    */
-                            // Delay clearing the red highlight (incorrect class) for 5 seconds:
-                    setTimeout(() => {
-                        answerZone.querySelectorAll('.word-box').forEach(box => {
-                            box.classList.remove('correct', 'incorrect');
-                        });
-                        confirmButton.disabled = false; // Re-enable the confirm button after delay
-                    }, 5000);
+                    resumeTimer();
+                    // No further action needed—the user can interact to clear the red styling
                 } else {
-                    // User wants to move to the next question
                     if (currentQuestion < quizData.length - 1) {
                         currentQuestion++;
-                        pausedAt = 0; // Reset pause state
+                        pausedAt = 0;
                         loadQuestion();
-                        startTimer(); // Restart timer for new question
+                        startTimer();
                     } else {
-                        showResults(); // End of quiz
+                        showResults();
                     }
                 }
             });
         }
     }
+
 
     // Utility functions
     function calculatePoints(seconds) {
