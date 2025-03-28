@@ -27,6 +27,42 @@
             --radius: 0.5rem;
             --transition: all 0.3s ease;
         }
+        
+    /* Rotating icon animation */
+    .rotate-icon {
+        display: inline-block;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Text fill effect */
+    .fill-text {
+        display: inline-block;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        color: transparent;
+        animation: fillText 2s ease forwards;
+    }
+
+    @keyframes fillText {
+        from {
+            background-position: -100% 0;
+        }
+        to {
+            background-position: 0 0;
+        }
+    }
+
+
 /* Typography */
     body {
         font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -521,7 +557,9 @@
 <body>
     <div class="app-container">
         <header class="app-header">
-            <h1><i class="fas fa-puzzle-piece"></i> Language Puzzle</h1>
+            <h1><i class="fas fa-puzzle-piece"></i> 
+                <span class="fill-text">Language Puzzle</span>
+            </h1>
         </header>
 
     <!-- Landing Screen -->
