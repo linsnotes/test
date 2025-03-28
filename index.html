@@ -781,6 +781,8 @@
 
         document.getElementById('answerZone').addEventListener('dblclick', function(e) {
             if (e.target.classList.contains('word-box')) {
+                // Remove the 'incorrect' class immediately when moved back via double-click
+                e.target.classList.remove('incorrect');
                 document.getElementById('wordContainer').appendChild(e.target);
             }
         });
