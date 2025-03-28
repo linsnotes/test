@@ -1105,7 +1105,7 @@
         }
     }
 
-   function checkAnswer() {
+        function checkAnswer() {
         // Disable button to prevent multiple submissions
         const confirmButton = document.querySelector('#quizScreen .btn-primary');
         confirmButton.disabled = true;
@@ -1126,6 +1126,7 @@
         currentAttemptRecord.attempts++;
 
         // Clear previous correct/incorrect styles from answer zone only
+        // (We re-apply specific incorrect styles below if needed)
         answerZone.querySelectorAll('.word-box').forEach(box => {
             box.classList.remove('correct', 'incorrect');
         });
@@ -1134,6 +1135,7 @@
         let attemptIndex = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
 
         if (isCorrect) {
+            // --- CORRECT ANSWER LOGIC ---
             currentAttemptRecord.correct = true;
             const points = calculatePoints(timeSpent);
 
@@ -1150,11 +1152,9 @@
             if (attemptIndex === -1) {
                 userData.attempts.push(attemptData);
             } else {
-                // Update only if this new correct attempt is better (e.g., fewer attempts, though logic might vary)
-                // For simplicity, let's just update with the latest correct info
-                 userData.attempts[attemptIndex] = attemptData;
+                // Update existing attempt record
+                userData.attempts[attemptIndex] = attemptData;
             }
-
 
             Swal.fire({
                 title: 'Correct!',
@@ -1176,36 +1176,59 @@
                 }
             });
 
-        } else { // Incorrect Answer
-             // Add visual feedback for incorrect words
+        } else {
+            // --- INCORRECT ANSWER LOGIC ---
+
+            // Start: Specific Highlighting and Independent Timer
             const correctAnswerWords = correctAnswer.split(' ');
-            answerZone.querySelectorAll('.word-box').forEach((box, index) => {
-                 if (index < correctAnswerWords.length && box.textContent.trim() === correctAnswerWords[index]) {
-                    // Correct word in the correct position (though overall answer is wrong) - optional styling
-                    // box.classList.add('correct'); // Maybe confusing, stick to just 'incorrect' for wrong answers
-                 } else {
+            const userWordBoxes = answerZone.querySelectorAll('.word-box');
+            const incorrectBoxesToClear = []; // Store the boxes that need clearing after 5s
+
+            userWordBoxes.forEach((box, index) => {
+                const userWord = box.textContent.trim();
+                const correctWordAtIndex = correctAnswerWords[index];
+
+                // Check if the word is in the wrong place OR if it's an extra word
+                if (index >= correctAnswerWords.length || userWord !== correctWordAtIndex) {
                     box.classList.add('incorrect');
-                 }
-             });
+                    incorrectBoxesToClear.push(box); // Add to the list for later clearing
+                }
+                // No need for an else here, we cleared all styles at the start of checkAnswer
+            });
+
+            // Start the 5-second timer immediately to remove the 'incorrect' class
+            // This timer runs independently of user interaction with the popup or boxes
+            setTimeout(() => {
+                incorrectBoxesToClear.forEach(box => {
+                    // Check if the box *still* exists in the DOM and has the class before removing
+                    // (It might have been moved out or the next question loaded)
+                    if (box && box.parentElement === answerZone && box.classList.contains('incorrect')) {
+                        box.classList.remove('incorrect');
+                    }
+                });
+                // NOTE: We do NOT re-enable the confirm button here automatically.
+            }, 5000); // 5 seconds
+            // End: Specific Highlighting and Independent Timer
+
 
             // Record the incorrect attempt if it's the first attempt or if no correct answer recorded yet
-             if (attemptIndex === -1 || userData.attempts[attemptIndex].points === 0) {
-                 const attemptData = {
+            if (attemptIndex === -1 || userData.attempts[attemptIndex].points === 0) {
+                const attemptData = {
                     question: currentQuestion + 1,
                     time: timeSpent,
                     points: 0, // Incorrect answer gets 0 points
                     userAnswer,
                     correctAnswer,
                     attempts: currentAttemptRecord.attempts
-                 };
-                 if (attemptIndex === -1) {
+                };
+                if (attemptIndex === -1) {
                     userData.attempts.push(attemptData);
-                 } else {
+                } else {
                     userData.attempts[attemptIndex] = attemptData; // Update existing incorrect attempt record
-                 }
-             }
+                }
+            }
 
-
+            // Show the popup asking the user what to do next
             Swal.fire({
                 title: 'Incorrect!',
                 html: `Would you like to try again?`,
@@ -1215,27 +1238,21 @@
                 cancelButtonText: 'Next Question',
                 confirmButtonColor: '#1a73e8',
                 cancelButtonColor: '#ef4444',
-                allowOutsideClick: false
+                allowOutsideClick: false // Ensure user makes a choice
             }).then((result) => {
                 if (result.isConfirmed) {
                     // User wants to try again
                     resumeTimer(); // Resume timer
-                    // Clear feedback styles before retry
-                    /*
-                     answerZone.querySelectorAll('.word-box').forEach(box => {
-                         box.classList.remove('correct', 'incorrect');
-                     });
-                    confirmButton.disabled = false; // Re-enable button for retry
-                    */
-                            // Delay clearing the red highlight (incorrect class) for 5 seconds:
-                    setTimeout(() => {
-                        answerZone.querySelectorAll('.word-box').forEach(box => {
-                            box.classList.remove('correct', 'incorrect');
-                        });
-                        confirmButton.disabled = false; // Re-enable the confirm button after delay
-                    }, 5000);
+                    // Re-enable the confirm button ONLY when 'Try Again' is clicked
+                    confirmButton.disabled = false;
+                    // The red highlight removal is handled by the independent setTimeout above.
                 } else {
-                    // User wants to move to the next question
+                    // User wants to move to the next question (or finish)
+                    // Clear any potentially remaining incorrect styles immediately before loading next question
+                    answerZone.querySelectorAll('.word-box.incorrect').forEach(box => {
+                        box.classList.remove('incorrect');
+                    });
+
                     if (currentQuestion < quizData.length - 1) {
                         currentQuestion++;
                         pausedAt = 0; // Reset pause state
@@ -1246,8 +1263,8 @@
                     }
                 }
             });
-        }
-    }
+        } // End of else (incorrect answer)
+    } // End of checkAnswer function
 
     // Utility functions
     function calculatePoints(seconds) {
