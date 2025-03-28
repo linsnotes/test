@@ -1219,10 +1219,19 @@
                     // User wants to try again
                     resumeTimer(); // Resume timer
                     // Clear feedback styles before retry
+                    /*
                      answerZone.querySelectorAll('.word-box').forEach(box => {
                          box.classList.remove('correct', 'incorrect');
                      });
                     confirmButton.disabled = false; // Re-enable button for retry
+                    */
+                            // Delay clearing the red highlight (incorrect class) for 5 seconds:
+                    setTimeout(() => {
+                        answerZone.querySelectorAll('.word-box').forEach(box => {
+                            box.classList.remove('correct', 'incorrect');
+                        });
+                        confirmButton.disabled = false; // Re-enable the confirm button after delay
+                    }, 5000);
                 } else {
                     // User wants to move to the next question
                     if (currentQuestion < quizData.length - 1) {
