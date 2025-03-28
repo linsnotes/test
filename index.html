@@ -7,6 +7,12 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Language Puzzle</title>
+
+    <!-- Load Google Fonts (Example for Noto Sans JP and Noto Sans Thai) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans+Thai:wght@400;500&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.css"> <!-- SortableJS -->
     <style>
@@ -26,6 +32,31 @@
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius: 0.5rem;
             --transition: all 0.3s ease;
+
+            /* --- NEW: Font configuration for word boxes --- */
+            /* Default font stack: Prioritizes system UI fonts, common web fonts, and a generic fallback. */
+            /* You can CHANGE this stack to better suit the primary languages you expect. */
+            /* Example for primarily CJK languages: */
+            /* --word-box-font-family: 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', 'Microsoft YaHei', 'SimHei', 'Malgun Gothic', Meiryo, sans-serif; */
+            /* Example for primarily Thai: */
+            /* --word-box-font-family: 'Noto Sans Thai', Tahoma, sans-serif; */
+            --word-box-font-family: KaiTi,             /* Windows Simplified */
+                                    'Kaiti SC',         /* macOS/iOS Simplified */
+                                    DFKai-SB,           /* Windows Traditional */
+                                    BiauKai,            /* Common Traditional */
+                                    'Microsoft YaHei',  /* Common Sans Chinese Fallback (optional but good) */
+                                    'SimHei',           /* Common Sans Chinese Fallback (optional but good) */
+                                    'Segoe UI',        /* Standard Latin Sans */
+                                    Roboto,             /* Standard Latin Sans (Android/ChromeOS) */
+                                    'Helvetica Neue',   /* Standard Latin Sans (macOS/iOS) */
+                                    Arial,              /* Widely available Latin Sans */
+                                    sans-serif;         /* Generic fallback */
+
+
+            /* Default font size for word boxes. Adjust as needed. */
+            --word-box-font-size: 1.5rem; /* <-- EDIT THIS LINE TO CHANGE SIZE GLOBALLY */
+            /* --- End NEW --- */
+           
         }
         
     /* Rotating icon animation */
@@ -359,6 +390,10 @@
         user-select: none;
         transition: var(--transition);
         border: 1px solid #e5e7eb;
+        /* --- APPLY FONT VARIABLES --- */
+        font-family: var(--word-box-font-family); /* Use the variable */
+        font-size: var(--word-box-font-size);   /* Use the variable */
+        /* --- End APPLY --- */
     }
 
     .word-box:hover {
