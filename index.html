@@ -1328,11 +1328,42 @@
         // Calculate total points (no change needed here)
         userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
         const correctCount = userData.attempts.filter(a => a.points > 0).length;
-        // Get completion timestamp (no change needed here)
-        // ... (timestamp calculation) ...
 
-        // Update resultSummary (no change needed here)
-        // ... (resultSummary update) ...
+        // Get completion timestamp  // <--- UNCOMMENTED
+        const completionDate = new Date(); // <--- UNCOMMENTED
+        const day = completionDate.getDate().toString().padStart(2, '0'); // <--- UNCOMMENTED
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; // <--- UNCOMMENTED
+        const month = monthNames[completionDate.getMonth()]; // <--- UNCOMMENTED
+        const year = completionDate.getFullYear(); // <--- UNCOMMENTED
+        const hours = completionDate.getHours().toString().padStart(2, '0'); // <--- UNCOMMENTED
+        const minutes = completionDate.getMinutes().toString().padStart(2, '0'); // <--- UNCOMMENTED
+        const seconds = completionDate.getSeconds().toString().padStart(2, '0'); // <--- UNCOMMENTED
+        const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`; // <--- UNCOMMENTED
+
+        // Update the resultSummary with improved styling // <--- UNCOMMENTED
+        document.getElementById('resultSummary').innerHTML = ` // <--- UNCOMMENTED
+            <div class="result-stat">
+                <i class="fas fa-user"></i>
+                <span><strong>Name:</strong> ${userData.name || 'N/A'}</span>
+            </div>
+            <div class="result-stat">
+                <i class="fas fa-calendar-check"></i>
+                <span><strong>Completed:</strong> ${completionTimestamp}</span>
+            </div>
+            <div class="result-stat">
+                <i class="fas fa-book"></i>
+                <span><strong>Quiz Title:</strong> ${window.quizTitle || 'N/A'}</span>
+            </div>
+            <div class="result-stat">
+                <i class="fas fa-trophy"></i>
+                <span><strong>Total Score:</strong> ${userData.totalPoints} points</span>
+            </div>
+            <div class="result-stat">
+                <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                <span><strong>Correct Answers:</strong> ${correctCount} / ${quizData.length}</span>
+            </div>
+        `; // <--- UNCOMMENTED
+
 
         const table = document.getElementById('resultsTable');
         let tableHTML = `
