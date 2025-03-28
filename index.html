@@ -995,9 +995,14 @@
         quizData = data.map(question => {
             // Ensure question is a string before splitting
             const questionText = String(question || '');
+            // Calculate parts first (split by #, trim each, remove empty)
+            const parts = questionText.split('#').map(p => p.trim()).filter(p => p);
+            // Generate the 'correct' answer CONSISTENTLY by joining the cleaned parts with a single space
+            const correctAnswerString = parts.join(' ');
+            
             return {
-                parts: questionText.split('#').map(p => p.trim()).filter(p => p), // Trim parts and filter empty ones
-                correct: questionText.replace(/#/g, ' ').trim(), // Replace # with space and trim
+                parts: parts,
+                correct: correctAnswerString,
                 shuffled: null
             };
         }).filter(q => q.parts.length > 0); // Filter out questions that became empty
