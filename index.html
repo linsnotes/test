@@ -348,11 +348,6 @@
         color: var(--text-secondary);
     }
 
-    .drop-zone.drop-zone-over {
-        background-color: rgba(26, 115, 232, 0.2); /* Light blue fill */
-        border-color: var(--primary);
-    }
-
     .word-box {
         display: inline-block;
         padding: 0.5rem 1rem;
@@ -749,19 +744,6 @@
                 evt.item.classList.add('animate-drop');
                 setTimeout(() => evt.item.classList.remove('animate-drop'), 300);
             }
-        });
-
-        document.querySelectorAll('.drop-zone').forEach(zone => {
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault(); // Allow drop
-                zone.classList.add('drop-zone-over');
-            });
-            zone.addEventListener('dragleave', () => {
-                zone.classList.remove('drop-zone-over');
-            });
-            zone.addEventListener('drop', () => {
-                zone.classList.remove('drop-zone-over');
-            });
         });
 
 
