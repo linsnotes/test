@@ -261,6 +261,17 @@
         color: var(--text-primary);
     }
 
+    .quiz-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    background: var(--light);
+    border-radius: var(--radius);
+    }
+
     .question-counter {
         font-weight: 500;
         color: var(--text-secondary);
@@ -475,6 +486,11 @@
             margin: 0.125rem;
             font-size: 0.875rem;
         }
+        
+        .quiz-title {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        }
     }
 
     /* Google Sheet Dropdown Styling */
@@ -578,6 +594,9 @@
                 <div class="timer-container">
                     <i class="fas fa-clock"></i>
                     Time: <span id="timer" class="timer-value">0</span>s
+                </div>
+                <div id="quizTitleDisplay" class="quiz-title">
+                 <!-- Quiz title will be shown here -->
                 </div>
                 <div class="question-counter" id="questionNumber"></div>
             </div>
@@ -740,6 +759,7 @@
                  throw new Error('No sheet found in the workbook.');
             }
             const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
+            window.quizTitle = rows[0][0]; // Extract cell A1 and store globally
             // Ensure rows is an array and has data
              if (!Array.isArray(rows) || rows.length <= 1) {
                 console.warn('Sheet is empty or has only a header row.');
@@ -953,6 +973,7 @@
         setupDoubleClickHandlers();
 
         showScreen('quizScreen');
+        document.getElementById('quizTitleDisplay').innerText = window.quizTitle || '';
         loadQuestion();
         startTimer();
     }
@@ -1217,6 +1238,10 @@
             <div class="result-stat">
                 <i class="fas fa-calendar-check"></i>
                 <span><strong>Completed:</strong> ${completionTimestamp}</span>
+            </div>
+            <div class="result-stat">
+                <i class="fas fa-book"></i>
+                <span><strong>Quiz Title:</strong> ${window.quizTitle || 'N/A'}</span>
             </div>
             <div class="result-stat">
                 <i class="fas fa-trophy"></i>
