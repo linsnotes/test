@@ -732,6 +732,8 @@
                         // Animate word box on drop
                         evt.item.classList.add('animate-drop');
                         setTimeout(() => evt.item.classList.remove('animate-drop'), 300);
+                        // If the item being added back had the 'incorrect' class, remove it immediately.
+                        evt.item.classList.remove('incorrect');
                 }
         });
 
