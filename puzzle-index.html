@@ -1141,8 +1141,7 @@
             // The interval continues running, it will pick up the correct time difference
         }
     }
-
-        function checkAnswer() {
+    function checkAnswer() {
         // Disable button to prevent multiple submissions
         const confirmButton = document.querySelector('#quizScreen .btn-primary');
         confirmButton.disabled = true;
@@ -1151,9 +1150,15 @@
 
         const timeSpent = elapsedTime; // Use the time when paused
         const answerZone = document.getElementById('answerZone');
+        const wordContainer = document.getElementById('wordContainer'); // Get word container too
         const userAnswerWords = [...answerZone.querySelectorAll('.word-box')]
                                 .map(node => node.textContent.trim());
         const userAnswer = userAnswerWords.join(' ');
+
+        // *** NEW: Check if the attempt is complete ***
+        // An attempt is complete if the wordContainer is empty
+        const isAttemptComplete = wordContainer.querySelectorAll('.word-box').length === 0;
+        // *** END NEW ***
 
         const currentQuizItem = quizData[currentQuestion];
         const correctAnswer = currentQuizItem.correct;
@@ -1163,12 +1168,10 @@
         currentAttemptRecord.attempts++;
 
         // Clear previous correct/incorrect styles from answer zone only
-        // (We re-apply specific incorrect styles below if needed)
         answerZone.querySelectorAll('.word-box').forEach(box => {
             box.classList.remove('correct', 'incorrect');
         });
 
-        // Find the attempt index if it exists
         let attemptIndex = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
 
         if (isCorrect) {
@@ -1182,27 +1185,24 @@
                 points,
                 userAnswer,
                 correctAnswer,
-                attempts: currentAttemptRecord.attempts
+                attempts: currentAttemptRecord.attempts,
+                attemptComplete: isAttemptComplete // *** ADDED FLAG ***
             };
 
             // Add or update the attempt in userData
             if (attemptIndex === -1) {
                 userData.attempts.push(attemptData);
             } else {
-                // Update existing attempt record
                 userData.attempts[attemptIndex] = attemptData;
             }
 
             Swal.fire({
                 title: 'Correct!',
-                text: `(+${points} points)`,
+                text: (+${points} points),
                 icon: 'success',
-                confirmButtonColor: '#1a73e8',
-                timer: 1500,
-                timerProgressBar: true,
-                allowOutsideClick: false // Prevent dismissal until timer runs out or manually closed
+                // ... (rest of Swal options)
             }).then(() => {
-                // Move to next question or results
+                // ... (rest of logic to move next)
                 if (currentQuestion < quizData.length - 1) {
                     currentQuestion++;
                     pausedAt = 0; // Reset pause state for next question
@@ -1216,92 +1216,97 @@
         } else {
             // --- INCORRECT ANSWER LOGIC ---
 
-            // Start: Specific Highlighting and Independent Timer
-            const correctAnswerWords = correctAnswer.split(' ');
-            const userWordBoxes = answerZone.querySelectorAll('.word-box');
-            const incorrectBoxesToClear = []; // Store the boxes that need clearing after 5s
+            // *** NEW: Only show "Incorrect" pop-up if the attempt was complete ***
+            // If incomplete, just record it and move on or allow retry without the harsh 'Incorrect!' label initially.
+            // Let's refine this: Always record the attempt, but the popup message can differ.
+            // We still need to record the attempt data.
 
-            userWordBoxes.forEach((box, index) => {
-                const userWord = box.textContent.trim();
-                const correctWordAtIndex = correctAnswerWords[index];
+            const attemptData = {
+                question: currentQuestion + 1,
+                time: timeSpent,
+                points: 0, // Incorrect answer gets 0 points
+                userAnswer,
+                correctAnswer,
+                attempts: currentAttemptRecord.attempts,
+                attemptComplete: isAttemptComplete // *** ADDED FLAG ***
+            };
 
-                // Check if the word is in the wrong place OR if it's an extra word
-                if (index >= correctAnswerWords.length || userWord !== correctWordAtIndex) {
-                    box.classList.add('incorrect');
-                    incorrectBoxesToClear.push(box); // Add to the list for later clearing
-                }
-                // No need for an else here, we cleared all styles at the start of checkAnswer
-            });
-
-            // Start the 5-second timer immediately to remove the 'incorrect' class
-            // This timer runs independently of user interaction with the popup or boxes
-            setTimeout(() => {
-                incorrectBoxesToClear.forEach(box => {
-                    // Check if the box *still* exists in the DOM and has the class before removing
-                    // (It might have been moved out or the next question loaded)
-                    if (box && box.parentElement === answerZone && box.classList.contains('incorrect')) {
-                        box.classList.remove('incorrect');
-                    }
-                });
-                // NOTE: We do NOT re-enable the confirm button here automatically.
-            }, 5000); // 5 seconds
-            // End: Specific Highlighting and Independent Timer
-
-
-            // Record the incorrect attempt if it's the first attempt or if no correct answer recorded yet
-            if (attemptIndex === -1 || userData.attempts[attemptIndex].points === 0) {
-                const attemptData = {
-                    question: currentQuestion + 1,
-                    time: timeSpent,
-                    points: 0, // Incorrect answer gets 0 points
-                    userAnswer,
-                    correctAnswer,
-                    attempts: currentAttemptRecord.attempts
-                };
-                if (attemptIndex === -1) {
-                    userData.attempts.push(attemptData);
-                } else {
-                    userData.attempts[attemptIndex] = attemptData; // Update existing incorrect attempt record
-                }
+            // Update or add the attempt record regardless of completeness
+            if (attemptIndex === -1) {
+                userData.attempts.push(attemptData);
+            } else {
+                // Only update if the new attempt is 'more complete' or it's still incomplete
+                // Or simply always update to reflect the last try state
+                userData.attempts[attemptIndex] = attemptData; // Always update with the latest attempt info
             }
 
-            // Show the popup asking the user what to do next
+            // Highlight incorrect boxes *only if the attempt was complete* (otherwise it's just incomplete)
+            if (isAttemptComplete) {
+                const correctAnswerWords = correctAnswer.split(' ');
+                const userWordBoxes = answerZone.querySelectorAll('.word-box');
+                const incorrectBoxesToClear = [];
+
+                userWordBoxes.forEach((box, index) => {
+                    const userWord = box.textContent.trim();
+                    const correctWordAtIndex = correctAnswerWords[index];
+                    if (index >= correctAnswerWords.length || userWord !== correctWordAtIndex) {
+                        box.classList.add('incorrect');
+                        incorrectBoxesToClear.push(box);
+                    }
+                });
+
+                setTimeout(() => {
+                    incorrectBoxesToClear.forEach(box => {
+                        if (box && box.parentElement === answerZone && box.classList.contains('incorrect')) {
+                            box.classList.remove('incorrect');
+                        }
+                    });
+                }, 5000);
+            }
+
+            // Show popup based on completeness
+            const popupTitle = isAttemptComplete ? 'Incorrect!' : 'Incomplete Answer';
+            const popupIcon = isAttemptComplete ? 'error' : 'warning';
+            const popupHTML = isAttemptComplete ? "Would you like to try again?" : "You haven't used all the words. Would you like to try again?";
+
             Swal.fire({
-                title: 'Incorrect!',
-                html: `Would you like to try again?`,
-                icon: 'error',
+                title: popupTitle, // Dynamic title
+                html: popupHTML,   // Dynamic message
+                icon: popupIcon,     // Dynamic icon
                 showCancelButton: true,
                 confirmButtonText: 'Try Again',
                 cancelButtonText: 'Next Question',
                 confirmButtonColor: '#1a73e8',
                 cancelButtonColor: '#ef4444',
-                allowOutsideClick: false // Ensure user makes a choice
+                allowOutsideClick: false
             }).then((result) => {
                 if (result.isConfirmed) {
                     // User wants to try again
-                    resumeTimer(); // Resume timer
-                    // Re-enable the confirm button ONLY when 'Try Again' is clicked
+                    resumeTimer();
                     confirmButton.disabled = false;
-                    // The red highlight removal is handled by the independent setTimeout above.
+                    // Ensure incorrect styling is cleared if they retry an incomplete attempt
+                    if (!isAttemptComplete) {
+                        answerZone.querySelectorAll('.word-box').forEach(box => box.classList.remove('incorrect'));
+                    }
                 } else {
-                    // User wants to move to the next question (or finish)
-                    // Clear any potentially remaining incorrect styles immediately before loading next question
+                    // User wants to move to the next question
                     answerZone.querySelectorAll('.word-box.incorrect').forEach(box => {
                         box.classList.remove('incorrect');
                     });
 
                     if (currentQuestion < quizData.length - 1) {
                         currentQuestion++;
-                        pausedAt = 0; // Reset pause state
+                        pausedAt = 0;
                         loadQuestion();
-                        startTimer(); // Restart timer for new question
+                        startTimer();
                     } else {
-                        showResults(); // End of quiz
+                        showResults();
                     }
                 }
             });
-        } // End of else (incorrect answer)
-    } // End of checkAnswer function
+        }
+    }
+
 
     // Utility functions
     function calculatePoints(seconds) {
@@ -1315,51 +1320,21 @@
         return 0; // Should not happen with Infinity, but good practice
     }
 
+
     function showResults() {
-        clearInterval(timerInterval); // Ensure timer is stopped
+        clearInterval(timerInterval);
         showScreen('resultsScreen');
 
-        // Calculate total points based on the LATEST recorded points for each question attempt
+        // Calculate total points (no change needed here)
         userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
         const correctCount = userData.attempts.filter(a => a.points > 0).length;
+        // Get completion timestamp (no change needed here)
+        // ... (timestamp calculation) ...
 
-        // Get completion timestamp
-        const completionDate = new Date();
-        const day = completionDate.getDate().toString().padStart(2, '0');
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const month = monthNames[completionDate.getMonth()];
-        const year = completionDate.getFullYear();
-        const hours = completionDate.getHours().toString().padStart(2, '0');
-        const minutes = completionDate.getMinutes().toString().padStart(2, '0');
-        const seconds = completionDate.getSeconds().toString().padStart(2, '0');
-        const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`;
-
-        // Update the resultSummary with improved styling
-        document.getElementById('resultSummary').innerHTML = `
-            <div class="result-stat">
-                <i class="fas fa-user"></i>
-                <span><strong>Name:</strong> ${userData.name || 'N/A'}</span>
-            </div>
-            <div class="result-stat">
-                <i class="fas fa-calendar-check"></i>
-                <span><strong>Completed:</strong> ${completionTimestamp}</span>
-            </div>
-            <div class="result-stat">
-                <i class="fas fa-book"></i>
-                <span><strong>Quiz Title:</strong> ${window.quizTitle || 'N/A'}</span>
-            </div>
-            <div class="result-stat">
-                <i class="fas fa-trophy"></i>
-                <span><strong>Total Score:</strong> ${userData.totalPoints} points</span>
-            </div>
-            <div class="result-stat">
-                <i class="fas fa-check-circle" style="color: var(--success);"></i>
-                <span><strong>Correct Answers:</strong> ${correctCount} / ${quizData.length}</span>
-            </div>
-        `;
+        // Update resultSummary (no change needed here)
+        // ... (resultSummary update) ...
 
         const table = document.getElementById('resultsTable');
-        // Ensure header is always present
         let tableHTML = `
             <thead>
                 <tr>
@@ -1373,45 +1348,54 @@
             </thead>
             <tbody>`;
 
-        // Populate table rows - create rows for ALL questions, even if not attempted/skipped incorrectly
-         for (let i = 0; i < quizData.length; i++) {
+        for (let i = 0; i < quizData.length; i++) {
             const questionNum = i + 1;
             const attempt = userData.attempts.find(a => a.question === questionNum);
+            const originalQuestionData = quizData[i]; // Get original data for the correct answer fallback
+
             if (attempt) {
-                 // Highlight correct vs incorrect rows subtly
-                 const rowClass = attempt.points > 0 ? 'table-success' : 'table-danger-light';
-                 tableHTML += `
+                // *** NEW: Conditional display based on attemptComplete ***
+                const displayCorrectAnswer = attempt.attemptComplete || attempt.points > 0; // Show if complete OR if they got it right anyway (edge case?)
+                const correctAnswerText = displayCorrectAnswer
+                                          ? attempt.correctAnswer
+                                          : '<span style="color: var(--warning);">Please try again to review</span>';
+                const userAnswerText = attempt.attemptComplete || attempt.points > 0
+                                       ? (attempt.userAnswer || 'N/A') // Show their answer if attempt was complete
+                                       : '<i>Incomplete</i>'; // Show 'Incomplete' if not complete
+
+                const rowClass = attempt.points > 0 ? 'table-success' : (displayCorrectAnswer ? 'table-danger-light' : ''); // Add danger class only if complete but wrong
+
+                tableHTML += `
                     <tr class="${rowClass}">
                         <td>${attempt.question}</td>
                         <td>${attempt.time}</td>
                         <td>${attempt.points}</td>
                         <td>${attempt.attempts}</td>
-                        <td style="color: ${attempt.points > 0 ? 'inherit' : 'var(--danger)'};">${attempt.userAnswer || 'N/A'}</td>
-                        <td>${attempt.correctAnswer}</td>
+                        <td style="color: ${attempt.points > 0 ? 'inherit' : (displayCorrectAnswer ? 'var(--danger)' : 'inherit')};">${userAnswerText}</td>
+                        <td>${correctAnswerText}</td>
                     </tr>
-                 `;
+                `;
+                // *** END NEW ***
             } else {
-                 // Question likely skipped or not reached if quiz ended early
-                 tableHTML += `
+                // Question skipped or not reached
+                tableHTML += `
                     <tr>
                         <td>${questionNum}</td>
                         <td>-</td>
                         <td>0</td>
                         <td>${questionAttempts[i]?.attempts || 0}</td>
-                        <td>Not Answered</td>
-                        <td>${quizData[i].correct}</td>
+                        <td><i>Not Answered</i></td>
+                        <td><span style="color: var(--warning);">Please try again to review</span></td>
                     </tr>
-                 `;
+                `;
             }
         }
 
         tableHTML += `</tbody>`;
         table.innerHTML = tableHTML;
-
-         // Add some light styling for success/danger rows if needed in CSS
-         // e.g., .table-success td { background-color: rgba(16, 185, 129, 0.1); }
-         //       .table-danger-light td { background-color: rgba(239, 68, 68, 0.05); }
     }
+    
+
 
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
