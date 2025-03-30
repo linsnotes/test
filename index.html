@@ -649,45 +649,67 @@
             showScreen('nameScreen');
         }
 
+        // --- UPDATED resetQuizState Function ---
         function resetQuizState(fullReset = true) {
-            stopGameLoop(); // Ensure loop is stopped
-            clearInterval(timerInterval);
-            currentQuestion = 0;
-            quizData = fullReset ? [] : quizData;
-            allColBTargets = fullReset ? [] : allColBTargets;
-            userData.startTime = 0;
-            userData.attempts = [];
-            userData.totalPoints = 0;
-            timerInterval = null;
-            timerPaused = false;
-            elapsedTime = 0;
-            questionStartTime = 0;
-            questionAttempts = {};
-            questionFailed = false;
-            currentCorrectAnswer = '';
-            activeTargets = []; // Clear active targets array
-            keysPressed = {}; // Clear pressed keys
-             if (fullReset) {
-                 userData.name = ''; currentSheetId = ''; window.quizTitle = '';
-             }
-             // Clear UI elements
-             DOMElements.resultSummary.innerHTML = '';
-             DOMElements.resultsTable.innerHTML = '';
-             DOMElements.gameArea.innerHTML = ''; // Clear targets from DOM
-             DOMElements.shooter.textContent = '';
-             DOMElements.progressBar.style.width = '0%';
-             DOMElements.timerDisplay.textContent = '0';
-             DOMElements.questionNumberDisplay.textContent = '';
-             DOMElements.quizTitleDisplay.textContent = '';
-             // Re-add shooter and bullet structure to gameArea
-             DOMElements.gameArea.appendChild(DOMElements.shooter);
-             DOMElements.gameArea.appendChild(DOMElements.bullet);
-             bulletState.element = DOMElements.bullet; // Re-cache bullet element
-             bulletState.active = false;
-             bulletState.element.style.display = 'none';
+                stopGameLoop(); // Ensure loop is stopped
+                clearInterval(timerInterval);
+                currentQuestion = 0;
+                quizData = fullReset ? [] : quizData;
+                allColBTargets = fullReset ? [] : allColBTargets;
+                userData.startTime = 0;
+                userData.attempts = [];
+                userData.totalPoints = 0;
+                timerInterval = null;
+                timerPaused = false;
+                elapsedTime = 0;
+                questionStartTime = 0;
+                questionAttempts = {};
+                questionFailed = false;
+                currentCorrectAnswer = '';
+                activeTargets = []; // Clear active targets array
 
+                // ---> ADD THIS: Clear active bullets (DOM and Array) <---
+                activeBullets.forEach(b => {
+                        if (b.element && b.element.parentNode) {
+                                b.element.remove();
+                        }
+                });
+                activeBullets = [];
+                // ---> END ADD <---
+
+                keysPressed = {}; // Clear pressed keys
+
+                if (fullReset) {
+                        userData.name = ''; currentSheetId = ''; window.quizTitle = '';
+                }
+
+                // Clear UI elements
+                DOMElements.resultSummary.innerHTML = '';
+                DOMElements.resultsTable.innerHTML = '';
+
+                // Clear dynamically added children from gameArea (targets, bullets)
+                // Keep shooter and bullet template
+                Array.from(DOMElements.gameArea.children).forEach(child => {
+                        // Check against the cached elements
+                        if (child !== DOMElements.shooter && child !== DOMElements.bulletTemplate) {
+                                child.remove();
+                        }
+                });
+
+                // Reset other UI specific to the quiz screen
+                DOMElements.shooter.textContent = '';
+                DOMElements.progressBar.style.width = '0%';
+                DOMElements.timerDisplay.textContent = '0';
+                DOMElements.questionNumberDisplay.textContent = '';
+                DOMElements.quizTitleDisplay.textContent = '';
+
+                // Ensure the bullet template remains hidden (CSS should primarily handle this)
+                if (DOMElements.bulletTemplate) {
+                        DOMElements.bulletTemplate.style.display = 'none';
+                }
         }
 
+        
         function startQuiz() {
             userData.name = DOMElements.userNameInput.value.trim();
             if (!userData.name) { Swal.fire('Missing Input', 'Please enter your name.', 'warning', { confirmButtonColor: primaryColor }); return; }
@@ -780,65 +802,7 @@
                 // }
         }
 
-        // --- UPDATED resetQuizState Function ---
-        function resetQuizState(fullReset = true) {
-                stopGameLoop(); // Ensure loop is stopped
-                clearInterval(timerInterval);
-                currentQuestion = 0;
-                quizData = fullReset ? [] : quizData;
-                allColBTargets = fullReset ? [] : allColBTargets;
-                userData.startTime = 0;
-                userData.attempts = [];
-                userData.totalPoints = 0;
-                timerInterval = null;
-                timerPaused = false;
-                elapsedTime = 0;
-                questionStartTime = 0;
-                questionAttempts = {};
-                questionFailed = false;
-                currentCorrectAnswer = '';
-                activeTargets = []; // Clear active targets array
 
-                // ---> ADD THIS: Clear active bullets (DOM and Array) <---
-                activeBullets.forEach(b => {
-                        if (b.element && b.element.parentNode) {
-                                b.element.remove();
-                        }
-                });
-                activeBullets = [];
-                // ---> END ADD <---
-
-                keysPressed = {}; // Clear pressed keys
-
-                if (fullReset) {
-                        userData.name = ''; currentSheetId = ''; window.quizTitle = '';
-                }
-
-                // Clear UI elements
-                DOMElements.resultSummary.innerHTML = '';
-                DOMElements.resultsTable.innerHTML = '';
-
-                // Clear dynamically added children from gameArea (targets, bullets)
-                // Keep shooter and bullet template
-                Array.from(DOMElements.gameArea.children).forEach(child => {
-                        // Check against the cached elements
-                        if (child !== DOMElements.shooter && child !== DOMElements.bulletTemplate) {
-                                child.remove();
-                        }
-                });
-
-                // Reset other UI specific to the quiz screen
-                DOMElements.shooter.textContent = '';
-                DOMElements.progressBar.style.width = '0%';
-                DOMElements.timerDisplay.textContent = '0';
-                DOMElements.questionNumberDisplay.textContent = '';
-                DOMElements.quizTitleDisplay.textContent = '';
-
-                // Ensure the bullet template remains hidden (CSS should primarily handle this)
-                if (DOMElements.bulletTemplate) {
-                        DOMElements.bulletTemplate.style.display = 'none';
-                }
-        }
 
         function spawnTargets() {
                 const gameArea = DOMElements.gameArea;
