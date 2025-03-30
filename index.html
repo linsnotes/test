@@ -377,6 +377,8 @@
         let currentSheetId = ''; // Track the current sheet ID
         let currentCorrectAnswer = ''; // Holds the correct ColB for the current question
         let targetClickHandlerAttached = false; // Flag to manage event listeners
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+        const textSecondary = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
 
         // DOM Elements Cache
         const DOMElements = {
@@ -512,7 +514,6 @@
 
             } catch (error) {
                 console.error('Error loading quiz titles:', error);
-                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
                  Swal.fire({
                     title: 'Error Loading Quiz List',
                     text: `Could not load built-in quizzes. Check console for details. Details: ${error.message}`,
@@ -565,7 +566,7 @@
         // Quiz Flow Control
         function startSelectedQuiz() {
             if (!currentSheetId) {
-                Swal.fire('No Quiz Selected', 'Please select a quiz from the dropdown.', 'warning', { confirmButtonColor: var(--primary) });
+                Swal.fire('No Quiz Selected', 'Please select a quiz from the dropdown.', 'warning', { confirmButtonColor: primaryColor });
                 return;
             }
             startQuizFlow(currentSheetId);
@@ -574,7 +575,7 @@
         async function startCustomQuiz() {
             const sheetId = DOMElements.quizIdInput.value.trim();
             if (!sheetId) {
-                Swal.fire('Missing Input', 'Please enter a Custom Quiz Google Sheet ID.', 'warning', { confirmButtonColor: var(--primary) });
+                Swal.fire('Missing Input', 'Please enter a Custom Quiz Google Sheet ID.', 'warning', { confirmButtonColor: primaryColor });
                 return;
             }
             currentSheetId = sheetId; // Store for potential restart
@@ -589,7 +590,7 @@
             if (!data || data.length === 0) {
                 Swal.close();
                 if (data !== null) { // Only show 'empty' if loading didn't error out
-                    Swal.fire('Empty or Invalid Quiz', 'No valid questions (pairs of words) found in the sheet.', 'warning', { confirmButtonColor: var(--primary) });
+                    Swal.fire('Empty or Invalid Quiz', 'No valid questions (pairs of words) found in the sheet.', 'warning', { confirmButtonColor: primaryColor });
                 }
                 // If data is null, loadSheetData already showed an error
                 return;
@@ -636,7 +637,7 @@
         function startQuiz() {
             userData.name = DOMElements.userNameInput.value.trim();
             if (!userData.name) {
-                Swal.fire('Missing Input', 'Please enter your name.', 'warning', { confirmButtonColor: var(--primary) });
+                Swal.fire('Missing Input', 'Please enter your name.', 'warning', { confirmButtonColor: primaryColor });
                 return;
             }
 
@@ -999,11 +1000,11 @@
                 link.download = `LanguageShooter-Results-${userData.name || 'User'}-${timestamp}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
-                Swal.fire('Success!', 'Results screenshot downloaded.', 'success', { confirmButtonColor: var(--primary) });
+                Swal.fire('Success!', 'Results screenshot downloaded.', 'success', { confirmButtonColor: primaryColor });
             }).catch(err => {
                 Swal.close();
                 console.error("Screenshot error:", err);
-                Swal.fire('Error', 'Could not generate screenshot.', 'error', { confirmButtonColor: var(--primary) });
+                Swal.fire('Error', 'Could not generate screenshot.', 'error', { confirmButtonColor: primaryColor });
             });
         }
 
@@ -1016,8 +1017,8 @@
                 showCancelButton: true,
                 confirmButtonText: 'Yes, Restart Quiz',
                 cancelButtonText: 'No, Go Home',
-                confirmButtonColor: var(--primary),
-                cancelButtonColor: var(--text-secondary),
+                confirmButtonColor: primaryColor,
+                cancelButtonColor: textSecondary,
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
