@@ -417,7 +417,7 @@
         // --- Game State ---
         let gameLoopId = null;
         let shooterX = 0; // Current horizontal position (pixels from left)
-        let bulletState = { active: false, x: 0, y: 0, element: null };
+        let activeBullets = []; // Array of { element: DOMEl, x: num, y: num, width: num, height: num } // ADD THIS LINE
         let activeTargets = []; // Array of { element: DOMEl, x: num, y: num, vx: num, vy: num, word: str, hit: bool }
         let keysPressed = {}; // Track pressed keys for smoother movement
         let gameActive = false; // Is the game loop running?
@@ -437,7 +437,7 @@
             progressBar: document.getElementById('progressBar'),
             gameArea: document.getElementById('gameArea'),
             shooter: document.getElementById('shooter'),
-            bullet: document.getElementById('bullet'),
+            bulletTemplate: document.getElementById('bullet'), 
             resultSummary: document.getElementById('resultSummary'),
             resultsTable: document.getElementById('resultsTable'),
             startBuiltInButton: document.querySelector('button[onclick="startSelectedQuiz()"]'),
@@ -757,16 +757,87 @@
         }
 
         function clearGameElements() {
-             // Remove target DOM elements
-             activeTargets.forEach(t => {
-                if (t.element && t.element.parentNode) { // Check if element exists and is in DOM
-                    t.element.remove();
+                // Remove target DOM elements (existing code)
+                activeTargets.forEach(t => {
+                        if (t.element && t.element.parentNode) { // Check if element exists and is in DOM
+                                t.element.remove();
+                        }
+                });
+                activeTargets = [];
+
+                // ---> ADD THIS: Remove active bullet DOM elements <---
+                activeBullets.forEach(b => {
+                        if (b.element && b.element.parentNode) { // Check if element exists and is in DOM
+                                b.element.remove();
+                        }
+                });
+                activeBullets = []; // Clear the tracking array
+                // ---> END ADD <---
+
+                // Hide bullet TEMPLATE (redundant if CSS handles it, but safe)
+                // if (DOMElements.bulletTemplate) {
+                //     DOMElements.bulletTemplate.style.display = 'none';
+                // }
+        }
+
+        // --- UPDATED resetQuizState Function ---
+        function resetQuizState(fullReset = true) {
+                stopGameLoop(); // Ensure loop is stopped
+                clearInterval(timerInterval);
+                currentQuestion = 0;
+                quizData = fullReset ? [] : quizData;
+                allColBTargets = fullReset ? [] : allColBTargets;
+                userData.startTime = 0;
+                userData.attempts = [];
+                userData.totalPoints = 0;
+                timerInterval = null;
+                timerPaused = false;
+                elapsedTime = 0;
+                questionStartTime = 0;
+                questionAttempts = {};
+                questionFailed = false;
+                currentCorrectAnswer = '';
+                activeTargets = []; // Clear active targets array
+
+                // ---> ADD THIS: Clear active bullets (DOM and Array) <---
+                activeBullets.forEach(b => {
+                        if (b.element && b.element.parentNode) {
+                                b.element.remove();
+                        }
+                });
+                activeBullets = [];
+                // ---> END ADD <---
+
+                keysPressed = {}; // Clear pressed keys
+
+                if (fullReset) {
+                        userData.name = ''; currentSheetId = ''; window.quizTitle = '';
                 }
-             });
-             activeTargets = [];
-             // Hide bullet (important!)
-             bulletState.active = false;
-             if(bulletState.element) bulletState.element.style.display = 'none';
+
+                // Clear UI elements
+                DOMElements.resultSummary.innerHTML = '';
+                DOMElements.resultsTable.innerHTML = '';
+
+                // Clear dynamically added children from gameArea (targets, bullets)
+                // Keep shooter and bullet template
+                Array.from(DOMElements.gameArea.children).forEach(child => {
+                        // Check against the cached elements
+                        if (child !== DOMElements.shooter && child !== DOMElements.bulletTemplate) {
+                                child.remove();
+                        }
+                });
+
+                // Reset other UI specific to the quiz screen
+                DOMElements.shooter.textContent = '';
+                DOMElements.progressBar.style.width = '0%';
+                DOMElements.timerDisplay.textContent = '0';
+                DOMElements.questionNumberDisplay.textContent = '';
+                DOMElements.quizTitleDisplay.textContent = '';
+
+                // Ensure the bullet template remains hidden (CSS should primarily handle this)
+                if (DOMElements.bulletTemplate) {
+                        DOMElements.bulletTemplate.style.display = 'none';
+                }
         }
 
         function spawnTargets() {
@@ -911,23 +982,45 @@
             DOMElements.shooter.style.left = `${shooterX}px`;
         }
 
-         function fireBullet() {
-             if (bulletState.active) return; // Only one bullet at a time
+        function fireBullet() {
+            // REMOVED: if (bulletState.active) return; // No longer limiting to one bullet
 
-             questionAttempts[currentQuestion]++; // Count every shot as an attempt
+            questionAttempts[currentQuestion]++; // Count every shot as an attempt
 
-             const shooterRect = DOMElements.shooter.getBoundingClientRect();
-             const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
+            const shooterRect = DOMElements.shooter.getBoundingClientRect();
+            const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
 
-             // Start bullet from top-center of the shooter
-             bulletState.x = shooterRect.left - gameAreaRect.left + (shooterRect.width / 2) - (bulletState.element.offsetWidth / 2);
-             bulletState.y = shooterRect.top - gameAreaRect.top - bulletState.element.offsetHeight; // Start just above shooter
-             bulletState.active = true;
+            // Clone the template bullet
+            const newBulletElement = DOMElements.bulletTemplate.cloneNode(true);
+            newBulletElement.style.display = 'block'; // Make it visible
+            newBulletElement.removeAttribute('id'); // Avoid duplicate IDs
 
-             bulletState.element.style.left = `${bulletState.x}px`;
-             bulletState.element.style.top = `${bulletState.y}px`;
-             bulletState.element.style.display = 'block';
-         }
+            // Calculate initial position - get dimensions robustly
+            // Use computedStyle as fallback if offsetWidth/Height isn't available immediately
+            const computedStyle = getComputedStyle(DOMElements.bulletTemplate);
+            const bulletWidth = newBulletElement.offsetWidth || parseInt(computedStyle.width) || 8; // Default width 8px
+            const bulletHeight = newBulletElement.offsetHeight || parseInt(computedStyle.height) || 18; // Default height 18px
+
+            const startX = shooterRect.left - gameAreaRect.left + (shooterRect.width / 2) - (bulletWidth / 2);
+            const startY = shooterRect.top - gameAreaRect.top - bulletHeight; // Start just above shooter
+
+            // Position the new bullet element
+            newBulletElement.style.left = `${startX}px`;
+            newBulletElement.style.top = `${startY}px`;
+
+            // Add the element to the game area
+            DOMElements.gameArea.appendChild(newBulletElement);
+
+            // Add the new bullet's state to our tracking array
+            activeBullets.push({
+                element: newBulletElement,
+                x: startX,
+                y: startY,
+                width: bulletWidth,  // Store dimensions for collision detection
+                height: bulletHeight
+            });
+        }
+
 
         // --- Game Loop ---
         function startGameLoop() {
@@ -941,102 +1034,120 @@
             keysPressed = {}; // Clear keys when stopping loop
         }
 
+
         function gameLoop() {
-             if (!gameActive || timerPaused || questionFailed) { // Stop loop if paused, failed, or not on quiz screen
-                 gameLoopId = requestAnimationFrame(gameLoop); // Keep checking state
-                 return;
-             }
-
-             const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
-             const shooterRect = DOMElements.shooter.getBoundingClientRect(); // Get current shooter pos
-
-             // 1. Update Shooter Position (based on keysPressed)
-             updateShooterPosition();
-
-             // 2. Update Bullet Position & Check Offscreen
-             if (bulletState.active) {
-                 bulletState.y -= BULLET_SPEED;
-                 bulletState.element.style.top = `${bulletState.y}px`;
-
-                 if (bulletState.y < -bulletState.element.offsetHeight) { // Bullet went off top screen
-                     bulletState.active = false;
-                     bulletState.element.style.display = 'none';
-                 }
-             }
-
-            // 3. Update Target Positions & Check Bounce / Failure
-            let targetReachedBottom = false;
-            const shooterTopRelative = shooterRect.top - gameAreaRect.top; // Shooter Y relative to gameArea
-
-            activeTargets.forEach(target => {
-                if (target.hit) return; // Skip already hit targets
-
-                // Update position
-                target.x += target.vx;
-                target.y += target.vy;
-
-                // Horizontal bounce
-                if (target.x <= 0 || (target.x + target.width) >= gameAreaRect.width) {
-                    target.vx *= -1; // Reverse horizontal direction
-                    target.x = Math.max(0, Math.min(target.x, gameAreaRect.width - target.width)); // Clamp position
+                if (!gameActive || timerPaused || questionFailed) { // Stop loop if paused, failed, or not on quiz screen
+                        gameLoopId = requestAnimationFrame(gameLoop); // Keep checking state
+                        return;
                 }
 
-                // Apply new position
-                target.element.style.left = `${target.x}px`;
-                target.element.style.top = `${target.y}px`;
+                const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
+                const shooterRect = DOMElements.shooter.getBoundingClientRect(); // Get current shooter pos
 
-                // Check failure condition (target reaches shooter level)
-                if (!questionFailed && (target.y + target.height) >= (shooterTopRelative - TARGET_FAILURE_PADDING)) {
-                     targetReachedBottom = true;
-                     // Mark the target visually maybe? (Optional)
-                     // target.element.style.backgroundColor = 'orange';
-                }
-            });
+                // 1. Update Shooter Position (based on keysPressed)
+                updateShooterPosition(); // Assumes this function exists and works
 
-             // 4. Handle Failure State (outside target loop to process only once)
-             if (targetReachedBottom) {
-                 handleQuestionFailure();
-                 // Loop continues briefly to allow popup, but game logic pauses
-             }
+                // 2. Update ALL Bullets & Check Collisions / Offscreen
+                // Iterate backwards through the activeBullets array to safely remove elements while looping
+                for (let i = activeBullets.length - 1; i >= 0; i--) {
+                        let bullet = activeBullets[i];
+                        let bulletRemoved = false; // Flag to track if this bullet is removed in this iteration
 
-            // 5. Collision Detection (Bullet vs Targets)
-            if (bulletState.active) {
-                const bulletRect = {
-                    left: bulletState.x,
-                    top: bulletState.y,
-                    right: bulletState.x + bulletState.element.offsetWidth,
-                    bottom: bulletState.y + bulletState.element.offsetHeight
-                };
+                        // Update bullet position
+                        bullet.y -= BULLET_SPEED;
+                        bullet.element.style.top = `${bullet.y}px`;
+
+                        // Check if bullet went off-screen (top)
+                        if (bullet.y < -bullet.height) { // Use stored height
+                                bullet.element.remove(); // Remove from DOM
+                                activeBullets.splice(i, 1); // Remove from array
+                                bulletRemoved = true; // Mark as removed
+                                continue; // Go to the next bullet in the loop (this one is gone)
+                        }
+
+                        // If bullet still exists (wasn't removed for being off-screen), check for collisions with targets
+                        if (!bulletRemoved) {
+                                const bulletRect = {
+                                        left: bullet.x,
+                                        top: bullet.y,
+                                        right: bullet.x + bullet.width, // Use stored width
+                                        bottom: bullet.y + bullet.height // Use stored height
+                                };
+
+                                // Iterate through active targets to check for collision
+                                for (let j = activeTargets.length - 1; j >= 0; j--) { // Can iterate targets normally or backward
+                                        let target = activeTargets[j];
+
+                                        if (target.hit) continue; // Skip targets that have already been hit
+
+                                        const targetRect = {
+                                                left: target.x,
+                                                top: target.y,
+                                                right: target.x + target.width,
+                                                bottom: target.y + target.height
+                                        };
+
+                                        // Simple AABB (Axis-Aligned Bounding Box) collision check
+                                        if (bulletRect.left < targetRect.right &&
+                                            bulletRect.right > targetRect.left &&
+                                            bulletRect.top < targetRect.bottom &&
+                                            bulletRect.bottom > targetRect.top)
+                                        {
+                                                // Collision detected!
+                                                bullet.element.remove(); // Remove THE COLLIDING BULLET from DOM
+                                                activeBullets.splice(i, 1); // Remove THE COLLIDING BULLET from array
+                                                bulletRemoved = true; // Mark bullet as removed
+
+                                                target.hit = true; // Mark THE TARGET as hit (prevents multiple hits on same target)
+                                                handleBulletHit(target); // Call the function to handle consequences (score, animation, etc.)
+
+                                                // Since this bullet hit a target, it's gone. Stop checking this bullet against other targets.
+                                                break; // Exit the inner target loop (j) and move to the next bullet (i)
+                                        }
+                                } // End of target collision check loop (j)
+                        } // End of collision check block (if !bulletRemoved)
+                } // End of activeBullets loop (i)
+
+
+                // 3. Update Target Positions & Check Bounce / Failure (This part remains the same as your original code)
+                let targetReachedBottom = false;
+                const shooterTopRelative = shooterRect.top - gameAreaRect.top; // Shooter Y relative to gameArea
 
                 activeTargets.forEach(target => {
-                    if (target.hit || !bulletState.active) return; // Skip hit targets or if bullet already processed
+                        if (target.hit) return; // Skip already hit targets
 
-                    const targetRect = {
-                        left: target.x,
-                        top: target.y,
-                        right: target.x + target.width,
-                        bottom: target.y + target.height
-                    };
+                        // Update position
+                        target.x += target.vx;
+                        target.y += target.vy;
 
-                    // Simple AABB collision check
-                    if (bulletRect.left < targetRect.right &&
-                        bulletRect.right > targetRect.left &&
-                        bulletRect.top < targetRect.bottom &&
-                        bulletRect.bottom > targetRect.top)
-                    {
-                        // Collision detected!
-                        bulletState.active = false;
-                        bulletState.element.style.display = 'none';
-                        target.hit = true; // Mark target as hit
+                        // Horizontal bounce
+                        if (target.x <= 0 || (target.x + target.width) >= gameAreaRect.width) {
+                                target.vx *= -1; // Reverse horizontal direction
+                                target.x = Math.max(0, Math.min(target.x, gameAreaRect.width - target.width)); // Clamp position
+                        }
 
-                        handleBulletHit(target);
-                    }
+                        // Apply new position
+                        target.element.style.left = `${target.x}px`;
+                        target.element.style.top = `${target.y}px`;
+
+                        // Check failure condition (target reaches shooter level)
+                        if (!questionFailed && (target.y + target.height) >= (shooterTopRelative - TARGET_FAILURE_PADDING)) {
+                                targetReachedBottom = true;
+                                // Mark the target visually maybe? (Optional)
+                                // target.element.style.backgroundColor = 'orange';
+                        }
                 });
-            }
 
-            // 6. Request Next Frame
-            gameLoopId = requestAnimationFrame(gameLoop);
+                // 4. Handle Failure State (outside target loop to process only once)
+                if (targetReachedBottom) {
+                        handleQuestionFailure(); // Assumes this function exists and works
+                        // Loop continues briefly to allow popup, but game logic pauses via questionFailed flag
+                }
+
+                // 5. Request Next Frame (Remains the same)
+                gameLoopId = requestAnimationFrame(gameLoop);
         }
+
 
         function handleBulletHit(target) {
             // No pausing timer or game loop needed for this approach
