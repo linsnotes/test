@@ -718,10 +718,14 @@
 
         // --- Screen Management ---
         function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = ''; // Clear any inline display styling
+            });
             const targetScreen = DOMElements[screenId];
             if (targetScreen) {
                 targetScreen.classList.add('active');
+                targetScreen.style.display = 'block'; // Ensure it's visible
             } else {
                 console.error(`Screen with ID ${screenId} not found.`);
                 DOMElements.landingScreen.classList.add('active'); // Fallback
