@@ -176,16 +176,29 @@
             position: absolute;
             bottom: 10px;
             left: 50%;
-            width: 60px;           /* Fixed width for a tank body */
-            height: 40px;          /* Fixed height */
+            min-width: 60px;
+            width: auto;
+            padding: 0 10px;
+            height: 40px;
             background-color: var(--dark);
-            border-radius: 5px;    /* Minimal curves */
+            border-radius: 5px;
             transform: translateX(-50%);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            color: var(--shooter-text-color);
-            text-align: center; /* Ensure text centers if it somehow wraps */
-            align-items: center; /* Center text vertically */
-            font-family: var(--word-box-font-family);
+            white-space: nowrap;
+            text-align: center;
+            line-height: 40px;
+            color: var(--shooter-text-color);  /* Text color set here */
+        }
+
+        #shooter::before {
+            content: '';
+            position: absolute;
+            width: 6px;            /* Increased width for a thicker barrel */
+            height: 20px;
+            background-color: var(--dark);
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         #shooter::after {
@@ -199,18 +212,6 @@
             transform: translateX(-50%);
             border-radius: 3px;
         }
-
-        #shooter::before {
-            content: '';
-            position: absolute;
-            width: 4px;            /* Thin cannon barrel */
-            height: 20px;          /* Length of the cannon */
-            background-color: var(--dark);
-            top: -25px;            /* Adjust to attach to the turret */
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
 
         /* Optional: Style bullet slightly differently */
         .bullet-visual {
