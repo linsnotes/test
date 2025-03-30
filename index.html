@@ -410,6 +410,11 @@
         const TARGET_FAILURE_PADDING = 20; // How close target needs to get to shooter top to fail
         let numberOfOptions = 4; // Default target count
 
+        // --- NEW CONSTANTS FOR POPUP TIMERS ---
+        const POPUP_TIMER_CORRECT_MS = 500;    // Duration for the "Correct!" popup (milliseconds)
+        const POPUP_TIMER_INCORRECT_MS = 500;  // Duration for the "Incorrect!" popup (milliseconds)
+        const POPUP_ANIMATION_WAIT_MS = 500;    // Delay before showing "Correct!" popup to allow animation (milliseconds)
+
         // --- Game State ---
         let gameLoopId = null;
         let shooterX = 0; // Current horizontal position (pixels from left)
@@ -1045,19 +1050,19 @@
                  setTimeout(() => {
                      Swal.fire({
                         title: 'Correct!', text: `+${points} points!`, icon: 'success',
-                        toast: true, position: 'top-end', showConfirmButton: false, timer: 600, timerProgressBar: true
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: POPUP_TIMER_CORRECT_MS, timerProgressBar: true
                      }).then(() => {
                          currentQuestion++;
                          loadQuestion(); // Load next (will resume timer and start loop)
                      });
-                 }, 500); // Wait for animation
+                 }, POPUP_TIMER_WAIT_MS); // Wait for animation
 
             } else {
                 // --- INCORRECT HIT ---
                 target.element.classList.add('target-hit-incorrect');
                  Swal.fire({
                     title: 'Incorrect!', icon: 'error',
-                    toast: true, position: 'top-end', showConfirmButton: false, timer: 600, timerProgressBar: true
+                    toast: true, position: 'top-end', showConfirmButton: false, timer: POPUP_TIMER_INCORRECT_MS, timerProgressBar: true
                  });
 
                  // Remove the hit target after animation, allow player to try again
@@ -1066,7 +1071,7 @@
                      // Find and remove from activeTargets array to prevent re-checking
                      activeTargets = activeTargets.filter(t => t !== target);
                      resumeTimer(); // Resume timer after feedback
-                 }, 500); // Match animation duration
+                 }, POPUP_TIMER_WAIT_MS); // Match animation duration
             }
         }
 
