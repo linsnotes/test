@@ -901,106 +901,73 @@
             showScreen('nameScreen');
         }
 
+        // --- UPDATED resetQuizState Function ---
         function resetQuizState(fullReset = true) {
-            stopGameLoop(); // Ensure animation loop is stopped
-            clearInterval(timerInterval); // Stop the main timer interval
-
-            // --- Reset Core Game State Variables ---
-            currentQuestion = 0;
-            // quizData and allColBTargets are handled based on fullReset below
-            userData.startTime = 0;
-            userData.attempts = []; // Clear previous attempts data
-            userData.totalPoints = 0; // Clear previous score
-            timerInterval = null;
-            timerPaused = false; // Reset pause state
-            elapsedTime = 0;
-            questionStartTime = 0;
-            questionAttempts = {}; // Reset attempts count per question
-            questionFailed = false; // Crucial: Reset failure flag
-            currentCorrectAnswer = ''; // Reset the tracked correct answer
-            keysPressed = {}; // Clear any stuck key presses
-
-            // --- Clear Active Game Element Tracking Arrays (Do this first) ---
-            activeTargets = [];
-            activeBullets = [];
-
-            // --- Reset UI Elements Not Inside Game Area (e.g., Results Screen) ---
-            // (These are safe to clear early)
-            DOMElements.resultSummary.innerHTML = '';
-            DOMElements.resultsTable.innerHTML = '';
-
-            // *** START REVISED ROBUST DOM CLEARING in Game Area ***
-            console.log("ResetQuizState: Starting robust DOM cleanup of gameArea."); // Debug log
-            if (DOMElements.gameArea) { // Check if gameArea element exists
-                const childrenToRemove = []; // Collect elements to remove first
-                // Loop through all current children of the gameArea
-                for (const child of DOMElements.gameArea.children) {
-                    // Check if the child is NOT the shooter element AND NOT the bullet template element
-                    if (child !== DOMElements.shooter && child !== DOMElements.bulletTemplate) {
-                        // We identify targets and bullets reliably by their CSS class
-                        if (child.classList.contains('target') || child.classList.contains('bullet-visual')) {
-                            // If it's a target or a bullet visual, mark it for removal
-                            childrenToRemove.push(child);
+                stopGameLoop(); // Ensure loop is stopped
+                clearInterval(timerInterval);
+                currentQuestion = 0;
+                quizData = fullReset ? [] : quizData;
+                allColBTargets = fullReset ? [] : allColBTargets;
+                userData.startTime = 0;
+                userData.attempts = [];
+                userData.totalPoints = 0;
+                timerInterval = null;
+                timerPaused = false;
+                elapsedTime = 0;
+                questionStartTime = 0;
+                questionAttempts = {};
+                questionFailed = false;
+                currentCorrectAnswer = '';
+                activeTargets = []; // Clear active targets array
+                // ---> ADD THIS: Clear active bullets (DOM and Array) <---
+                activeBullets.forEach(b => {
+                        if (b.element && b.element.parentNode) {
+                                b.element.remove();
                         }
-                        // Optional: You could log or even remove unexpected elements here if needed
-                        // else {
-                        //    console.log("ResetQuizState: Found unexpected child during reset, keeping:", child);
-                        // }
-                    }
-                }
-                // Now, remove all the elements we collected
-                childrenToRemove.forEach(child => {
-                    console.log("ResetQuizState: Removing element:", child.textContent || child.className); // Log removal detail
-                    child.remove(); // Remove from the actual DOM
                 });
-                console.log(`ResetQuizState: Finished robust DOM cleanup, removed ${childrenToRemove.length} elements.`); // Confirm count
-            } else {
-                console.error("ResetQuizState: gameArea element not found during DOM clearing."); // Error if gameArea is missing
-            }
-            // *** END REVISED ROBUST DOM CLEARING ***
+                activeBullets = [];
+                // ---> END ADD <---
 
+                keysPressed = {}; // Clear pressed keys
 
-            // --- Reset Specific Quiz Screen UI Elements (Do this AFTER clearing the DOM) ---
-            DOMElements.shooter.textContent = ''; // Clear shooter text
-            DOMElements.progressBar.style.width = '0%'; // Reset progress bar
-            DOMElements.timerDisplay.textContent = '0'; // Reset timer display
-            DOMElements.questionNumberDisplay.textContent = ''; // Clear question counter text
-            DOMElements.quizTitleDisplay.textContent = ''; // Clear quiz title display
+                if (fullReset) {
+                        userData.name = ''; currentSheetId = ''; window.quizTitle = '';
+                }
 
-            // Reset Bullet Counter UI
-            const bulletCounterEl = DOMElements.bulletCounter;
-            if (bulletCounterEl) {
-                bulletCounterEl.style.display = 'none'; // Hide it initially for new game
-                bulletCounterEl.innerHTML = ''; // Clear its content
-                bulletCounterEl.style.color = 'var(--text-secondary)'; // Reset color just in case
-            }
+                // Clear UI elements
+                DOMElements.resultSummary.innerHTML = '';
+                DOMElements.resultsTable.innerHTML = '';
 
-            // Ensure the bullet template itself remains hidden (redundant with CSS, but safe)
-            if (DOMElements.bulletTemplate) {
-                DOMElements.bulletTemplate.style.display = 'none';
-            }
+                // Clear dynamically added children from gameArea (targets, bullets)
+                // Keep shooter and bullet template
+                Array.from(DOMElements.gameArea.children).forEach(child => {
+                        // Check against the cached elements
+                        if (child !== DOMElements.shooter && child !== DOMElements.bulletTemplate) {
+                                child.remove();
+                        }
+                });
 
-            // --- Handle Full Reset Specifics ---
-            // This part only runs if resetting completely (Go Home), not on Play Again
-            if (fullReset) {
-                console.log("ResetQuizState: Performing full reset (clearing name, quiz data).");
-                userData.name = ''; // Clear user name
-                quizData = []; // Clear quiz questions
-                allColBTargets = []; // Clear list of possible targets
-                currentSheetId = ''; // Clear the current sheet ID
-                window.quizTitle = ''; // Clear the quiz title
-                // Optionally reset input fields on landing screen if needed
-                if (DOMElements.quizIdInput) DOMElements.quizIdInput.value = '';
-                if (DOMElements.userNameInput) DOMElements.userNameInput.value = '';
-                if (DOMElements.quizSelect) DOMElements.quizSelect.selectedIndex = 0;
-            } else {
-                console.log("ResetQuizState: Performing partial reset (keeping name, quiz data for Play Again).");
-                // If NOT a full reset (i.e., Play Again), we keep userData.name, quizData, allColBTargets, currentSheetId, window.quizTitle
-                // Make sure questionAttempts IS reset regardless (already done above)
-            }
+                // Reset other UI specific to the quiz screen
+                DOMElements.shooter.textContent = '';
+                DOMElements.progressBar.style.width = '0%';
+                DOMElements.timerDisplay.textContent = '0';
+                DOMElements.questionNumberDisplay.textContent = '';
+                DOMElements.quizTitleDisplay.textContent = '';
 
-            console.log("ResetQuizState: Finished."); // Final log
+                 // ---> Reset Bullet Counter UI <---
+                 const bulletCounterEl = DOMElements.bulletCounter; // Use cached element
+                 if (bulletCounterEl) {
+                     bulletCounterEl.style.display = 'none'; // Hide it
+                     bulletCounterEl.innerHTML = ''; // Clear content
+                 }
+                 // ---> END Reset Bullet Counter UI <---
+            
+                // Ensure the bullet template remains hidden (CSS should primarily handle this)
+                if (DOMElements.bulletTemplate) {
+                        DOMElements.bulletTemplate.style.display = 'none';
+                }
         }
+
         
         function startQuiz() {
             userData.name = DOMElements.userNameInput.value.trim();
@@ -1833,8 +1800,6 @@
         }
 
         function reviewQuestions() {
-             stopGameLoop();         // Force stop any running game loop NOW.
-             questionFailed = false; // Reset the failure flag NOW.
              Swal.fire({
                 title: 'Play Again?', text: 'Restart the same quiz? Previous results will be cleared.',
                 icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, Restart', cancelButtonText: 'No, Go Home',
