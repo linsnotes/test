@@ -1055,7 +1055,7 @@
                          currentQuestion++;
                          loadQuestion(); // Load next (will resume timer and start loop)
                      });
-                 }, POPUP_TIMER_WAIT_MS); // Wait for animation
+                 }, POPUP_ANIMATION_WAIT_MS); // Wait for animation
 
             } else {
                 // --- INCORRECT HIT ---
@@ -1071,7 +1071,7 @@
                      // Find and remove from activeTargets array to prevent re-checking
                      activeTargets = activeTargets.filter(t => t !== target);
                      resumeTimer(); // Resume timer after feedback
-                 }, POPUP_TIMER_WAIT_MS); // Match animation duration
+                 }, POPUP_ANIMATION_WAIT_MS); // Match animation duration
             }
         }
 
