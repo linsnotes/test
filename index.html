@@ -455,8 +455,6 @@
             // Add keyboard listeners globally, but only act when gameActive
             document.addEventListener('keydown', handleKeyDown);
             document.addEventListener('keyup', handleKeyUp);
-            // Cache bullet element
-            bulletState.element = DOMElements.bullet;
 
             // pageviews counter
             const pv = document.getElementById('pageviews');
@@ -918,7 +916,7 @@
             keysPressed[event.code] = true;
 
             // Handle firing immediately on Space press down
-            if (event.code === 'Space' && !bulletState.active) {
+            if (event.code === 'Space') {
                 fireBullet();
                 event.preventDefault(); // Prevent scrolling page down
             }
