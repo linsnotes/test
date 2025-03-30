@@ -264,16 +264,16 @@
                     <div class="divider">OR</div>
 
                     <div class="form-group">
-                        <label for="quizId" class="form-label">Have a custom quiz?</label>
+                        <label for="quizId" class="form-label">Have a custom game?</label>
                         <p class="form-text" style="margin-top: 0.25rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
-                            <i class="fas fa-info-circle"></i> Enter the Google Sheet ID for your quiz.
+                            <i class="fas fa-info-circle"></i> Enter the Game ID provided by your teacher for your quiz.
                         </p>
-                        <input type="text" id="quizId" placeholder="Enter Google Sheet ID" class="form-control">
+                        <input type="text" id="quizId" placeholder="Enter Game ID" class="form-control">
                     </div>
                 </div>
                  <div class="center-button">
                     <button onclick="startCustomQuiz()" class="btn btn-secondary">
-                        <i class="fas fa-file-import"></i> Start Custom Quiz
+                        <i class="fas fa-file-import"></i> Start Custom Game
                     </button>
                 </div>
             </div>
@@ -528,8 +528,8 @@
                     .filter(quiz => quiz.title && quiz.id);
                 populateQuizSelect();
             } catch (error) {
-                console.error('Error loading quiz titles:', error);
-                 Swal.fire('Error Loading Quiz List', `Could not load built-in Games. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
+                console.error('Error loading game titles:', error);
+                 Swal.fire('Error Loading Game List', `Could not load built-in Games. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
                 DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Error Loading Games</option>';
                 DOMElements.quizSelect.disabled = true;
                 DOMElements.startBuiltInButton.disabled = true;
@@ -568,7 +568,7 @@
             currentSheetId = sheetId; startQuizFlow(sheetId);
         }
         async function startQuizFlow(sheetId) {
-            Swal.fire({ title: 'Loading Quiz', text: 'Please wait...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Loading Game', text: 'Please wait...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading() });
             const data = await loadSheetData(sheetId);
             if (!data || data.length === 0) {
                 Swal.close(); if (data !== null) { Swal.fire('Empty or Invalid Quiz', 'No valid questions found.', 'warning', { confirmButtonColor: primaryColor }); } return;
