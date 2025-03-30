@@ -1800,6 +1800,8 @@
         }
 
         function reviewQuestions() {
+             stopGameLoop();         // Force stop any running game loop NOW.
+             questionFailed = false; // Reset the failure flag NOW.
              Swal.fire({
                 title: 'Play Again?', text: 'Restart the same quiz? Previous results will be cleared.',
                 icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, Restart', cancelButtonText: 'No, Go Home',
