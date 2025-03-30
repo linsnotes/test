@@ -1046,23 +1046,47 @@
                 target.element.classList.add('target-hit-correct'); // Start animation immediately
 
                 const timeTaken = Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
-                const points = calculatePoints(timeTaken); // Assumes calculatePoints exists
-                userData.totalPoints += points;
+                const timeBasedPoints = calculatePoints(timeTaken); // Get time-based points
 
-                // Record attempt data
+                // ---> START: Bonus Point Calculation <---
+                const shotsFired = questionAttempts[currentQuestion] || 1; // Get shots for this question (default to 1 if somehow undefined)
+                let bonusPoints = 0;
+                if (shotsFired === 1) {
+                    bonusPoints = 10;
+                } else if (shotsFired === 2) {
+                    bonusPoints = 5;
+                } else if (shotsFired === 3) {
+                    bonusPoints = 1;
+                } // bonusPoints remains 0 for > 3 shots
+
+                const totalPointsThisRound = timeBasedPoints + bonusPoints; // Combine points
+                // ---> END: Bonus Point Calculation <---
+
+                userData.totalPoints += totalPointsThisRound; // Add TOTAL points to overall score
+
+                // Record attempt data (store TOTAL points and shots fired)
                 userData.attempts.push({
                     question: currentQuestion + 1,
                     colA: quizData[currentQuestion].colA,
                     correctAnswer: currentCorrectAnswer,
                     time: timeTaken,
-                    points: points,
-                    attempts: questionAttempts[currentQuestion] || 1, // Ensure attempt count is at least 1
+                    points: totalPointsThisRound, // Store the combined points
+                    attempts: shotsFired,         // Store the actual attempts for this question
                     status: 'correct'
                 });
 
-                // Show a *non-blocking* toast immediately
+                // Construct popup text showing the breakdown
+                let popupText = `+${timeBasedPoints} (time)`;
+                if (bonusPoints > 0) {
+                    popupText += ` +${bonusPoints} (bonus)`;
+                }
+                popupText += ` = ${totalPointsThisRound} total!`;
+
+                // Show a *non-blocking* toast immediately (with updated text)
                 Swal.fire({
-                    title: 'Correct!', text: `+${points} points!`, icon: 'success',
+                    title: 'Correct!',
+                    text: popupText, // Use the new text showing breakdown
+                    icon: 'success',
                     toast: true, position: 'top-end', // Use 'top-end' or similar for less intrusion
                     showConfirmButton: false, timer: POPUP_TIMER_CORRECT_MS, timerProgressBar: true, // Assumes POPUP_TIMER_CORRECT_MS exists
                     // Prevent focus stealing which can interrupt gameplay
@@ -1077,7 +1101,7 @@
                     }
                 });
 
-                // --- IMMEDIATE NEXT QUESTION ---
+                // --- IMMEDIATE NEXT QUESTION --- (Remains the same)
                 currentQuestion++;
                 // Use requestAnimationFrame to ensure the animation *starts* before we potentially clear it
                 requestAnimationFrame(() => {
@@ -1088,7 +1112,7 @@
                 });
 
             } else {
-                // --- INCORRECT HIT ---
+                // --- INCORRECT HIT --- (Remains unchanged from your previous version)
                 target.element.classList.add('target-hit-incorrect'); // Start animation immediately
 
                 // Show a non-blocking toast
@@ -1123,7 +1147,6 @@
                 // --- DO NOT pause/resume timer --- The game continues immediately
             }
         }
-
 
         function handleQuestionFailure() {
             questionFailed = true; // Set flag to stop game logic in loop
