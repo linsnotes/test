@@ -512,11 +512,12 @@
 
             } catch (error) {
                 console.error('Error loading quiz titles:', error);
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
                  Swal.fire({
                     title: 'Error Loading Quiz List',
                     text: `Could not load built-in quizzes. Check console for details. Details: ${error.message}`,
                     icon: 'error',
-                    confirmButtonColor: var(--primary)
+                    confirmButtonColor: primaryColor
                 });
                 DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Error Loading Quizzes</option>';
                 DOMElements.quizSelect.disabled = true;
