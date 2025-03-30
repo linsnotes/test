@@ -6,1538 +6,1032 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Language Puzzle</title>
+    <title>Language Shooter</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.css"> <!-- SortableJS -->
+    <!-- Removed SortableJS CSS -->
     <style>
-        /* Base Styles (Same as your original CSS, but repeated for clarity) */
+        /* Base Styles (Adapted from provided CSS) */
         :root {
             --primary: #1a73e8; /* Modern blue color (Google style) */
             --primary-hover: #0b5fdb; /* Darker shade for hover */
             --secondary: #e5e7eb;
-            --accent: #8b5cf6;
+            --accent: #8b5cf6; /* Purple accent */
             --text-primary: #1f2937;
             --text-secondary: #6b7280;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
+            --success: #10b981; /* Green */
+            --warning: #f59e0b; /* Yellow */
+            --danger: #ef4444; /* Red */
             --light: #f9fafb;
             --dark: #111827;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius: 0.5rem;
             --transition: all 0.3s ease;
 
-            /* --- NEW: Font configuration for word boxes --- */
-            /* Default font stack: Prioritizes system UI fonts, common web fonts, and a generic fallback. */
-            /* You can CHANGE this stack to better suit the primary languages you expect. */
-            /* Example for primarily CJK languages: */
-            /* --word-box-font-family: 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', 'Microsoft YaHei', 'SimHei', 'Malgun Gothic', Meiryo, sans-serif; */
-            /* Example for primarily Thai: */
-            /* --word-box-font-family: 'Noto Sans Thai', Tahoma, sans-serif; */
-            --word-box-font-family: KaiTi,             /* Windows Simplified */
-                                    'Kaiti SC',         /* macOS/iOS Simplified */
-                                    DFKai-SB,           /* Windows Traditional */
-                                    BiauKai,            /* Common Traditional */
-                                    'Microsoft YaHei',  /* Common Sans Chinese Fallback (optional but good) */
-                                    'SimHei',           /* Common Sans Chinese Fallback (optional but good) */
-                                    'Segoe UI',        /* Standard Latin Sans */
-                                    Roboto,             /* Standard Latin Sans (Android/ChromeOS) */
-                                    'Helvetica Neue',   /* Standard Latin Sans (macOS/iOS) */
-                                    Arial,              /* Widely available Latin Sans */
-                                    sans-serif;         /* Generic fallback */
-
-
-            /* Default font size for word boxes. Adjust as needed. */
-            --word-box-font-size: 1.5rem; /* <-- EDIT THIS LINE TO CHANGE SIZE GLOBALLY */
-            /* --- End NEW --- */
-           
-        }
-        
-    /* Rotating icon animation */
-    .rotate-icon {
-        display: inline-block;
-        animation: spin 3s linear infinite;
-    }
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
-    /* Text fill effect */
-    .fill-text {
-        display: inline-block;
-        background: linear-gradient(90deg, var(--primary), var(--accent));
-        background-size: 200% 100%;
-        -webkit-background-clip: text;
-        color: transparent;
-        animation: fillText 5s ease infinite;
-    }
-
-    @keyframes fillText {
-        from {
-            background-position: -100% 0;
-        }
-        to {
-            background-position: 0 0;
-        }
-    }
-
-
-/* Typography */
-    body {
-        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f3f4f6;
-        color: var(--text-primary);
-        line-height: 1.5;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-        font-weight: 600;
-        margin-top: 0;
-        color: var(--dark);
-    }
-
-    h1 {
-        font-size: 2rem;
-        margin-bottom: 1.5rem;
-    }
-
-    h2 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    /* Layout */
-    .app-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 1rem;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .app-header {
-        text-align: center;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--secondary);
-        margin-bottom: 2rem;
-    }
-
-    .app-footer {
-        margin-top: auto;
-        text-align: center;
-        padding: 1rem 0;
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        border-top: 1px solid var(--secondary);
-    }
-
-    .app-footer a {
-        color: #6b7280; /* Gray color */
-        text-decoration: none;
-    }
-
-    /* Cards and Screens */
-    .screen {
-        display: none;
-        opacity: 0;
-        transition: var(--transition);
-        transform: translateY(10px);
-    }
-
-    .screen.active {
-        display: block;
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .card {
-        background: white;
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-        transition: var(--transition);
-    }
-
-    .card-header {
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid var(--secondary);
-        padding-bottom: 1rem;
-    }
-
-    .card-title {
-        font-size: 1.25rem;
-        margin: 0;
-    }
-
-    .card-body {
-        margin-bottom: 1.5rem;
-    }
-
-    .card-footer {
-        border-top: 1px solid var(--secondary);
-        padding-top: 1rem;
-        display: flex;
-        justify-content: center; /* Center all buttons in card footer */
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    /* Form Elements */
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-control {
-        display: block;
-        width: 100%;
-        padding: 0.75rem;
-        font-size: 1rem;
-        border: 1px solid var(--secondary);
-        border-radius: var(--radius);
-        transition: var(--transition);
-    }
-
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
-    }
-
-    /* Quiz ID input specific styling */
-    #quizId, #userName {
-        width: 100%;
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0.75rem;
-    }
-
-    /* Fix alignment for the quiz ID container */
-    .form-group {
-        padding: 0;
-        margin-bottom: 1.5rem;
-    }
-
-    .center-button {
-    text-align: center;
-    }
-
-    /* Buttons */
-    .btn {
-        display: inline-block;
-        font-weight: 500;
-        text-align: center;
-        vertical-align: middle;
-        user-select: none;
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        border-radius: var(--radius);
-        transition: var(--transition);
-        cursor: pointer;
-        border: none;
-    }
-
-    .btn-primary {
-        background-color: var(--primary);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background-color: var(--primary-hover);
-    }
-
-    .btn-secondary {
-        background-color: var(--secondary);
-        color: var(--text-primary);
-    }
-
-    .btn-secondary:hover {
-        background-color: #d1d5db;
-    }
-
-    .btn-success {
-        background-color: var(--success);
-        color: white;
-    }
-
-    .btn-success:hover {
-        background-color: #0ca678;
-    }
-
-    .btn-danger {
-        background-color: var(--danger);
-        color: white;
-    }
-
-    .btn-danger:hover {
-        background-color: #dc2626;
-    }
-
-    .btn-lg {
-        padding: 1rem 2rem;
-        font-size: 1.125rem;
-    }
-
-    .btn-sm {
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-    }
-
-    /* Quiz Elements */
-    .quiz-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .timer-container {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        padding: 0.5rem 1rem;
-        background: var(--light);
-        border-radius: var(--radius);
-    }
-
-    .timer-container i {
-        color: var(--primary);
-    }
-
-    .timer-value {
-        color: var(--text-primary);
-    }
-
-    .quiz-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 0.5rem 1rem;
-    background: var(--light);
-    border-radius: var(--radius);
-    }
-
-    .question-counter {
-        font-weight: 500;
-        color: var(--text-secondary);
-        padding: 0.5rem 1rem;
-        background: var(--light);
-        border-radius: var(--radius);
-    }
-
-    .quiz-instructions {
-        margin-bottom: 1.5rem;
-        padding: 0.75rem;
-        background-color: rgba(26, 115, 232, 0.1);
-        border-left: 4px solid var(--primary);
-        border-radius: 0 var(--radius) var(--radius) 0;
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-
-    /* Word Containers */
-    .drop-zone {
-        min-height: 80px;
-        border: 2px dashed #d1d5db;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        background: #f9fafb;
-        border-radius: var(--radius);
-        transition: var(--transition);
-    }
-
-    .drop-zone:hover {
-        border-color: var(--primary);
-    }
-
-    .drop-zone-label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: var(--text-secondary);
-    }
-
-    .word-box {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        margin: 0.25rem;
-        background: white;
-        border-radius: var(--radius);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        cursor: move;
-        user-select: none;
-        transition: var(--transition);
-        border: 1px solid #e5e7eb;
-        /* --- APPLY FONT VARIABLES --- */
-        font-family: var(--word-box-font-family); /* Use the variable */
-        font-size: var(--word-box-font-size);   /* Use the variable */
-        /* --- End APPLY --- */
-    }
-
-    .word-box:hover {
-        background: #f3f4f6;
-        transform: translateY(-2px);
-    }
-
-    .word-box.dragging {
-        opacity: 0.6;
-        background: rgba(26, 115, 232, 0.2); /* Light blue fill */
-        border-color: var(--primary);
-    }
-
-    /* Results Screen */
-    .result-summary {
-        padding: 1.5rem;
-        background-color: #f3f4f6;
-        border-radius: var(--radius);
-        margin-bottom: 1.5rem;
-    }
-
-    .result-stat {
-        display: flex;
-        align-items: center;
-        margin-bottom: 0.75rem;
-    }
-
-    .result-stat i {
-        margin-right: 0.75rem;
-        color: var(--primary);
-        width: 24px;
-        text-align: center;
-    }
-
-    .results-table-container {
-        overflow-x: auto;
-        margin-bottom: 1.5rem;
-    }
-
-    .results-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-    }
-
-    .results-table th,
-    .results-table td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid var(--secondary);
-    }
-
-    .results-table th {
-        background-color: #f9fafb;
-        font-weight: 600;
-        color: var(--text-secondary);
-    }
-
-    .results-table tr:hover td {
-        background-color: #f3f4f6;
-    }
-
-    /* Divider and alternative option styling */
-    .divider {
-        display: flex;
-        align-items: center;
-        margin: 1.5rem 0;
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
-
-    .divider::before,
-    .divider::after {
-        content: "";
-        flex: 1;
-        border-bottom: 1px solid var(--secondary);
-    }
-
-    .divider::before {
-        margin-right: 1rem;
-    }
-
-    .divider::after {
-        margin-left: 1rem;
-    }
-
-    /* Progress bar for quiz */
-    .progress-container {
-        width: 100%;
-        height: 6px;
-        background-color: var(--secondary);
-        border-radius: 3px;
-        overflow: hidden;
-        margin-bottom: 1.5rem;
-    }
-
-    .progress-bar {
-        height: 100%;
-        background-color: var(--primary);
-        transition: width 0.3s ease;
-    }
-
-    /* Correct/Incorrect Styling */
-    .word-box.correct {
-        background-color: var(--success);
-        color: white;
-    }
-
-    .word-box.incorrect {
-        background-color: var(--danger);
-        color: white;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .card {
-            padding: 1.5rem;
+            /* Font for targets/shooter */
+             --word-box-font-family: KaiTi, 'Kaiti SC', DFKai-SB, BiauKai, 'Microsoft YaHei', 'SimHei', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+             --word-box-font-size: 1.6rem; /* Slightly larger for game elements */
         }
 
-        .btn {
-            padding: 0.625rem 1.25rem;
-        }
+        /* Rotating icon animation */
+        .rotate-icon { display: inline-block; animation: spin 3s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .quiz-header {
-            flex-direction: column;
-            align-items: flex-start;
+        /* Text fill effect */
+        .fill-text { display: inline-block; background: linear-gradient(90deg, var(--primary), var(--accent)); background-size: 200% 100%; -webkit-background-clip: text; color: transparent; animation: fillText 5s ease infinite; }
+        @keyframes fillText { from { background-position: -100% 0; } to { background-position: 0 0; } }
+
+        /* Typography */
+        body { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: var(--text-primary); line-height: 1.5; }
+        h1, h2, h3, h4, h5, h6 { font-weight: 600; margin-top: 0; color: var(--dark); }
+        h1 { font-size: 2rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+
+        /* Layout */
+        .app-container { max-width: 1000px; margin: 0 auto; padding: 1rem; min-height: 100vh; display: flex; flex-direction: column; }
+        .app-header { text-align: center; padding: 1rem 0; border-bottom: 1px solid var(--secondary); margin-bottom: 2rem; }
+        .app-footer { margin-top: auto; text-align: center; padding: 1rem 0; font-size: 0.875rem; color: var(--text-secondary); border-top: 1px solid var(--secondary); }
+        .app-footer a { color: #6b7280; text-decoration: none; }
+
+        /* Cards and Screens */
+        .screen { display: none; opacity: 0; transition: var(--transition); transform: translateY(10px); }
+        .screen.active { display: block; opacity: 1; transform: translateY(0); }
+        .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; margin-bottom: 1.5rem; transition: var(--transition); }
+        .card-header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--secondary); padding-bottom: 1rem; }
+        .card-title { font-size: 1.25rem; margin: 0; }
+        .card-body { margin-bottom: 1.5rem; }
+        .card-footer { border-top: 1px solid var(--secondary); padding-top: 1rem; display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-control { display: block; width: 100%; padding: 0.75rem; font-size: 1rem; border: 1px solid var(--secondary); border-radius: var(--radius); transition: var(--transition); box-sizing: border-box; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2); }
+        #quizId, #userName { width: 100%; margin: 0; padding: 0.75rem; }
+        .center-button { text-align: center; }
+
+        /* Buttons */
+        .btn { display: inline-block; font-weight: 500; text-align: center; vertical-align: middle; user-select: none; padding: 0.75rem 1.5rem; font-size: 1rem; line-height: 1.5; border-radius: var(--radius); transition: var(--transition); cursor: pointer; border: none; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: var(--secondary); color: var(--text-primary); }
+        .btn-secondary:hover { background-color: #d1d5db; }
+        /* Add other button styles if needed (success, danger, etc.) */
+
+        /* Quiz Screen Specific Styles */
+        #quizScreen { position: relative; overflow: hidden; /* Contain absolute elements */ min-height: 70vh; /* Ensure space for elements */ background: linear-gradient(180deg, #e0f7fa 0%, #b3e5fc 100%); /* Light blue gradient bg */ }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.7); border-radius: var(--radius); }
+        .timer-container, .quiz-title-display, .question-counter { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text-secondary); padding: 0.5rem 1rem; background: var(--light); border-radius: var(--radius); }
+        .timer-container i { color: var(--primary); }
+        .timer-value { color: var(--text-primary); }
+        .quiz-instructions { margin: 0.5rem 0 1rem 0; padding: 0.75rem; background-color: rgba(26, 115, 232, 0.1); border-left: 4px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.875rem; color: var(--text-secondary); }
+        .progress-container { width: 100%; height: 8px; background-color: var(--secondary); border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
+        .progress-bar { height: 100%; background-color: var(--primary); transition: width 0.3s ease; }
+
+        #gameArea {
+            position: relative; /* Crucial for absolute positioning of targets */
             width: 100%;
+            height: 65vh; /* Adjust height as needed */
+            margin-top: 1rem;
+            border: 2px dashed var(--secondary);
+            border-radius: var(--radius);
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="%23d1d5db" fill-opacity="0.1" d="M10 10 H90 V90 H10Z M0 0 H100 V100 H0Z" /></svg>'); /* Subtle background pattern */
+            overflow: hidden; /* Hide targets that might randomly go outside */
         }
 
-        .timer-container, .question-counter {
-            width: 100%;
-            box-sizing: border-box;
-            margin: 0.25rem 0;
-            padding: 0.5rem;
-            font-size: 0.875rem;
+        #shooter {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            background-color: var(--dark);
+            color: white;
+            border-radius: var(--radius);
+            font-family: var(--word-box-font-family);
+            font-size: var(--word-box-font-size);
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            border-top: 3px solid var(--primary);
         }
 
-        .results-table th,
-        .results-table td {
-            padding: 0.5rem;
-            font-size: 0.75rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .app-header h1 {
-            margin-bottom: 0.75rem; /* Smaller gap below h1 on mobile */
-        }
-
-        .card-footer {
-            justify-content: center;
-        }
-
-        .btn {
-            width: 100%;
-            margin-bottom: 0.5rem;
+        .target {
+            position: absolute; /* Positioned within gameArea */
+            padding: 0.6rem 1.2rem;
+            background-color: var(--accent);
+            color: white;
+            border-radius: 50px; /* Pill shape */
+            font-family: var(--word-box-font-family);
+            font-size: calc(var(--word-box-font-size) * 0.9); /* Slightly smaller than shooter */
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 5;
+            user-select: none; /* Prevent text selection */
         }
 
-        .word-box {
-            padding: 0.375rem 0.75rem;
-            margin: 0.125rem;
-            font-size: 0.875rem;
+        .target:hover {
+            transform: scale(1.1);
+            background-color: var(--primary-hover);
         }
-        
-        .quiz-title {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.875rem;
+
+        /* Target Animations */
+        @keyframes targetHit {
+            0% { transform: scale(1); opacity: 1; background-color: var(--success); }
+            100% { transform: scale(1.5); opacity: 0; background-color: var(--success); }
         }
-    }
+        .target-hit {
+            animation: targetHit 0.4s ease-out forwards;
+            pointer-events: none; /* Prevent clicking during animation */
+        }
 
-    /* Google Sheet Dropdown Styling */
-    #quizSelect {
-        width: 100%;
-        padding: 0.75rem;
-        font-size: 1rem;
-        border: 1px solid var(--secondary);
-        border-radius: var(--radius);
-        transition: var(--transition);
-        background-color: white;
-        color: var(--text-primary);
-        appearance: none; /* Remove default arrow in some browsers */
-        -webkit-appearance: none; /* Remove default arrow in Chrome/Safari */
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 0.75rem top 50%;
-        background-size: 1.25rem;
-    }
+        @keyframes targetMiss { /* Simple shake */
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        .target-miss {
+            animation: targetMiss 0.3s linear;
+            background-color: var(--danger); /* Flash red */
+        }
 
-    #quizSelect:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
-    }
-</style>
+        #bullet {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: var(--warning); /* Yellow bullet */
+            border-radius: 50% 50% 0 0;
+            box-shadow: 0 0 5px var(--warning);
+            z-index: 9;
+            transition: top 0.3s ease-out, left 0.3s ease-out; /* Smooth movement */
+            pointer-events: none; /* Don't block clicks */
+            display: none; /* Hidden initially */
+        }
+
+
+        /* Results Screen (Mostly reused styles) */
+        .result-summary { padding: 1.5rem; background-color: #f3f4f6; border-radius: var(--radius); margin-bottom: 1.5rem; }
+        .result-stat { display: flex; align-items: center; margin-bottom: 0.75rem; }
+        .result-stat i { margin-right: 0.75rem; color: var(--primary); width: 24px; text-align: center; }
+        .results-table-container { overflow-x: auto; margin-bottom: 1.5rem; }
+        .results-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .results-table th, .results-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--secondary); }
+        .results-table th { background-color: #f9fafb; font-weight: 600; color: var(--text-secondary); }
+        .results-table tr:hover td { background-color: #f3f4f6; }
+        .results-table td.correct { color: var(--success); }
+        .results-table td.incorrect { color: var(--danger); } /* Style incorrect answers if needed */
+
+        /* Divider */
+        .divider { display: flex; align-items: center; margin: 1.5rem 0; color: var(--text-secondary); font-size: 0.875rem; }
+        .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--secondary); }
+        .divider::before { margin-right: 1rem; }
+        .divider::after { margin-left: 1rem; }
+
+        /* Google Sheet Dropdown Styling */
+        #quizSelect { /* Style reused */ width: 100%; padding: 0.75rem; font-size: 1rem; border: 1px solid var(--secondary); border-radius: var(--radius); transition: var(--transition); background-color: white; color: var(--text-primary); appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem top 50%; background-size: 1.25rem; }
+        #quizSelect:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2); }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .card { padding: 1.5rem; }
+            .quiz-header { flex-direction: column; align-items: flex-start; width: 100%; }
+            .timer-container, .quiz-title-display, .question-counter { width: 100%; box-sizing: border-box; margin: 0.25rem 0; padding: 0.5rem; font-size: 0.875rem; justify-content: center; }
+            #gameArea { height: 55vh; }
+            #shooter { padding: 0.8rem 1.5rem; font-size: calc(var(--word-box-font-size) * 0.9); }
+            .target { padding: 0.5rem 1rem; font-size: calc(var(--word-box-font-size) * 0.8); }
+            .results-table th, .results-table td { padding: 0.5rem; font-size: 0.75rem; }
+        }
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .card-footer { justify-content: center; }
+            .btn { width: 100%; margin-bottom: 0.5rem; }
+            #gameArea { height: 50vh; }
+            #shooter { padding: 0.6rem 1.2rem; font-size: calc(var(--word-box-font-size) * 0.8); }
+            .target { padding: 0.4rem 0.8rem; font-size: calc(var(--word-box-font-size) * 0.7); }
+            .quiz-title-display { font-size: 0.8rem; }
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <header class="app-header">
-            <h1><i class="fas fa-puzzle-piece rotate-icon"></i> 
-                <span class="fill-text">Language Puzzle</span>
-            </h1>
+             <h1><i class="fas fa-crosshairs rotate-icon"></i>
+                <span class="fill-text">Language Shooter</span>
+             </h1>
         </header>
 
-    <!-- Landing Screen -->
-    <div id="landingScreen" class="screen active">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Welcome to Language Puzzle</h2>
-                <p>Piece together the perfect sentence—every word has its place!</p>
-            </div>
-            <div class="card-body">
-                <!-- Quiz Selection -->
-                <div class="form-group">
-                    <label for="quizSelect" class="form-label">Built-in Quiz:</label>
-                    <select id="quizSelect" class="form-control"></select>
+        <!-- Landing Screen -->
+        <div id="landingScreen" class="screen active">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Welcome to Language Shooter</h2>
+                    <p>Take aim and match the words!</p>
                 </div>
-                <div class="center-button">
-                    <button onclick="startSelectedQuiz()" class="btn btn-primary">
-                        <i class="fas fa-play-circle"></i> Start Built-in Quiz
+                <div class="card-body">
+                    <!-- Quiz Selection -->
+                    <div class="form-group">
+                        <label for="quizSelect" class="form-label">Built-in Quiz:</label>
+                        <select id="quizSelect" class="form-control"></select> <!-- Options populated by JS -->
+                    </div>
+                    <div class="center-button">
+                        <button onclick="startSelectedQuiz()" class="btn btn-primary" disabled> <!-- Initially disabled -->
+                            <i class="fas fa-play-circle"></i> Start Built-in Quiz
+                        </button>
+                    </div>
+                    <div class="divider">OR</div>
+
+                    <div class="form-group">
+                        <label for="quizId" class="form-label">Have a custom quiz?</label>
+                        <p class="form-text" style="margin-top: 0.25rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+                            <i class="fas fa-info-circle"></i> Enter the Google Sheet ID for your quiz.
+                        </p>
+                        <input type="text" id="quizId" placeholder="Enter Google Sheet ID" class="form-control">
+                    </div>
+                </div>
+                 <div class="center-button">
+                    <button onclick="startCustomQuiz()" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Start Custom Quiz
                     </button>
                 </div>
-                <div class="divider">OR</div>
-
-                <div class="form-group">
-                    <label for="quizId" class="form-label">Have a custom quiz?</label>
-                    <p class="form-text" style="margin-top: 0.25rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
-                        <i class="fas fa-info-circle"></i> Custom Quiz ID is provided by your teacher
-                    </p>
-                    <input type="text" id="quizId" placeholder="Enter Quiz ID" class="form-control">
-                </div>
-            </div>
-            <div class="center-button">
-                <button onclick="startCustomQuiz()" class="btn btn-secondary">
-                    <i class="fas fa-file-import"></i> Start Custom Quiz
-                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Name Screen -->
-    <div id="nameScreen" class="screen">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Let's Get Started</h2>
-            </div>
-            <div class="quiz-instructions">
-                <i class="fas fa-info-circle"></i> Drag and drop the words into the correct order. Double-tap or double-click as an alternative.
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="userName" class="form-label">Enter Your Name</label>
-                    <input type="text" id="userName" required class="form-control" placeholder="Your Name">
+        <!-- Name Screen -->
+        <div id="nameScreen" class="screen">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Ready Player?</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="userName" class="form-label">Enter Your Name</label>
+                        <input type="text" id="userName" required class="form-control" placeholder="Your Name">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button onclick="startQuiz()" class="btn btn-primary">
+                        <i class="fas fa-gamepad"></i> Start Game
+                    </button>
+                    <button onclick="goHome()" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Back to Home
+                    </button>
                 </div>
             </div>
-            <div class="card-footer">
-                <button onclick="startQuiz()" class="btn btn-primary">
-                    <i class="fas fa-arrow-right"></i> Start Quiz
-                </button>
-                <button onclick="showScreen('landingScreen')" class="btn btn-secondary">
-                    <i class="fas fa-home"></i> Back to Home
-                </button>
-            </div>
         </div>
-    </div>
 
-    <!-- Quiz Screen -->
-    <div id="quizScreen" class="screen">
-        <div class="card">
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+             <!-- Header elements -->
             <div class="quiz-header">
                 <div class="timer-container">
-                    <i class="fas fa-clock"></i>
-                    Time: <span id="timer" class="timer-value">0</span>s
+                    <i class="fas fa-clock"></i> Time: <span id="timer" class="timer-value">0</span>s
                 </div>
-                <div id="quizTitleDisplay" class="quiz-title">
-                 <!-- Quiz title will be shown here -->
-                </div>
+                 <div id="quizTitleDisplay" class="quiz-title-display">
+                     <!-- Quiz title will be shown here -->
+                 </div>
                 <div class="question-counter" id="questionNumber"></div>
             </div>
             <div id="progressContainer" class="progress-container">
                 <div id="progressBar" class="progress-bar" style="width: 0%"></div>
             </div>
-            <div class="quiz-instructions">
-                <i class="fas fa-info-circle"></i> Drag and drop the words into the correct order. Double-tap or double-click as an alternative.
+             <div class="quiz-instructions">
+                <i class="fas fa-info-circle"></i> Click the target word that matches the word at the bottom!
             </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label class="drop-zone-label">Available Words:</label>
-                    <div id="wordContainer" class="drop-zone"></div>
-                </div>
-                <div class="form-group">
-                    <label class="drop-zone-label">Your Answer:</label>
-                    <div class="drop-zone" id="answerZone"></div>
-                </div>
+
+            <!-- Game Area -->
+            <div id="gameArea">
+                <!-- Targets will be added here by JS -->
             </div>
-            <div class="card-footer">
-                <button onclick="checkAnswer()" class="btn btn-primary">
-                    <i class="fas fa-check-circle"></i> Confirm Answer
-                </button>
+
+            <!-- Shooter -->
+            <div id="shooter">
+                <!-- Current Column A word here -->
+            </div>
+
+             <!-- Bullet Element (initially hidden) -->
+            <div id="bullet"></div>
+
+            <!-- No buttons needed here anymore, interaction is via targets -->
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="screen">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Game Over - Results</h2>
+                </div>
+                <div class="card-body">
+                    <div class="result-summary" id="resultSummary">
+                        <!-- Results summary will be inserted here -->
+                    </div>
+
+                    <div class="results-table-container">
+                        <table id="resultsTable" class="results-table">
+                            <!-- Results table will be inserted here -->
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button onclick="screenshotResults()" class="btn btn-secondary">
+                        <i class="fas fa-camera"></i> Screenshot Results
+                    </button>
+                    <button onclick="reviewQuestions()" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Play Again
+                    </button>
+                     <button onclick="goHome()" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Back to Home
+                    </button>
+                </div>
             </div>
         </div>
+
+        <footer class="app-footer">
+             <!-- Optional: Visitor counter -->
+            <p><a href="https://linsnotes.com">Created based on linsnotes.com example</a></p>
+        </footer>
     </div>
 
-    <!-- Results Screen -->
-    <div id="resultsScreen" class="screen">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Quiz Results</h2>
-            </div>
-            <div class="card-body">
-                <div class="result-summary" id="resultSummary">
-                    <!-- Results summary will be inserted here -->
-                </div>
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Removed SortableJS script -->
 
-                <div class="results-table-container">
-                    <table id="resultsTable" class="results-table">
-                        <!-- Results table will be inserted here -->
-                    </table>
-                </div>
-            </div>
-            <div class="card-footer">
-                <button onclick="screenshotResults()" class="btn btn-secondary">
-                    <i class="fas fa-camera"></i> Screenshot Results
-                </button>
-                <button onclick="reviewQuestions()" class="btn btn-primary">
-                    <i class="fas fa-redo"></i> Try Again
-                </button>
-            </div>
-        </div>
-    </div>
+    <script>
+        let currentQuestion = 0;
+        let quizData = []; // Array of { colA: "word1", colB: "match1" }
+        let allTargets = []; // Array of all unique Column B words
+        let userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 }; // Attempts: { question: num, time: sec, points: num, attempts: num }
+        let timerInterval;
+        let timerPaused = false;
+        let elapsedTime = 0;
+        let questionStartTime = 0; // Track start time for each question
+        let questionAttempts = {}; // Tracks attempts per question index { index: count }
 
-    <footer class="app-footer">
-        <div id="visitor-counter">
-           Welcome! You're visitor #<span id="pageviews">Loading...</span>
-        </div>
-        <p><a href="https://linsnotes.com">linsnotes.com</a></p>
-    </footer>
-</div>
+        // !!! IMPORTANT: REPLACE WITH YOUR QUIZ LIST SHEET ID !!!
+        const QUIZ_LIST_SHEET_ID = 'YOUR_QUIZ_LIST_SHEET_ID_HERE'; // e.g., '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII'
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>  <!-- SortableJS -->
+        let quizTitlesAndIds = [];
+        let currentSheetId = ''; // Track the current sheet ID
+        let currentCorrectAnswer = ''; // Holds the correct ColB for the current question
+        let targetClickHandlerAttached = false; // Flag to manage event listeners
 
-<script>
-    let currentQuestion = 0;
-    let quizData = [];
-    let userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 };
-    let timerInterval;
-    let timerPaused = false;
-    let elapsedTime = 0;
-    let pausedAt = 0;
-    const QUIZ_LIST_SHEET_ID = '1jsmk781Fob4qrAd61DrBDyJQQ0beEFF92yA3uWr7UII'; // Explicitly define quiz list sheet ID
-    let questionAttempts = {};
-    let quizTitlesAndIds = [];
-    let currentSheetId = ''; // Track the current sheet ID, start empty
+        // DOM Elements Cache
+        const DOMElements = {
+            landingScreen: document.getElementById('landingScreen'),
+            nameScreen: document.getElementById('nameScreen'),
+            quizScreen: document.getElementById('quizScreen'),
+            resultsScreen: document.getElementById('resultsScreen'),
+            quizSelect: document.getElementById('quizSelect'),
+            quizIdInput: document.getElementById('quizId'),
+            userNameInput: document.getElementById('userName'),
+            timerDisplay: document.getElementById('timer'),
+            quizTitleDisplay: document.getElementById('quizTitleDisplay'),
+            questionNumberDisplay: document.getElementById('questionNumber'),
+            progressBar: document.getElementById('progressBar'),
+            gameArea: document.getElementById('gameArea'),
+            shooter: document.getElementById('shooter'),
+            bullet: document.getElementById('bullet'),
+            resultSummary: document.getElementById('resultSummary'),
+            resultsTable: document.getElementById('resultsTable'),
+            startBuiltInButton: document.querySelector('button[onclick="startSelectedQuiz()"]'),
+            appHeader: document.querySelector('.app-header'),
+            appFooter: document.querySelector('.app-footer')
+        };
 
-    // Initialize SortableJS instances
-    let sortableWordContainer;
-    let sortableAnswerZone;
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuizTitlesAndIds();
+            // No SortableJS initialization needed
+        });
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Initialize SortableJS for wordContainer
-        sortableWordContainer = Sortable.create(document.getElementById('wordContainer'), {
-                group: 'shared', // Allows dragging between the two lists
-                animation: 0,    // Disable smooth animations
-                easing: "linear",
-                swapThreshold: 0.7,
-                ghostClass: 'dragging', // Apply this class to the ghost element while dragging
-                onAdd: function (evt) {
-                        // Animate word box on drop
-                        evt.item.classList.add('animate-drop');
-                        setTimeout(() => evt.item.classList.remove('animate-drop'), 300);
-                        // If the item being added back had the 'incorrect' class, remove it immediately.
-                        evt.item.classList.remove('incorrect');
+        // Screen Management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const targetScreen = DOMElements[screenId]; // Use cached element
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+            } else {
+                console.error(`Screen with ID ${screenId} not found.`);
+                DOMElements.landingScreen.classList.add('active'); // Fallback
+            }
+            // Hide header/footer only on quiz screen for focus
+            const showHeaderFooter = (screenId !== 'quizScreen');
+            DOMElements.appHeader.style.display = showHeaderFooter ? 'block' : 'none';
+            DOMElements.appFooter.style.display = showHeaderFooter ? 'block' : 'none';
+        }
+
+        function goHome() {
+            // Reset state variables
+            resetQuizState();
+            // Reset UI elements on landing page
+            DOMElements.quizIdInput.value = '';
+            DOMElements.quizSelect.selectedIndex = 0; // Reset dropdown to placeholder
+            DOMElements.startBuiltInButton.disabled = true; // Disable button
+             // Ensure header/footer are visible
+             DOMElements.appHeader.style.display = 'block';
+             DOMElements.appFooter.style.display = 'block';
+
+            showScreen('landingScreen');
+        }
+
+
+        // Data Loading
+        async function loadSheetData(sheetId) {
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`; // Added gid=0 for first sheet
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const csv = await response.text();
+                const workbook = XLSX.read(csv, { type: 'string' });
+                const sheetName = workbook.SheetNames[0];
+                if (!sheetName) throw new Error('No sheet found in the workbook.');
+
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
+                // Assume Title is in A1 (optional)
+                window.quizTitle = rows?.[0]?.[0]?.trim() || `Quiz (${sheetId.substring(0, 6)}...)`; // Use A1 or generate default
+
+                // Process data rows (starting from row 2, index 1)
+                const data = rows.slice(1)
+                    .map(row => ({
+                        colA: row[0] ? String(row[0]).trim() : null, // Column A
+                        colB: row[1] ? String(row[1]).trim() : null  // Column B
+                    }))
+                    .filter(item => item.colA && item.colB); // Keep only rows with BOTH values
+
+                if (data.length === 0) {
+                    console.warn('Sheet has no valid data rows (needs content in columns A and B).');
+                    return null; // Indicate no usable data
                 }
-        });
 
-        // Initialize SortableJS for answerZone
-        sortableAnswerZone = Sortable.create(document.getElementById('answerZone'), {
-                group: 'shared',
-                animation: 0,    // Disable smooth animations
-                easing: "linear",
-                swapThreshold: 0.7,
-                ghostClass: 'dragging', // Apply this class to the ghost element while dragging
-                onAdd: function (evt) {
-                        // Animate word box on drop
-                        evt.item.classList.add('animate-drop');
-                        setTimeout(() => evt.item.classList.remove('animate-drop'), 300);
+                 // Extract all unique Column B values for targets
+                allTargets = [...new Set(data.map(item => item.colB))];
+
+                return data; // Return the structured quiz data
+
+            } catch (error) {
+                console.error('Error loading sheet data:', error);
+                Swal.fire({
+                    title: 'Error Loading Quiz',
+                    text: `Could not load quiz data. Check Sheet ID [${sheetId}] or network. Is sheet published & shared? Details: ${error.message}`,
+                    icon: 'error',
+                    confirmButtonColor: var(--primary)
+                });
+                return null; // Indicate failure
+            }
+        }
+
+        async function loadQuizTitlesAndIds() {
+            // Use the explicit constant for the quiz list sheet ID
+             if (QUIZ_LIST_SHEET_ID === 'YOUR_QUIZ_LIST_SHEET_ID_HERE') {
+                console.warn("Quiz List Sheet ID not set. Disabling built-in quiz option.");
+                DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Built-in Quizzes Unavailable</option>';
+                DOMElements.quizSelect.disabled = true;
+                DOMElements.startBuiltInButton.disabled = true;
+                return; // Stop if the placeholder ID is still there
+             }
+
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${QUIZ_LIST_SHEET_ID}/export?format=csv&gid=0`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const csv = await response.text();
+                const workbook = XLSX.read(csv, { type: 'string' });
+                const sheetName = workbook.SheetNames[0];
+                if (!sheetName) throw new Error('No sheet found for quiz list.');
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
+                quizTitlesAndIds = rows.slice(1) // Skip header
+                    .map(row => ({ title: row[0]?.trim(), id: row[1]?.trim() }))
+                    .filter(quiz => quiz.title && quiz.id); // Ensure both exist
+
+                populateQuizSelect();
+
+            } catch (error) {
+                console.error('Error loading quiz titles:', error);
+                 Swal.fire({
+                    title: 'Error Loading Quiz List',
+                    text: `Could not load built-in quizzes. Check console for details. Details: ${error.message}`,
+                    icon: 'error',
+                    confirmButtonColor: var(--primary)
+                });
+                DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Error Loading Quizzes</option>';
+                DOMElements.quizSelect.disabled = true;
+                DOMElements.startBuiltInButton.disabled = true;
+            }
+        }
+
+        function populateQuizSelect() {
+            const select = DOMElements.quizSelect;
+            select.innerHTML = ''; // Clear
+
+            if (quizTitlesAndIds.length === 0) {
+                select.innerHTML = '<option value="" disabled selected>No Built-in Quizzes Found</option>';
+                select.disabled = true;
+                DOMElements.startBuiltInButton.disabled = true;
+                return;
+            }
+
+            // Add default prompt
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "-- Select a Built-in Quiz --";
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            select.appendChild(defaultOption);
+
+            quizTitlesAndIds.forEach(quiz => {
+                const option = document.createElement('option');
+                option.value = quiz.id;
+                option.textContent = quiz.title;
+                select.appendChild(option);
+            });
+
+            select.disabled = false; // Enable select
+            DOMElements.startBuiltInButton.disabled = true; // Keep button disabled until selection
+
+            // Event listener to update currentSheetId and enable button
+            select.addEventListener('change', function() {
+                currentSheetId = this.value;
+                DOMElements.quizIdInput.value = ''; // Clear custom ID input
+                DOMElements.startBuiltInButton.disabled = !this.value; // Enable button only if a valid quiz is selected
+            });
+        }
+
+        // Quiz Flow Control
+        function startSelectedQuiz() {
+            if (!currentSheetId) {
+                Swal.fire('No Quiz Selected', 'Please select a quiz from the dropdown.', 'warning', { confirmButtonColor: var(--primary) });
+                return;
+            }
+            startQuizFlow(currentSheetId);
+        }
+
+        async function startCustomQuiz() {
+            const sheetId = DOMElements.quizIdInput.value.trim();
+            if (!sheetId) {
+                Swal.fire('Missing Input', 'Please enter a Custom Quiz Google Sheet ID.', 'warning', { confirmButtonColor: var(--primary) });
+                return;
+            }
+            currentSheetId = sheetId; // Store for potential restart
+            startQuizFlow(sheetId);
+        }
+
+        async function startQuizFlow(sheetId) {
+            Swal.fire({ title: 'Loading Quiz', text: 'Please wait...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading() });
+
+            const data = await loadSheetData(sheetId);
+
+            if (!data || data.length === 0) {
+                Swal.close();
+                if (data !== null) { // Only show 'empty' if loading didn't error out
+                    Swal.fire('Empty or Invalid Quiz', 'No valid questions (pairs of words) found in the sheet.', 'warning', { confirmButtonColor: var(--primary) });
                 }
-        });
-
-        loadQuizTitlesAndIds(); // Load quiz options from Google Sheet
-        const pv = document.getElementById('pageviews');
-
-        if (pv !== null) {
-          const uri = location.pathname.replace(/\/$/, '');
-          const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
-
-          fetch(url)
-            .then((response) => response.json())
-            .then((data) => {
-              const count = data.count.replace(/\s/g, '');
-              pv.innerText = new Intl.NumberFormat().format(count);
-            })
-            .catch((error) => {
-              pv.innerText = '1';
-            });
-        }
-    });
-
-    // Double-click Functions
-    function setupDoubleClickHandlers() {
-        // Use event delegation to handle double-clicks
-        document.getElementById('wordContainer').addEventListener('dblclick', function(e) {
-            if (e.target.classList.contains('word-box')) {
-                document.getElementById('answerZone').appendChild(e.target);
+                // If data is null, loadSheetData already showed an error
+                return;
             }
-        });
 
-        document.getElementById('answerZone').addEventListener('dblclick', function(e) {
-            if (e.target.classList.contains('word-box')) {
-                // Remove the 'incorrect' class immediately when moved back via double-click
-                e.target.classList.remove('incorrect');
-                document.getElementById('wordContainer').appendChild(e.target);
-            }
-        });
-    }
-
-    // Core Quiz Functions
-    async function loadSheetData(sheetId) {
-        try {
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const csv = await response.text();
-            const workbook = XLSX.read(csv, {type: 'string'});
-            const sheetName = workbook.SheetNames[0];
-            if (!sheetName) {
-                 throw new Error('No sheet found in the workbook.');
-            }
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
-            window.quizTitle = rows[0][0]; // Extract cell A1 and store globally
-            // Ensure rows is an array and has data
-             if (!Array.isArray(rows) || rows.length <= 1) {
-                console.warn('Sheet is empty or has only a header row.');
-                return []; // Return empty array if no data after header
-            }
-            return rows.slice(1).map(row => row[0]).filter(cell => cell != null && cell.trim() !== ''); // Skip header row and filter out empty/null cells
-
-        } catch (error) {
-            console.error('Error loading sheet data:', error);
-            Swal.fire({
-                title: 'Error Loading Quiz',
-                text: `Could not load quiz data. Please check the Quiz ID [${sheetId}] or network connection. Details: ${error.message}`,
-                icon: 'error',
-                confirmButtonColor: '#1a73e8'
-            });
-            return null; // Return null to indicate failure
-        }
-    }
-
-    // Load Quiz Titles and IDs from Google Sheet
-    async function loadQuizTitlesAndIds() {
-        try {
-            const url = `https://docs.google.com/spreadsheets/d/${QUIZ_LIST_SHEET_ID}/export?format=csv`;
-            const response = await fetch(url);
-             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const csv = await response.text();
-            const workbook = XLSX.read(csv, {type: 'string'});
-            const sheetName = workbook.SheetNames[0];
-            if (!sheetName) {
-                 throw new Error('No sheet found in the workbook for quiz list.');
-            }
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
-
-            quizTitlesAndIds = rows.slice(1) // Skip header
-                                  .map(row => ({ title: row[0], id: row[1] }))
-                                  .filter(quiz => quiz.title && quiz.id); // Ensure both title and id exist
-
-            populateQuizSelect();
-        } catch (error) {
-            console.error('Error loading quiz titles:', error);
-            Swal.fire({
-                title: 'Error',
-                text: `Could not load the list of available quizzes. Details: ${error.message}`,
-                icon: 'error',
-                confirmButtonColor: '#1a73e8'
-            });
-             // Optionally disable the dropdown and built-in quiz button if list fails to load
-            document.getElementById('quizSelect').disabled = true;
-            document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = true;
-        }
-    }
-
-    function populateQuizSelect() {
-        const selectElement = document.getElementById('quizSelect');
-        selectElement.innerHTML = ''; // Clear existing options
-
-        if (quizTitlesAndIds.length === 0) {
-             const option = document.createElement('option');
-             option.textContent = "No quizzes available";
-             option.disabled = true;
-             selectElement.appendChild(option);
-             selectElement.disabled = true; // Disable select if empty
-             document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = true; // Disable button
-             return;
+            quizData = data;
+            resetQuizState(false); // Reset state but keep name/sheetId
+            Swal.close();
+            showScreen('nameScreen');
         }
 
-        // Add a default prompt option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = "";
-        defaultOption.textContent = "-- Select a Quiz --";
-        defaultOption.disabled = true; // Make it non-selectable
-        defaultOption.selected = true; // Make it the default display
-        selectElement.appendChild(defaultOption);
-
-
-        quizTitlesAndIds.forEach(quiz => {
-            const option = document.createElement('option');
-            option.value = quiz.id;
-            option.textContent = quiz.title;
-            selectElement.appendChild(option);
-        });
-
-        // Set the initial currentSheetId to the first available quiz ID if any, otherwise keep it empty
-        // currentSheetId = quizTitlesAndIds.length > 0 ? quizTitlesAndIds[0].id : '';
-        currentSheetId = ''; // Start with no selection
-
-        // Add event listener to the select element to update currentSheetId
-        selectElement.addEventListener('change', function() {
-            currentSheetId = this.value; // Update currentSheetId when the selection changes
-            document.getElementById('quizId').value = ''; // Clear any previously entered custom Quiz ID
-            // Enable the "Start Built-in Quiz" button only when a valid quiz is selected
-            document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = !this.value;
-        });
-
-        // Initially disable the button until a selection is made
-        // document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = true;
-    }
-
-    // ADDED function to start quiz from dropdown selection
-    function startSelectedQuiz() {
-        if (!currentSheetId) {
-             Swal.fire({
-                title: 'No Quiz Selected',
-                text: 'Please select a quiz from the dropdown list.',
-                icon: 'warning',
-                confirmButtonColor: '#1a73e8'
-            });
-            return;
-        }
-        startQuizFlow(currentSheetId);
-    }
-
-
-    async function startCustomQuiz() {
-        const sheetId = document.getElementById('quizId').value.trim(); // Trim whitespace
-        if (!sheetId) return Swal.fire({
-            title: 'Missing Input',
-            text: 'Please enter a Custom Quiz ID.',
-            icon: 'warning',
-            confirmButtonColor: '#1a73e8'
-        });
-        currentSheetId = sheetId; // Update currentSheetId for custom quiz as well
-        startQuizFlow(sheetId);
-    }
-
-    async function startQuizFlow(sheetId) {
-        // Show loading indicator
-        Swal.fire({
-            title: 'Loading Quiz',
-            text: 'Please wait...',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            willOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        const data = await loadSheetData(sheetId);
-
-        if (data === null) { // Check if loading failed
-             // Close loading indicator if loadSheetData handled the error popup - Swal.close();
-            return; // Stop execution if data loading failed
-        }
-
-        if (!data || data.length === 0) {
-             Swal.close();
-             Swal.fire({
-                title: 'Empty Quiz',
-                text: 'The selected quiz appears to be empty or could not be loaded correctly.',
-                icon: 'warning',
-                confirmButtonColor: '#1a73e8'
-            });
-            return; // Stop if quiz data is empty
-        }
-
-
-        quizData = data.map(question => {
-            // Ensure question is a string before splitting
-            const questionText = String(question || '');
-            // Calculate parts first (split by #, trim each, remove empty)
-            const parts = questionText.split('#').map(p => p.trim()).filter(p => p);
-            // Generate the 'correct' answer CONSISTENTLY by joining the cleaned parts with a single space
-            const correctAnswerString = parts.join(' ');
-            
-            return {
-                parts: parts,
-                correct: correctAnswerString,
-                shuffled: null
-            };
-        }).filter(q => q.parts.length > 0); // Filter out questions that became empty
-
-        if (quizData.length === 0) {
-             Swal.close();
-             Swal.fire({
-                title: 'Invalid Quiz Data',
-                text: 'No valid questions found in the loaded quiz data.',
-                icon: 'warning',
-                confirmButtonColor: '#1a73e8'
-            });
-            return;
-        }
-
-        Swal.close(); // Close loading indicator *after* processing data
-
-        questionAttempts = {};
-        quizData.forEach((_, idx) => {
-            questionAttempts[idx] = { attempts: 0, correct: false };
-        });
-
-        // Reset quiz state
-        currentQuestion = 0;
-        userData.attempts = [];
-        userData.totalPoints = 0;
-        pausedAt = 0;
-        elapsedTime = 0;
-        // Clear previous results if any
-        document.getElementById('resultSummary').innerHTML = '';
-        document.getElementById('resultsTable').innerHTML = '';
-
-
-        showScreen('nameScreen');
-    }
-
-    function startQuiz() {
-        userData.name = document.getElementById('userName').value.trim();
-        if (!userData.name) return Swal.fire({
-            title: 'Missing Input',
-            text: 'Please enter your name',
-            icon: 'warning',
-            confirmButtonColor: '#1a73e8'
-        });
-
-        // Set up double-click handlers
-        setupDoubleClickHandlers();
-
-        showScreen('quizScreen');
-        document.getElementById('quizTitleDisplay').innerText = window.quizTitle || '';
-        loadQuestion();
-        startTimer();
-    }
-
-    function loadQuestion() {
-        // Ensure currentQuestion is within bounds
-        if (currentQuestion >= quizData.length) {
-            console.error("Attempted to load question beyond quiz length.");
-            showResults(); // Go to results if out of questions
-            return;
-        }
-
-        const question = quizData[currentQuestion];
-        if (!question.shuffled) {
-            question.shuffled = shuffle([...question.parts]);
-        }
-
-        // Update progress bar
-        const progressPercentage = ((currentQuestion + 1) / quizData.length) * 100;
-        document.getElementById('progressBar').style.width = `${progressPercentage}%`;
-
-        document.getElementById('questionNumber').textContent =
-            `Question ${currentQuestion + 1} of ${quizData.length}`;
-
-        const wordContainer = document.getElementById('wordContainer');
-        // Clear previous words carefully if using SortableJS
-        while (wordContainer.firstChild) {
-            wordContainer.removeChild(wordContainer.firstChild);
-        }
-        question.shuffled.forEach(word => {
-             const wordBox = document.createElement('div');
-             wordBox.className = 'word-box';
-             wordBox.textContent = word;
-             wordContainer.appendChild(wordBox);
-        });
-
-
-        // Clear answer zone carefully if using SortableJS
-         const answerZone = document.getElementById('answerZone');
-         while (answerZone.firstChild) {
-            answerZone.removeChild(answerZone.firstChild);
-        }
-
-        // Re-enable confirm button if it was disabled
-        document.querySelector('#quizScreen .btn-primary').disabled = false;
-    }
-
-    function startTimer() {
-        clearInterval(timerInterval); // Clear any existing interval first
-        if (pausedAt > 0) {
-            // Resume timer
-            userData.startTime = Date.now() - (pausedAt * 1000); // Adjust start time based on paused duration
-            elapsedTime = pausedAt; // Restore elapsed time
-            pausedAt = 0;
-        } else {
-            // Start new timer
-            userData.startTime = Date.now();
-            elapsedTime = 0; // Reset elapsed time for new question/start
-        }
-
-        document.getElementById('timer').textContent = elapsedTime; // Update display immediately
-        timerPaused = false;
-
-        timerInterval = setInterval(() => {
-            if (!timerPaused) {
-                // Calculate elapsed time based on the difference from the start time
-                elapsedTime = Math.floor((Date.now() - userData.startTime) / 1000);
-                document.getElementById('timer').textContent = elapsedTime;
-            }
-        }, 1000);
-    }
-
-    function pauseTimer() {
-        if (!timerPaused) { // Only pause if not already paused
-            timerPaused = true;
-            pausedAt = elapsedTime; // Store the current elapsed time when paused
-            // No need to clear interval here, just stop updating elapsedTime
-        }
-    }
-
-    function resumeTimer() {
-         if (timerPaused) { // Only resume if paused
+        function resetQuizState(fullReset = true) {
+            clearInterval(timerInterval);
+            currentQuestion = 0;
+            quizData = fullReset ? [] : quizData;
+            allTargets = fullReset ? [] : allTargets;
+            userData.startTime = 0;
+            userData.attempts = [];
+            userData.totalPoints = 0;
+            timerInterval = null;
             timerPaused = false;
-            // Adjust startTime based on how long it was paused
-            userData.startTime = Date.now() - (pausedAt * 1000);
-            // The interval continues running, it will pick up the correct time difference
+            elapsedTime = 0;
+            questionStartTime = 0;
+            questionAttempts = {};
+            currentCorrectAnswer = '';
+            targetClickHandlerAttached = false;
+             if (fullReset) {
+                 userData.name = '';
+                 currentSheetId = ''; // Clear selected sheet ID on full reset
+                 window.quizTitle = ''; // Clear quiz title
+             }
+             // Clear UI elements related to quiz state
+             DOMElements.resultSummary.innerHTML = '';
+             DOMElements.resultsTable.innerHTML = '';
+             DOMElements.gameArea.innerHTML = ''; // Clear targets
+             DOMElements.shooter.textContent = '';
+             DOMElements.progressBar.style.width = '0%';
+             DOMElements.timerDisplay.textContent = '0';
+             DOMElements.questionNumberDisplay.textContent = '';
+             DOMElements.quizTitleDisplay.textContent = '';
         }
-    }
-    function checkAnswer() {
-        // Disable button to prevent multiple submissions
-        const confirmButton = document.querySelector('#quizScreen .btn-primary');
-        confirmButton.disabled = true;
 
-        pauseTimer(); // Pause timer while checking/showing feedback
 
-        const timeSpent = elapsedTime; // Use the time when paused
-        const answerZone = document.getElementById('answerZone');
-        const wordContainer = document.getElementById('wordContainer'); // Get word container too
-        const userAnswerWords = [...answerZone.querySelectorAll('.word-box')]
-                                .map(node => node.textContent.trim());
-        const userAnswer = userAnswerWords.join(' ');
-
-        // *** NEW: Check if the attempt is complete ***
-        // An attempt is complete if the wordContainer is empty
-        const isAttemptComplete = wordContainer.querySelectorAll('.word-box').length === 0;
-        // *** END NEW ***
-
-        const currentQuizItem = quizData[currentQuestion];
-        const correctAnswer = currentQuizItem.correct;
-
-        const isCorrect = userAnswer === correctAnswer;
-        const currentAttemptRecord = questionAttempts[currentQuestion];
-        currentAttemptRecord.attempts++;
-
-        // Clear previous correct/incorrect styles from answer zone only
-        answerZone.querySelectorAll('.word-box').forEach(box => {
-            box.classList.remove('correct', 'incorrect');
-        });
-
-        let attemptIndex = userData.attempts.findIndex(a => a.question === currentQuestion + 1);
-
-        if (isCorrect) {
-            // --- CORRECT ANSWER LOGIC ---
-            currentAttemptRecord.correct = true;
-            const points = calculatePoints(timeSpent);
-
-            const attemptData = {
-                question: currentQuestion + 1,
-                time: timeSpent,
-                points,
-                userAnswer,
-                correctAnswer,
-                attempts: currentAttemptRecord.attempts,
-                attemptComplete: isAttemptComplete // *** ADDED FLAG ***
-            };
-
-            // Add or update the attempt in userData
-            if (attemptIndex === -1) {
-                userData.attempts.push(attemptData);
-            } else {
-                userData.attempts[attemptIndex] = attemptData;
+        function startQuiz() {
+            userData.name = DOMElements.userNameInput.value.trim();
+            if (!userData.name) {
+                Swal.fire('Missing Input', 'Please enter your name.', 'warning', { confirmButtonColor: var(--primary) });
+                return;
             }
 
-            Swal.fire({
-                title: 'Correct!',
-                text: `+${points} points`,
-                icon: 'success',
-                // ... (rest of Swal options)
-            }).then(() => {
-                // ... (rest of logic to move next)
-                if (currentQuestion < quizData.length - 1) {
-                    currentQuestion++;
-                    pausedAt = 0; // Reset pause state for next question
-                    loadQuestion();
-                    startTimer(); // Restart timer for the new question
-                } else {
-                    showResults();
-                }
+            // Initialize attempts counter
+            quizData.forEach((_, idx) => { questionAttempts[idx] = 0; });
+
+            showScreen('quizScreen');
+            DOMElements.quizTitleDisplay.textContent = window.quizTitle || 'Language Shooter';
+            loadQuestion();
+            startTimer(); // Start the overall timer
+        }
+
+        // Game Logic
+        function loadQuestion() {
+             if (currentQuestion >= quizData.length) {
+                 showResults();
+                 return;
+             }
+
+            const questionData = quizData[currentQuestion];
+            currentCorrectAnswer = questionData.colB;
+
+            // Update UI
+            DOMElements.shooter.textContent = questionData.colA;
+            const progress = ((currentQuestion + 1) / quizData.length) * 100;
+            DOMElements.progressBar.style.width = `${progress}%`;
+            DOMElements.questionNumberDisplay.textContent = `Question ${currentQuestion + 1} of ${quizData.length}`;
+
+            // Prepare and display targets
+            displayTargets();
+
+            // Reset timer for the question
+            questionStartTime = Date.now();
+            resumeTimer(); // Ensure timer is running for the new question
+        }
+
+         function displayTargets() {
+            const gameArea = DOMElements.gameArea;
+            gameArea.innerHTML = ''; // Clear previous targets
+
+            const shuffledTargets = shuffle([...allTargets]); // Shuffle all possible B words
+
+            // Simple positioning logic (random within bounds)
+            const areaWidth = gameArea.clientWidth;
+            const areaHeight = gameArea.clientHeight;
+            const targetPositions = []; // To avoid excessive overlap (basic check)
+
+            shuffledTargets.forEach(targetWord => {
+                const targetElement = document.createElement('div');
+                targetElement.className = 'target';
+                targetElement.textContent = targetWord;
+                targetElement.dataset.word = targetWord; // Store word for checking
+
+                // Attempt to position randomly, avoiding too much overlap
+                let placed = false;
+                let attempts = 0;
+                while (!placed && attempts < 20) { // Limit attempts to prevent infinite loop
+                    // Estimate target size (adjust these based on styling)
+                    const targetWidthEst = targetWord.length * 12 + 40; // Rough estimate
+                    const targetHeightEst = 40;
+
+                    const randomLeft = Math.random() * (areaWidth - targetWidthEst);
+                    const randomTop = Math.random() * (areaHeight - targetHeightEst - 20); // Keep away from bottom edge slightly
+
+                    // Basic overlap check
+                     let overlap = false;
+                     for (const pos of targetPositions) {
+                         if (
+                            randomLeft < pos.right &&
+                            randomLeft + targetWidthEst > pos.left &&
+                            randomTop < pos.bottom &&
+                            randomTop + targetHeightEst > pos.top
+                        ) {
+                            overlap = true;
+                            break;
+                        }
+                    }
+
+                    if (!overlap) {
+                        targetElement.style.left = `${randomLeft}px`;
+                        targetElement.style.top = `${randomTop}px`;
+                        targetPositions.push({
+                            left: randomLeft,
+                            top: randomTop,
+                            right: randomLeft + targetWidthEst,
+                            bottom: randomTop + targetHeightEst
+                        });
+                        placed = true;
+                    }
+                    attempts++;
+                 }
+
+                 // If placement failed after attempts, just place it anyway (might overlap)
+                 if (!placed) {
+                     const randomLeft = Math.random() * (areaWidth - 50); // Fallback
+                     const randomTop = Math.random() * (areaHeight - 30); // Fallback
+                     targetElement.style.left = `${randomLeft}px`;
+                     targetElement.style.top = `${randomTop}px`;
+                 }
+
+
+                gameArea.appendChild(targetElement);
             });
 
-        } else {
-            // --- INCORRECT ANSWER LOGIC ---
+             // Add event listener to the game area using delegation
+             if (!targetClickHandlerAttached) {
+                 gameArea.addEventListener('click', handleTargetClick);
+                 targetClickHandlerAttached = true;
+             }
+        }
 
-            // *** NEW: Only show "Incorrect" pop-up if the attempt was complete ***
-            // If incomplete, just record it and move on or allow retry without the harsh 'Incorrect!' label initially.
-            // Let's refine this: Always record the attempt, but the popup message can differ.
-            // We still need to record the attempt data.
+        function handleTargetClick(event) {
+             if (!event.target.classList.contains('target') || timerPaused) {
+                 return; // Ignore clicks not on targets or if paused for feedback
+             }
 
-            const attemptData = {
-                question: currentQuestion + 1,
-                time: timeSpent,
-                points: 0, // Incorrect answer gets 0 points
-                userAnswer,
-                correctAnswer,
-                attempts: currentAttemptRecord.attempts,
-                attemptComplete: isAttemptComplete // *** ADDED FLAG ***
-            };
+            pauseTimer(); // Pause timer immediately on click
 
-            // Update or add the attempt record regardless of completeness
-            if (attemptIndex === -1) {
-                userData.attempts.push(attemptData);
-            } else {
-                // Only update if the new attempt is 'more complete' or it's still incomplete
-                // Or simply always update to reflect the last try state
-                userData.attempts[attemptIndex] = attemptData; // Always update with the latest attempt info
-            }
+            const clickedTargetElement = event.target;
+            const clickedWord = clickedTargetElement.dataset.word;
 
-            // Highlight incorrect boxes *only if the attempt was complete* (otherwise it's just incomplete)
-            if (isAttemptComplete) {
-                const correctAnswerWords = correctAnswer.split(' ');
-                const userWordBoxes = answerZone.querySelectorAll('.word-box');
-                const incorrectBoxesToClear = [];
+            // Increment attempt count for this question index
+            questionAttempts[currentQuestion]++;
 
-                userWordBoxes.forEach((box, index) => {
-                    const userWord = box.textContent.trim();
-                    const correctWordAtIndex = correctAnswerWords[index];
-                    if (index >= correctAnswerWords.length || userWord !== correctWordAtIndex) {
-                        box.classList.add('incorrect');
-                        incorrectBoxesToClear.push(box);
-                    }
+            // Animate bullet
+            animateBullet(clickedTargetElement);
+
+            if (clickedWord === currentCorrectAnswer) {
+                // CORRECT Answer
+                const timeTaken = Math.round((Date.now() - questionStartTime) / 1000); // Time for this question
+                const points = calculatePoints(timeTaken);
+                userData.totalPoints += points;
+
+                // Record attempt data
+                userData.attempts.push({
+                    question: currentQuestion + 1,
+                    colA: quizData[currentQuestion].colA, // Store Col A for results display
+                    correctAnswer: currentCorrectAnswer, // Store Col B
+                    time: timeTaken,
+                    points: points,
+                    attempts: questionAttempts[currentQuestion] // Total attempts for this Q
                 });
 
+                 // Visual feedback
+                 clickedTargetElement.classList.add('target-hit');
+                 // Disable further clicks on targets temporarily
+                 DOMElements.gameArea.style.pointerEvents = 'none';
+
+                // Show success feedback and move to next question after a delay
                 setTimeout(() => {
-                    incorrectBoxesToClear.forEach(box => {
-                        if (box && box.parentElement === answerZone && box.classList.contains('incorrect')) {
-                            box.classList.remove('incorrect');
+                    Swal.fire({
+                        title: 'Correct!',
+                        text: `+${points} points!`,
+                        icon: 'success',
+                        toast: true, // Use toast for less interruption
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500, // Show for 1.5 seconds
+                        timerProgressBar: true
+                    }).then(() => {
+                         DOMElements.gameArea.style.pointerEvents = 'auto'; // Re-enable clicks
+                        currentQuestion++;
+                        if (currentQuestion < quizData.length) {
+                            loadQuestion(); // Load next question (will resume timer)
+                        } else {
+                            showResults(); // End of quiz
                         }
                     });
-                }, 5000);
+                }, 400); // Wait for hit animation
+
+            } else {
+                // INCORRECT Answer
+                clickedTargetElement.classList.add('target-miss');
+
+                // Remove miss animation class after it finishes and reset background
+                setTimeout(() => {
+                    clickedTargetElement.classList.remove('target-miss');
+                    clickedTargetElement.style.backgroundColor = ''; // Reset color if changed
+                     resumeTimer(); // Resume timer after feedback
+                }, 300); // Duration of the miss animation
             }
+        }
 
-            // Show popup based on completeness
-            const popupTitle = isAttemptComplete ? 'Incorrect!' : 'Incomplete Answer';
-            const popupIcon = isAttemptComplete ? 'error' : 'warning';
-            const popupHTML = isAttemptComplete ? "Would you like to try again?" : "You haven't used all the words. Would you like to try again?";
+        function animateBullet(targetElement) {
+            const bullet = DOMElements.bullet;
+            const shooterRect = DOMElements.shooter.getBoundingClientRect();
+            const targetRect = targetElement.getBoundingClientRect();
+            const gameAreaRect = DOMElements.gameArea.getBoundingClientRect(); // Need offset
 
-            Swal.fire({
-                title: popupTitle, // Dynamic title
-                html: popupHTML,   // Dynamic message
-                icon: popupIcon,     // Dynamic icon
+            // Calculate start position (top-center of shooter, relative to gameArea)
+            const startX = shooterRect.left + shooterRect.width / 2 - gameAreaRect.left - bullet.offsetWidth / 2;
+            const startY = shooterRect.top - gameAreaRect.top - bullet.offsetHeight;
+
+            // Calculate end position (center of target, relative to gameArea)
+            const endX = targetRect.left + targetRect.width / 2 - gameAreaRect.left - bullet.offsetWidth / 2;
+            const endY = targetRect.top + targetRect.height / 2 - gameAreaRect.top - bullet.offsetHeight / 2;
+
+            // Position bullet at start and make visible
+            bullet.style.left = `${startX}px`;
+            bullet.style.top = `${startY}px`;
+            bullet.style.display = 'block';
+
+             // Force reflow to apply start position before transition
+             void bullet.offsetWidth;
+
+            // Set end position to trigger transition
+            bullet.style.left = `${endX}px`;
+            bullet.style.top = `${endY}px`;
+
+            // Hide bullet after transition
+            setTimeout(() => {
+                bullet.style.display = 'none';
+            }, 300); // Match bullet transition time
+        }
+
+
+        // Timer Functions
+        function startTimer() {
+            clearInterval(timerInterval);
+            elapsedTime = 0; // Reset total elapsed time for the quiz
+            DOMElements.timerDisplay.textContent = elapsedTime;
+            timerPaused = false;
+
+            userData.startTime = Date.now(); // Record quiz start time
+
+            timerInterval = setInterval(() => {
+                if (!timerPaused) {
+                    elapsedTime = Math.floor((Date.now() - userData.startTime) / 1000);
+                    DOMElements.timerDisplay.textContent = elapsedTime;
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() { timerPaused = true; }
+        function resumeTimer() { timerPaused = false; }
+
+        // Scoring
+        function calculatePoints(seconds) {
+            // Time brackets: [max_seconds, points]
+             const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[40,4],[50,3],[60,2],[Infinity,1]];
+            for (const [max, points] of brackets) {
+                if (seconds <= max) return points;
+            }
+            return 0;
+        }
+
+        // Utility
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Results Display
+        function showResults() {
+            clearInterval(timerInterval); // Stop the main timer
+            showScreen('resultsScreen');
+
+             // Get completion timestamp
+            const completionDate = new Date();
+            const day = completionDate.getDate().toString().padStart(2, '0');
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = monthNames[completionDate.getMonth()];
+            const year = completionDate.getFullYear();
+            const hours = completionDate.getHours().toString().padStart(2, '0');
+            const minutes = completionDate.getMinutes().toString().padStart(2, '0');
+            const seconds = completionDate.getSeconds().toString().padStart(2, '0');
+            const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`;
+
+            const correctCount = userData.attempts.length; // Only correct attempts are pushed
+
+             // Update Summary
+            DOMElements.resultSummary.innerHTML = `
+                <div class="result-stat">
+                    <i class="fas fa-user"></i>
+                    <span><strong>Name:</strong> ${userData.name || 'N/A'}</span>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-calendar-check"></i>
+                    <span><strong>Completed:</strong> ${completionTimestamp}</span>
+                </div>
+                <div class="result-stat">
+                     <i class="fas fa-book"></i>
+                    <span><strong>Quiz Title:</strong> ${window.quizTitle || 'N/A'}</span>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-trophy"></i>
+                    <span><strong>Total Score:</strong> ${userData.totalPoints} points</span>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                    <span><strong>Correct Answers:</strong> ${correctCount} / ${quizData.length}</span>
+                </div>
+            `;
+
+            // Update Table
+            const table = DOMElements.resultsTable;
+            let tableHTML = `
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Word</th>
+                        <th>Correct Match</th>
+                        <th>Time (s)</th>
+                        <th>Attempts</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+             // We only have data for successfully answered questions in userData.attempts
+             // We need to show all questions from quizData
+             for (let i = 0; i < quizData.length; i++) {
+                 const questionNum = i + 1;
+                 const attemptData = userData.attempts.find(a => a.question === questionNum);
+                 const totalAttemptsForQ = questionAttempts[i] || 0; // Get attempts from the counter
+
+                 if (attemptData) { // Question was answered correctly
+                     tableHTML += `
+                        <tr>
+                            <td>${attemptData.question}</td>
+                            <td>${attemptData.colA}</td>
+                            <td class="correct">${attemptData.correctAnswer}</td>
+                            <td>${attemptData.time}</td>
+                            <td>${attemptData.attempts}</td>
+                            <td>${attemptData.points}</td>
+                        </tr>
+                    `;
+                 } else { // Question was not answered correctly (skipped or game ended)
+                     tableHTML += `
+                        <tr>
+                            <td>${questionNum}</td>
+                            <td>${quizData[i].colA}</td>
+                             <td class="incorrect"><em>Not Answered</em> (${quizData[i].colB})</td>
+                            <td>-</td>
+                            <td>${totalAttemptsForQ}</td>
+                            <td>0</td>
+                        </tr>
+                    `;
+                 }
+             }
+
+            tableHTML += `</tbody>`;
+            table.innerHTML = tableHTML;
+        }
+
+
+        // Results Actions
+        function screenshotResults() {
+            Swal.fire({ title: 'Generating Screenshot', text: 'Please wait...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading() });
+
+            const resultsElement = DOMElements.resultsScreen.querySelector('.card'); // Target the card
+
+            html2canvas(resultsElement, { scale: 2, useCORS: true }).then(canvas => {
+                Swal.close();
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                link.download = `LanguageShooter-Results-${userData.name || 'User'}-${timestamp}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                Swal.fire('Success!', 'Results screenshot downloaded.', 'success', { confirmButtonColor: var(--primary) });
+            }).catch(err => {
+                Swal.close();
+                console.error("Screenshot error:", err);
+                Swal.fire('Error', 'Could not generate screenshot.', 'error', { confirmButtonColor: var(--primary) });
+            });
+        }
+
+        function reviewQuestions() {
+            // In this game, "Try Again" means restarting the same quiz
+             Swal.fire({
+                title: 'Play Again?',
+                text: 'Do you want to restart the same quiz? Your previous results for this session will be cleared.',
+                icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Try Again',
-                cancelButtonText: 'Next Question',
-                confirmButtonColor: '#1a73e8',
-                cancelButtonColor: '#ef4444',
-                allowOutsideClick: false
+                confirmButtonText: 'Yes, Restart Quiz',
+                cancelButtonText: 'No, Go Home',
+                confirmButtonColor: var(--primary),
+                cancelButtonColor: var(--text-secondary),
+                reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // User wants to try again
-                    resumeTimer();
-                    confirmButton.disabled = false;
-                    // Ensure incorrect styling is cleared if they retry an incomplete attempt
-                    if (!isAttemptComplete) {
-                        answerZone.querySelectorAll('.word-box').forEach(box => box.classList.remove('incorrect'));
+                     if (!currentSheetId) {
+                         Swal.fire("Error", "Cannot determine which quiz to restart.", "error");
+                         goHome(); // Go back home if ID is lost
+                         return;
                     }
-                } else {
-                    // User wants to move to the next question
-                    answerZone.querySelectorAll('.word-box.incorrect').forEach(box => {
-                        box.classList.remove('incorrect');
-                    });
-
-                    if (currentQuestion < quizData.length - 1) {
-                        currentQuestion++;
-                        pausedAt = 0;
-                        loadQuestion();
-                        startTimer();
-                    } else {
-                        showResults();
-                    }
+                    // Reuse startQuizFlow to reset and load, then go to name screen again
+                    startQuizFlow(currentSheetId); // This will reset state and go to nameScreen
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    goHome(); // Go back to the landing page
                 }
             });
         }
-    }
 
-
-    // Utility functions
-    function calculatePoints(seconds) {
-        // const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[35,4],[40,3],[60,2],[Infinity,1]];
-        const brackets = [[10,10],[20,9],[30,8],[40,7],[50,6],[60,5],[70,4],[80,3],[90,2],[Infinity,1]];
-        for (const [max, points] of brackets) {
-            if (seconds <= max) {
-                return points;
-            }
-        }
-        return 0; // Should not happen with Infinity, but good practice
-    }
-
-
-    function showResults() {
-        clearInterval(timerInterval);
-        showScreen('resultsScreen');
-
-        // Calculate total points (no change needed here)
-        userData.totalPoints = userData.attempts.reduce((sum, a) => sum + a.points, 0);
-        const correctCount = userData.attempts.filter(a => a.points > 0).length;
-
-        // Get completion timestamp  // <--- UNCOMMENTED
-        const completionDate = new Date(); // <--- UNCOMMENTED
-        const day = completionDate.getDate().toString().padStart(2, '0'); // <--- UNCOMMENTED
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; // <--- UNCOMMENTED
-        const month = monthNames[completionDate.getMonth()]; // <--- UNCOMMENTED
-        const year = completionDate.getFullYear(); // <--- UNCOMMENTED
-        const hours = completionDate.getHours().toString().padStart(2, '0'); // <--- UNCOMMENTED
-        const minutes = completionDate.getMinutes().toString().padStart(2, '0'); // <--- UNCOMMENTED
-        const seconds = completionDate.getSeconds().toString().padStart(2, '0'); // <--- UNCOMMENTED
-        const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`; // <--- UNCOMMENTED
-
-        // Update the resultSummary with improved styling // <--- UNCOMMENTED
-        document.getElementById('resultSummary').innerHTML = `
-            <div class="result-stat">
-                <i class="fas fa-user"></i>
-                <span><strong>Name:</strong> ${userData.name || 'N/A'}</span>
-            </div>
-            <div class="result-stat">
-                <i class="fas fa-calendar-check"></i>
-                <span><strong>Completed:</strong> ${completionTimestamp}</span>
-            </div>
-            <div class="result-stat">
-                <i class="fas fa-book"></i>
-                <span><strong>Quiz Title:</strong> ${window.quizTitle || 'N/A'}</span>
-            </div>
-            <div class="result-stat">
-                <i class="fas fa-trophy"></i>
-                <span><strong>Total Score:</strong> ${userData.totalPoints} points</span>
-            </div>
-            <div class="result-stat">
-                <i class="fas fa-check-circle" style="color: var(--success);"></i>
-                <span><strong>Correct Answers:</strong> ${correctCount} / ${quizData.length}</span>
-            </div>
-        `; 
-
-
-        const table = document.getElementById('resultsTable');
-        let tableHTML = `
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Time (s)</th>
-                    <th>Points</th>
-                    <th>Attempts</th>
-                    <th>Your Answer</th>
-                    <th>Correct Answer</th>
-                </tr>
-            </thead>
-            <tbody>`;
-
-        for (let i = 0; i < quizData.length; i++) {
-            const questionNum = i + 1;
-            const attempt = userData.attempts.find(a => a.question === questionNum);
-            const originalQuestionData = quizData[i]; // Get original data for the correct answer fallback
-
-            if (attempt) {
-                // *** NEW: Conditional display based on attemptComplete ***
-                const displayCorrectAnswer = attempt.attemptComplete || attempt.points > 0; // Show if complete OR if they got it right anyway (edge case?)
-                const correctAnswerText = displayCorrectAnswer
-                                          ? attempt.correctAnswer
-                                          : '<span style="color: var(--warning);">Please try again to review</span>';
-                const userAnswerText = attempt.attemptComplete || attempt.points > 0
-                                       ? (attempt.userAnswer || 'N/A') // Show their answer if attempt was complete
-                                       : '<i>Incomplete</i>'; // Show 'Incomplete' if not complete
-
-                const rowClass = attempt.points > 0 ? 'table-success' : (displayCorrectAnswer ? 'table-danger-light' : ''); // Add danger class only if complete but wrong
-
-                tableHTML += `
-                    <tr class="${rowClass}">
-                        <td>${attempt.question}</td>
-                        <td>${attempt.time}</td>
-                        <td>${attempt.points}</td>
-                        <td>${attempt.attempts}</td>
-                        <td style="color: ${attempt.points > 0 ? 'inherit' : (displayCorrectAnswer ? 'var(--danger)' : 'inherit')};">${userAnswerText}</td>
-                        <td>${correctAnswerText}</td>
-                    </tr>
-                `;
-                // *** END NEW ***
-            } else {
-                // Question skipped or not reached
-                tableHTML += `
-                    <tr>
-                        <td>${questionNum}</td>
-                        <td>-</td>
-                        <td>0</td>
-                        <td>${questionAttempts[i]?.attempts || 0}</td>
-                        <td><i>Not Answered</i></td>
-                        <td><span style="color: var(--warning);">Please try again to review</span></td>
-                    </tr>
-                `;
-            }
-        }
-
-        tableHTML += `</tbody>`;
-        table.innerHTML = tableHTML;
-    }
-    
-
-
-    function showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        const targetScreen = document.getElementById(screenId);
-        if (targetScreen) {
-             targetScreen.classList.add('active');
-        } else {
-             console.error(`Screen with ID ${screenId} not found.`);
-             // Optionally default to landing screen
-             document.getElementById('landingScreen').classList.add('active');
-        }
-
-
-        // Show/hide header and footer based on screen
-        const showHeaderFooter = (screenId !== 'quizScreen');
-        document.querySelector('.app-header').style.display = showHeaderFooter ? 'block' : 'none';
-        document.querySelector('.app-footer').style.display = showHeaderFooter ? 'block' : 'none';
-    }
-
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    }
-
-    function screenshotResults() {
-        // Show loading indicator
-        Swal.fire({
-            title: 'Generating Screenshot',
-            text: 'Please wait...',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            willOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        const resultsElement = document.querySelector('#resultsScreen .card'); // Target the card for better framing
-
-        html2canvas(resultsElement, {
-             scale: 2, // Increase resolution for better quality
-             useCORS: true // If any external images/fonts are used indirectly
-             }).then(canvas => {
-            Swal.close();
-            const link = document.createElement('a');
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            link.download = `LanguagePuzzle-Results-${userData.name || 'User'}-${timestamp}.png`;
-            link.href = canvas.toDataURL("image/png"); // Use PNG for better quality
-            link.click();
-
-            Swal.fire({
-                title: 'Success!',
-                text: 'Your results screenshot has been downloaded.',
-                icon: 'success',
-                confirmButtonColor: '#1a73e8',
-            });
-        }).catch(err => {
-             Swal.close();
-             console.error("Screenshot error:", err);
-             Swal.fire({
-                title: 'Error',
-                text: 'Could not generate screenshot.',
-                icon: 'error',
-                confirmButtonColor: '#1a73e8',
-             });
-        });
-    }
-
-    function reviewQuestions() {
-        Swal.fire({
-            title: 'Try Again?',
-            text: 'Do you want to restart the same quiz? Your previous results for this session will be cleared.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Restart Quiz',
-            cancelButtonText: 'No, Go Home',
-            confirmButtonColor: '#1a73e8',
-            cancelButtonColor: '#6b7280',
-            reverseButtons: true // Puts 'Yes' on the right
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Restart the same quiz using the stored currentSheetId
-                if (!currentSheetId) {
-                     Swal.fire("Error", "Cannot determine which quiz to restart.", "error");
-                     showScreen('landingScreen'); // Go back home if ID is lost
-                     return;
-                }
-                // Re-use startQuizFlow to reset and load, then go to name screen again
-                 startQuizFlow(currentSheetId);
-                 // Note: startQuizFlow now handles resetting state and goes to nameScreen
-
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                 // User clicked 'No, Go Home'
-                 // Reset necessary states before going home
-                 currentQuestion = 0;
-                 quizData = [];
-                 userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 };
-                 timerInterval = null;
-                 pausedAt = 0;
-                 elapsedTime = 0;
-                 currentSheetId = ''; // Clear selected sheet ID
-                 document.getElementById('quizId').value = ''; // Clear custom ID input
-                 document.getElementById('quizSelect').selectedIndex = 0; // Reset dropdown
-                 document.querySelector('button[onclick="startSelectedQuiz()"]').disabled = true; // Disable built-in start button again
-
-                 showScreen('landingScreen'); // Go back to the beginning
-            }
-        });
-    }
-</script>
+    </script>
 </body>
 </html>
