@@ -1235,8 +1235,8 @@
                 shooterX += moveAmount;
             }
 
-            // Keep shooter within bounds
-            shooterX = Math.max(0, Math.min(shooterX, gameAreaWidth - shooterWidth));
+            // Adjust clamping to account for transform (shooterX is the center)
+            shooterX = Math.max(shooterWidth / 2, Math.min(shooterX, gameAreaWidth - shooterWidth / 2));
 
             DOMElements.shooter.style.left = `${shooterX}px`;
         }
