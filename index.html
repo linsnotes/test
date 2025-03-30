@@ -183,6 +183,9 @@
             transform: translateX(-50%);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             color: var(--shooter-text-color);
+            text-align: center; /* Ensure text centers if it somehow wraps */
+            align-items: center; /* Center text vertically */
+            font-family: var(--word-box-font-family);
         }
 
         #shooter::after {
