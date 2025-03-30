@@ -172,38 +172,41 @@
             text-align: center; /* Ensure text centers if it somehow wraps */
         }
 
-        /* --- MODIFICATION 2: Adjust Shooter and Add Triangle Pointer --- */
         #shooter {
             position: absolute;
             bottom: 10px;
-            left: 50%; /* Initial position set by JS */
-            padding: 0.8rem 1.8rem; /* Keep padding for text */
+            left: 50%;
+            width: 60px;           /* Fixed width for a tank body */
+            height: 40px;          /* Fixed height */
             background-color: var(--dark);
-            color: var(--shooter-text-color);
-            border-radius: 4px 4px 0 0; /* Change radius for a flatter bottom */
-            font-family: var(--word-box-font-family);
-            font-size: var(--word-box-font-size);
-            font-weight: bold;
+            border-radius: 5px;    /* Minimal curves */
+            transform: translateX(-50%);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            z-index: 10;
-            /* border-top: 3px solid var(--primary); */ /* REMOVE or change this border */
-            white-space: nowrap; /* Prevent wrapping */
-            /* ADD position: relative; if not already there (absolute is fine too) */
         }
 
-        /* ADD THIS NEW RULE for the triangle */
-        #shooter::before {
-            content: ''; /* Required for pseudo-elements */
+        #shooter::after {
+            content: '';
             position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;  /* Adjust size as needed */
-            border-right: 15px solid transparent; /* Adjust size as needed */
-            border-bottom: 15px solid var(--dark); /* Color matches shooter, creates upward triangle */
-            bottom: 100%; /* Position it right above the shooter rectangle */
-            left: 50%;    /* Center the triangle horizontally */
-            transform: translateX(-50%); /* Fine-tune centering */
+            width: 30px;           /* Width of the turret */
+            height: 15px;          /* Height of the turret */
+            background-color: var(--dark);
+            top: -10px;            /* Position above the tank body */
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
         }
+
+        #shooter::before {
+            content: '';
+            position: absolute;
+            width: 4px;            /* Thin cannon barrel */
+            height: 20px;          /* Length of the cannon */
+            background-color: var(--dark);
+            top: -25px;            /* Adjust to attach to the turret */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
 
         /* Optional: Style bullet slightly differently */
         .bullet-visual {
