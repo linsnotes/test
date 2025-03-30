@@ -121,43 +121,6 @@
             /* margin-top: 0.5rem;  */
         }
 
-        #shooter {
-            position: absolute;
-            bottom: 10px;
-            left: 50%; /* Initial position set by JS */
-            /* transform: translateX(-50%); */ /* Handled by JS positioning */
-            padding: 0.8rem 1.8rem; /* Slightly adjusted */
-            background-color: var(--dark);
-            color: var(--shooter-text-color);
-            border-radius: var(--radius);
-            font-family: var(--word-box-font-family);
-            font-size: var(--word-box-font-size);
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            z-index: 10;
-            border-top: 3px solid var(--primary);
-            white-space: nowrap; /* Prevent wrapping */
-        }
-
-        .target {
-            position: absolute; /* Positioned within gameArea */
-            padding: 0.6rem 1.2rem;
-            background-color: var(--accent);
-            color: var(--target-text-color);
-            border-radius: 50px; /* Pill shape */
-            font-family: var(--word-box-font-family);
-            font-size: calc(var(--word-box-font-size) * 0.9); /* Slightly smaller than shooter */
-            /* cursor: pointer; */ /* No longer clickable */
-            transition: transform 0.2s ease, background-color 0.2s ease; /* Keep for animations */
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 5;
-            user-select: none; /* Prevent text selection */
-            white-space: nowrap; /* Prevent wrapping */
-        }
-
-        /* Removed hover effect as targets are not directly interactive */
-        /* .target:hover { transform: scale(1.1); background-color: var(--primary-hover); } */
 
         /* Target Animations */
         @keyframes targetHitCorrect {
@@ -183,20 +146,78 @@
             pointer-events: none; /* Prevent hitting again during animation */
         }
 
-        /* Change the selector from #bullet to .bullet-visual */
+        /* --- MODIFICATION 1: Make Targets Circular --- */
+        .target {
+            position: absolute; /* Positioned within gameArea */
+            /* padding: 0.6rem 1.2rem; */ /* Remove or adjust this */
+            padding: 0.8rem; /* Make padding uniform for circle */
+            width: auto; /* Let width be determined by content */
+            min-width: 3rem; /* Ensure a minimum size */
+            aspect-ratio: 1 / 1; /* Force it into a square shape */
+            display: flex; /* Needed for centering text in aspect-ratio circle */
+            justify-content: center; /* Center text horizontally */
+            align-items: center; /* Center text vertically */
+            background-color: var(--accent);
+            color: var(--target-text-color);
+            /* border-radius: 50px; */ /* REMOVE Pill shape */
+            border-radius: 50%;   /* ADD THIS for Circle shape */
+            font-family: var(--word-box-font-family);
+            font-size: calc(var(--word-box-font-size) * 0.8); /* Adjust if text overflows */
+            transition: transform 0.2s ease, background-color 0.2s ease; /* Keep for animations */
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 5;
+            user-select: none; /* Prevent text selection */
+            white-space: nowrap; /* Prevent wrapping */
+            text-align: center; /* Ensure text centers if it somehow wraps */
+        }
+
+        /* --- MODIFICATION 2: Adjust Shooter and Add Triangle Pointer --- */
+        #shooter {
+            position: absolute;
+            bottom: 10px;
+            left: 50%; /* Initial position set by JS */
+            padding: 0.8rem 1.8rem; /* Keep padding for text */
+            background-color: var(--dark);
+            color: var(--shooter-text-color);
+            border-radius: 4px 4px 0 0; /* Change radius for a flatter bottom */
+            font-family: var(--word-box-font-family);
+            font-size: var(--word-box-font-size);
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            /* border-top: 3px solid var(--primary); */ /* REMOVE or change this border */
+            white-space: nowrap; /* Prevent wrapping */
+            /* ADD position: relative; if not already there (absolute is fine too) */
+        }
+
+        /* ADD THIS NEW RULE for the triangle */
+        #shooter::before {
+            content: ''; /* Required for pseudo-elements */
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;  /* Adjust size as needed */
+            border-right: 15px solid transparent; /* Adjust size as needed */
+            border-bottom: 15px solid var(--dark); /* Color matches shooter, creates upward triangle */
+            bottom: 100%; /* Position it right above the shooter rectangle */
+            left: 50%;    /* Center the triangle horizontally */
+            transform: translateX(-50%); /* Fine-tune centering */
+        }
+
+        /* Optional: Style bullet slightly differently */
         .bullet-visual {
             position: absolute;
-            width: 8px; /* Slimmer */
-            height: 18px; /* Longer */
-            background: linear-gradient(to top, var(--warning), gold); /* Gradient */
-            border-radius: 4px 4px 0 0; /* Rounded top */
-            box-shadow: 0 0 6px yellow;
+            width: 6px; /* Slimmer */
+            height: 12px; /* Shorter */
+            background: yellow; /* Simpler color */
+            /* background: linear-gradient(to top, var(--warning), gold); */ /* Gradient */
+            border-radius: 50% 50% 0 0; /* More rounded top */
+            /* box-shadow: 0 0 6px yellow; */
             z-index: 9;
             pointer-events: none; /* Don't block clicks */
             display: none; /* Keep hidden for the template */
         }
-
-
         /* Results Screen (Mostly reused styles) */
         .result-summary { padding: 1.5rem; background-color: #f3f4f6; border-radius: var(--radius); margin-bottom: 1.5rem; }
         .result-stat { display: flex; align-items: center; margin-bottom: 0.75rem; }
