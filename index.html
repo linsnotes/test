@@ -473,11 +473,12 @@
 
             } catch (error) {
                 console.error('Error loading sheet data:', error);
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
                 Swal.fire({
                     title: 'Error Loading Quiz',
                     text: `Could not load quiz data. Check Sheet ID [${sheetId}] or network. Is sheet published & shared? Details: ${error.message}`,
                     icon: 'error',
-                    confirmButtonColor: var(--primary)
+                    confirmButtonColor: primaryColor
                 });
                 return null; // Indicate failure
             }
