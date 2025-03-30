@@ -1017,6 +1017,8 @@
         function showResults() {
             stopGameLoop(); // Ensure game loop is stopped
             clearInterval(timerInterval);
+            // Explicitly hide the quiz screen to be absolutely sure
+            DOMElements.quizScreen.style.display = 'none';
             showScreen('resultsScreen');
 
             const completionDate = new Date();
