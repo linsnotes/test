@@ -367,7 +367,9 @@
         </div>
 
         <footer class="app-footer">
-             <!-- Optional: Visitor counter -->
+            <div id="visitor-counter">
+               Welcome! You're visitor #<span id="pageviews">Loading...</span>
+            </div>
             <p><a href="https://linsnotes.com">linsnotes.com</a></p>
         </footer>
     </div>
@@ -376,7 +378,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Removed SortableJS script -->
+    <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 
     <script>
         // --- Global State ---
@@ -443,6 +445,24 @@
             document.addEventListener('keyup', handleKeyUp);
             // Cache bullet element
             bulletState.element = DOMElements.bullet;
+
+            // pageviews counter
+            const pv = document.getElementById('pageviews');
+
+            if (pv !== null) {
+                const uri = location.pathname.replace(/\/$/, '');
+                const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
+
+                fetch(url)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const count = data.count.replace(/\s/g, '');
+                        pv.innerText = new Intl.NumberFormat().format(count);
+                    })
+                    .catch((error) => {
+                        pv.innerText = '1';
+                    });
+            }
         });
 
         // --- Screen Management ---
@@ -559,9 +579,21 @@
 
         // --- Quiz Flow Control ---
         function startSelectedQuiz() {
-            if (!currentSheetId) { Swal.fire('No Quiz Selected', 'Please select a quiz.', 'warning', { confirmButtonColor: primaryColor }); return; }
+            // Check if a built-in quiz is selected
+            if (!currentSheetId) {
+                // Use Swal.fire for the popup, matching the puzzle app style
+                Swal.fire({
+                    title: 'No Game Selected', // Changed title slightly for Shooter context
+                    text: 'Please select a game from the dropdown list.', // Matched puzzle app text
+                    icon: 'warning', // Matched puzzle app icon
+                    confirmButtonColor: primaryColor // Use the cached primary color variable
+                });
+                return; // Stop the function here
+            }
+            // If a sheet ID is selected, proceed
             startQuizFlow(currentSheetId);
         }
+
         async function startCustomQuiz() {
             const sheetId = DOMElements.quizIdInput.value.trim();
             if (!sheetId) { Swal.fire('Missing Input', 'Please enter a Custom Quiz Google Sheet ID.', 'warning', { confirmButtonColor: primaryColor }); return; }
