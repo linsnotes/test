@@ -318,7 +318,11 @@
                  <div id="quizTitleDisplay" class="quiz-title-display">
                      <!-- Quiz title will be shown here -->
                  </div>
+                
                 <div class="question-counter" id="questionNumber"></div>
+                <div id="bulletCounter" class="bullet-counter" style="display: none; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text-secondary); padding: 0.5rem 1rem; background: var(--light); border-radius: var(--radius); margin-left: 1rem;"> {/* Added margin-left for spacing */}
+                    <!-- Content set by JS -->
+                </div>
             </div>
             <div id="progressContainer" class="progress-container">
                 <div id="progressBar" class="progress-bar" style="width: 0%"></div>
@@ -416,6 +420,7 @@
         // --- Game State ---
         let gameLoopId = null;
         let shooterX = 0; // Current horizontal position (pixels from left)
+        let unlimitedBulletsEnabled = false; // default to limited
         let activeBullets = []; // Array of { element: DOMEl, x: num, y: num, width: num, height: num } // ADD THIS LINE
         let activeTargets = []; // Array of { element: DOMEl, x: num, y: num, vx: num, vy: num, word: str, hit: bool }
         let keysPressed = {}; // Track pressed keys for smoother movement
@@ -437,6 +442,7 @@
             gameArea: document.getElementById('gameArea'),
             shooter: document.getElementById('shooter'),
             bulletTemplate: document.getElementById('bullet'), 
+            bulletCounter: document.getElementById('bulletCounter'),
             resultSummary: document.getElementById('resultSummary'),
             resultsTable: document.getElementById('resultsTable'),
             startBuiltInButton: document.querySelector('button[onclick="startSelectedQuiz()"]'),
@@ -538,6 +544,19 @@
                         }
                         // ---> read from C1 <---
 
+                        // ---> Read D1 for Unlimited Bullets <---
+                        const unlimitedCellValue = rows?.[0]?.[3]; // Cell D1 (0-indexed column 3)
+                        // Check if the cell has *any* text content after trimming whitespace
+                        if (unlimitedCellValue !== undefined && unlimitedCellValue !== null && String(unlimitedCellValue).trim() !== '') {
+                                unlimitedBulletsEnabled = true;
+                                console.log("Cell D1 is not empty. Unlimited bullets ENABLED.");
+                        } else {
+                                unlimitedBulletsEnabled = false;
+                                console.log("Cell D1 is empty. Limited bullets ENABLED.");
+                        }
+                        // ---> END READ D1 <---
+
+                    
                         // Existing data processing
                         const data = rows.slice(1) // Start from the second row for actual quiz data
                                 .map(row => ({
@@ -664,7 +683,6 @@
                 questionFailed = false;
                 currentCorrectAnswer = '';
                 activeTargets = []; // Clear active targets array
-
                 // ---> ADD THIS: Clear active bullets (DOM and Array) <---
                 activeBullets.forEach(b => {
                         if (b.element && b.element.parentNode) {
@@ -700,6 +718,14 @@
                 DOMElements.questionNumberDisplay.textContent = '';
                 DOMElements.quizTitleDisplay.textContent = '';
 
+                 // ---> Reset Bullet Counter UI <---
+                 const bulletCounterEl = DOMElements.bulletCounter; // Use cached element
+                 if (bulletCounterEl) {
+                     bulletCounterEl.style.display = 'none'; // Hide it
+                     bulletCounterEl.innerHTML = ''; // Clear content
+                 }
+                 // ---> END Reset Bullet Counter UI <---
+            
                 // Ensure the bullet template remains hidden (CSS should primarily handle this)
                 if (DOMElements.bulletTemplate) {
                         DOMElements.bulletTemplate.style.display = 'none';
@@ -763,6 +789,26 @@
             const progress = ((currentQuestion + 1) / quizData.length) * 100;
             DOMElements.progressBar.style.width = `${progress}%`; // Assumes DOMElements cache exists
             DOMElements.questionNumberDisplay.textContent = `Question ${currentQuestion + 1} of ${quizData.length}`; // Assumes DOMElements cache exists
+            // ---> Update Bullet Counter UI <---
+            const bulletCounterEl = DOMElements.bulletCounter; // Use cached element
+            if (bulletCounterEl) { // Check if element exists in cache
+                 bulletCounterEl.style.color = 'var(--text-secondary)'; // Reset color
+                 bulletCounterEl.style.display = 'flex'; // Make sure it's visible
+
+                 if (unlimitedBulletsEnabled) {
+                      bulletCounterEl.innerHTML = `<i class="fas fa-infinity"></i> Unlimited`;
+                 } else {
+                      const shotsFired = questionAttempts[currentQuestion] || 0; // Get attempts for *this* question
+                      const remaining = Math.max(0, numberOfOptions - shotsFired); // Ensure not negative
+                      bulletCounterEl.innerHTML = `<i class="fas fa-crosshairs"></i> Bullets: ${remaining}/${numberOfOptions}`;
+                      if (remaining <= 0) {
+                           bulletCounterEl.style.color = 'var(--danger)'; // Optional: Indicate zero remaining
+                      }
+                 }
+            } else {
+                 console.warn("Bullet counter element not found in DOM cache.");
+            }
+            // ---> END Update Bullet Counter UI <---
 
             // Prepare and display NEW targets for the current question
             spawnTargets(); // Assumes spawnTargets exists
@@ -945,9 +991,35 @@
 
         function fireBullet() {
             // REMOVED: if (bulletState.active) return; // No longer limiting to one bullet
+            // ---> ADD BULLET LIMIT CHECK & POPUP TRIGGER <---
+            if (!unlimitedBulletsEnabled) {
+                 const shotsFired = questionAttempts[currentQuestion] || 0;
+                 if (shotsFired >= numberOfOptions) {
+                      console.log("Attempted to fire with no bullets left.");
+                      showOutOfBulletsPopup(); // <--- CALL THE NEW POPUP FUNCTION
+                      return; // Stop execution here, don't fire
+                 }
+            }
+            // ---> END BULLET LIMIT CHECK <---
 
+            
             questionAttempts[currentQuestion]++; // Count every shot as an attempt
 
+            // ---> Update Bullet Counter UI AFTER successful shot <---
+            if (!unlimitedBulletsEnabled) {
+                 const bulletCounterEl = DOMElements.bulletCounter;
+                 if (bulletCounterEl) {
+                      const remaining = Math.max(0, numberOfOptions - questionAttempts[currentQuestion]); // Ensure not negative
+                      bulletCounterEl.innerHTML = `<i class="fas fa-crosshairs"></i> Bullets: ${remaining}/${numberOfOptions}`;
+                      if (remaining <= 0) {
+                           bulletCounterEl.style.color = 'var(--danger)'; // Indicate zero
+                      }
+                 }
+            }
+            // ---> END UI UPDATE <---
+
+
+            
             const shooterRect = DOMElements.shooter.getBoundingClientRect();
             const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
 
@@ -982,6 +1054,65 @@
             });
         }
 
+        // --- NEW FUNCTION for Out of Bullets Popup ---
+        function showOutOfBulletsPopup() {
+            // Prevent triggering if already failed or paused in a way we shouldn't interrupt
+            if (questionFailed || !gameActive) return;
+
+            questionFailed = true; // Mark question as failed state to prevent other actions
+            pauseTimer();        // Pause the timer
+            stopGameLoop();      // Stop target/bullet movement
+
+            // Record failure immediately before showing popup
+            // Important: Record with the number of attempts used (which is numberOfOptions)
+            userData.attempts.push({
+                question: currentQuestion + 1,
+                colA: quizData[currentQuestion].colA,
+                correctAnswer: currentCorrectAnswer,
+                time: Math.round((Date.now() - questionStartTime) / 1000), // Time until failure trigger
+                points: 0,
+                attempts: numberOfOptions, // They used all allowed attempts
+                status: 'failed'
+            });
+
+            Swal.fire({
+                title: 'Out of Bullets!',
+                text: `You used all ${numberOfOptions} bullet${numberOfOptions === 1 ? '' : 's'} without hitting the correct target.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Next Question (0 points)', // Confirm moves on
+                cancelButtonText: 'Try Again',               // Cancel retries
+                confirmButtonColor: primaryColor,
+                cancelButtonColor: textSecondary,
+                allowOutsideClick: false, // Prevent closing by clicking outside
+                allowEscapeKey: false,    // Prevent closing with Esc key
+            }).then((result) => {
+                // loadQuestion will reset questionFailed flag and restart necessary timers/loops
+                if (result.isConfirmed) {
+                    // User chose "Next Question"
+                    console.log("User chose Next Question after running out of bullets.");
+                    currentQuestion++; // Move to the next question index
+                    loadQuestion();    // Load the next question
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    // User chose "Try Again"
+                    console.log("User chose Try Again after running out of bullets.");
+
+                     // Reset attempts counter *for this specific question* so they get full bullets again
+                     questionAttempts[currentQuestion] = 0;
+
+                     // Remove the 'failed' entry we just added for this attempt, as they are retrying
+                     const lastFailedIndex = userData.attempts.map(a => a.question === (currentQuestion + 1) && a.status === 'failed').lastIndexOf(true);
+                     if(lastFailedIndex > -1) {
+                        userData.attempts.splice(lastFailedIndex, 1);
+                        console.log("Removed preliminary failed attempt record for retry.");
+                     } else {
+                        console.warn("Could not find the preliminary failed attempt record to remove for retry.");
+                     }
+
+                    loadQuestion(); // Reload the *current* question
+                }
+            });
+        }
 
         // --- Game Loop ---
         function startGameLoop() {
@@ -995,118 +1126,144 @@
             keysPressed = {}; // Clear keys when stopping loop
         }
 
-
+        
         function gameLoop() {
-                if (!gameActive || timerPaused || questionFailed) { // Stop loop if paused, failed, or not on quiz screen
-                        gameLoopId = requestAnimationFrame(gameLoop); // Keep checking state
-                        return;
-                }
-
-                const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
-                const shooterRect = DOMElements.shooter.getBoundingClientRect(); // Get current shooter pos
-
-                // 1. Update Shooter Position (based on keysPressed)
-                updateShooterPosition(); // Assumes this function exists and works
-
-                // 2. Update ALL Bullets & Check Collisions / Offscreen
-                // Iterate backwards through the activeBullets array to safely remove elements while looping
-                for (let i = activeBullets.length - 1; i >= 0; i--) {
-                        let bullet = activeBullets[i];
-                        let bulletRemoved = false; // Flag to track if this bullet is removed in this iteration
-
-                        // Update bullet position
-                        bullet.y -= BULLET_SPEED;
-                        bullet.element.style.top = `${bullet.y}px`;
-
-                        // Check if bullet went off-screen (top)
-                        if (bullet.y < -bullet.height) { // Use stored height
-                                bullet.element.remove(); // Remove from DOM
-                                activeBullets.splice(i, 1); // Remove from array
-                                bulletRemoved = true; // Mark as removed
-                                continue; // Go to the next bullet in the loop (this one is gone)
-                        }
-
-                        // If bullet still exists (wasn't removed for being off-screen), check for collisions with targets
-                        if (!bulletRemoved) {
-                                const bulletRect = {
-                                        left: bullet.x,
-                                        top: bullet.y,
-                                        right: bullet.x + bullet.width, // Use stored width
-                                        bottom: bullet.y + bullet.height // Use stored height
-                                };
-
-                                // Iterate through active targets to check for collision
-                                for (let j = activeTargets.length - 1; j >= 0; j--) { // Can iterate targets normally or backward
-                                        let target = activeTargets[j];
-
-                                        if (target.hit) continue; // Skip targets that have already been hit
-
-                                        const targetRect = {
-                                                left: target.x,
-                                                top: target.y,
-                                                right: target.x + target.width,
-                                                bottom: target.y + target.height
-                                        };
-
-                                        // Simple AABB (Axis-Aligned Bounding Box) collision check
-                                        if (bulletRect.left < targetRect.right &&
-                                            bulletRect.right > targetRect.left &&
-                                            bulletRect.top < targetRect.bottom &&
-                                            bulletRect.bottom > targetRect.top)
-                                        {
-                                                // Collision detected!
-                                                bullet.element.remove(); // Remove THE COLLIDING BULLET from DOM
-                                                activeBullets.splice(i, 1); // Remove THE COLLIDING BULLET from array
-                                                bulletRemoved = true; // Mark bullet as removed
-
-                                                target.hit = true; // Mark THE TARGET as hit (prevents multiple hits on same target)
-                                                handleBulletHit(target); // Call the function to handle consequences (score, animation, etc.)
-
-                                                // Since this bullet hit a target, it's gone. Stop checking this bullet against other targets.
-                                                break; // Exit the inner target loop (j) and move to the next bullet (i)
-                                        }
-                                } // End of target collision check loop (j)
-                        } // End of collision check block (if !bulletRemoved)
-                } // End of activeBullets loop (i)
-
-
-                // 3. Update Target Positions & Check Bounce / Failure (This part remains the same as your original code)
-                let targetReachedBottom = false;
-                const shooterTopRelative = shooterRect.top - gameAreaRect.top; // Shooter Y relative to gameArea
-
-                activeTargets.forEach(target => {
-                        if (target.hit) return; // Skip already hit targets
-
-                        // Update position
-                        target.x += target.vx;
-                        target.y += target.vy;
-
-                        // Horizontal bounce
-                        if (target.x <= 0 || (target.x + target.width) >= gameAreaRect.width) {
-                                target.vx *= -1; // Reverse horizontal direction
-                                target.x = Math.max(0, Math.min(target.x, gameAreaRect.width - target.width)); // Clamp position
-                        }
-
-                        // Apply new position
-                        target.element.style.left = `${target.x}px`;
-                        target.element.style.top = `${target.y}px`;
-
-                        // Check failure condition (target reaches shooter level)
-                        if (!questionFailed && (target.y + target.height) >= (shooterTopRelative - TARGET_FAILURE_PADDING)) {
-                                targetReachedBottom = true;
-                                // Mark the target visually maybe? (Optional)
-                                // target.element.style.backgroundColor = 'orange';
-                        }
-                });
-
-                // 4. Handle Failure State (outside target loop to process only once)
-                if (targetReachedBottom) {
-                        handleQuestionFailure(); // Assumes this function exists and works
-                        // Loop continues briefly to allow popup, but game logic pauses via questionFailed flag
-                }
-
-                // 5. Request Next Frame (Remains the same)
+            // --- Core Loop Condition Check ---
+            // Stop processing if game isn't active, timer is paused, or the question has already failed
+            if (!gameActive || timerPaused || questionFailed) {
+                // Still request the next frame to keep checking the state, but do nothing else
                 gameLoopId = requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            // --- Get Necessary Dimensions/Positions ---
+            // Get these each frame as window/element sizes might change (though unlikely mid-game)
+            const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
+            const shooterRect = DOMElements.shooter.getBoundingClientRect(); // Current shooter position
+
+            // --- 1. Update Shooter Position ---
+            // Handles movement based on currently pressed keys ('ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD')
+            updateShooterPosition(); // Assumes this function exists and correctly updates shooterX and style.left
+
+            // --- 2. Update Bullets & Check Collisions / Offscreen ---
+            // Iterate backwards through active bullets for safe removal during loop
+            for (let i = activeBullets.length - 1; i >= 0; i--) {
+                let bullet = activeBullets[i];
+                let bulletRemoved = false; // Flag to track removal in this iteration
+
+                // Update bullet's vertical position
+                bullet.y -= BULLET_SPEED; // Move bullet upwards
+                bullet.element.style.top = `${bullet.y}px`;
+
+                // Check if bullet is off-screen (above the game area)
+                if (bullet.y < -bullet.height) { // Use stored bullet height
+                    bullet.element.remove();      // Remove from DOM
+                    activeBullets.splice(i, 1); // Remove from tracking array
+                    bulletRemoved = true;         // Mark as removed
+                    continue; // Skip collision checks for this removed bullet
+                }
+
+                // If bullet is still on screen, check for collisions with active targets
+                if (!bulletRemoved) {
+                    // Define the bullet's bounding box for collision detection
+                    const bulletRect = {
+                        left: bullet.x,
+                        top: bullet.y,
+                        right: bullet.x + bullet.width,
+                        bottom: bullet.y + bullet.height
+                    };
+
+                    // Check against each active target
+                    // Iterate backwards is safe for removal, though not strictly needed here as we break on hit
+                    for (let j = activeTargets.length - 1; j >= 0; j--) {
+                        let target = activeTargets[j];
+
+                        // Skip targets that have already been hit in this question
+                        if (target.hit) continue;
+
+                        // Define the target's bounding box
+                        const targetRect = {
+                            left: target.x,
+                            top: target.y,
+                            right: target.x + target.width,
+                            bottom: target.y + target.height
+                        };
+
+                        // Simple AABB (Axis-Aligned Bounding Box) collision check
+                        if (bulletRect.left < targetRect.right &&
+                            bulletRect.right > targetRect.left &&
+                            bulletRect.top < targetRect.bottom &&
+                            bulletRect.bottom > targetRect.top)
+                        {
+                            // --- Collision Detected! ---
+                            bullet.element.remove();      // Remove the bullet from DOM
+                            activeBullets.splice(i, 1); // Remove bullet from tracking array
+                            bulletRemoved = true;         // Mark bullet as removed
+
+                            target.hit = true; // Mark the target as hit (prevents multiple hits)
+
+                            // Handle consequences of the hit (scoring, animation, next question)
+                            handleBulletHit(target); // Assumes this function exists
+
+                            // Since this bullet hit a target, break the inner target loop (j)
+                            // and proceed to the next bullet (i) in the outer loop.
+                            break;
+                        }
+                    } // End of target collision check loop (j)
+                } // End of collision check block (if !bulletRemoved)
+            } // End of activeBullets loop (i)
+
+
+            // --- 3. Update Target Positions & Check Bounce / Failure (Target Reaching Bottom) ---
+            let targetReachedBottom = false; // Reset flag for this frame check
+            // Calculate shooter's top position relative to the game area for the failure check
+            const shooterTopRelative = shooterRect.top - gameAreaRect.top;
+
+            // Iterate through all active targets
+            activeTargets.forEach(target => {
+                // Skip targets that have already been hit
+                if (target.hit) return;
+
+                // Update target position based on its velocity
+                target.x += target.vx;
+                target.y += target.vy; // vy is the downward speed
+
+                // Handle horizontal bouncing off the game area edges
+                if (target.x <= 0 || (target.x + target.width) >= gameAreaRect.width) {
+                    target.vx *= -1; // Reverse horizontal direction
+                    // Clamp position to prevent sticking slightly outside bounds
+                    target.x = Math.max(0, Math.min(target.x, gameAreaRect.width - target.width));
+                }
+
+                // Apply the updated position to the target's element style
+                target.element.style.left = `${target.x}px`;
+                target.element.style.top = `${target.y}px`;
+
+                // Check for Failure: Target reaches near the shooter level
+                // Check only if the question hasn't already failed from another cause
+                 if (!questionFailed && (target.y + target.height) >= (shooterTopRelative - TARGET_FAILURE_PADDING)) {
+                    targetReachedBottom = true; // Set flag if ANY unhit target reaches the line
+                    // Optional: Visually indicate the failing target (e.g., change color)
+                    // target.element.style.backgroundColor = 'orange';
+                 }
+            });
+
+            // --- 4. Handle Failure State (Target Reaching Bottom) ---
+            // This check is done *after* iterating through all targets for the frame
+            if (targetReachedBottom) {
+                 // Call the specific failure handler for this scenario
+                 handleQuestionFailure("TargetReachedBottom"); // Pass reason for clarity/future use
+                 // Note: The loop continues briefly, but game logic pauses via the questionFailed flag set inside handleQuestionFailure
+            }
+
+            // --- 5. Request Next Frame ---
+            // Continue the loop only if the game is still considered active
+            if (gameActive) { // Added check just to be safe, though top check should catch most exits
+                 gameLoopId = requestAnimationFrame(gameLoop);
+            } else {
+                 console.log("Game loop stopping because gameActive is false."); // Debug log
+                 stopGameLoop(); // Ensure cleanup if gameActive becomes false unexpectedly
+            }
         }
 
 
@@ -1220,51 +1377,76 @@
             }
         }
 
-        function handleQuestionFailure() {
-            questionFailed = true; // Set flag to stop game logic in loop
-            pauseTimer();
-            stopGameLoop(); // Stop updates but keep screen visible
 
-             // Record failure (0 points)
-             userData.attempts.push({
-                 question: currentQuestion + 1,
-                 colA: quizData[currentQuestion].colA,
-                 correctAnswer: currentCorrectAnswer, // Store what it should have been
-                 time: Math.round((Date.now() - questionStartTime) / 1000), // Time until failure
-                 points: 0,
-                 attempts: questionAttempts[currentQuestion],
-                 status: 'failed' // Mark as failed
-             });
+                function handleQuestionFailure(reason = "TargetReachedBottom") { // Reason primarily for clarity now
+                        // Prevent multiple failure popups/logic execution for the same question instance
+                        if (questionFailed) {
+                                console.log("handleQuestionFailure called but questionFailed is already true. Skipping.");
+                                return;
+                        }
+                        questionFailed = true; // Set flag immediately to prevent race conditions/other actions
 
-            Swal.fire({
-                title: 'Target Reached Bottom!',
-                text: "You didn't hit the correct target in time.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Continue (0 points)',
-                cancelButtonText: 'Try Again',
-                confirmButtonColor: primaryColor,
-                cancelButtonColor: textSecondary,
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Continue: Move to next question
-                    currentQuestion++;
-                    loadQuestion(); // Will reset flags and restart loop
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // Try Again: Reload the same question
-                     // Reset attempts counter *for this specific question* if retrying
-                     questionAttempts[currentQuestion] = 0;
-                     // Find and remove the 'failed' entry from userData.attempts
-                     const failedAttemptIndex = userData.attempts.findIndex(a => a.question === (currentQuestion + 1) && a.status === 'failed');
-                     if (failedAttemptIndex > -1) {
-                         userData.attempts.splice(failedAttemptIndex, 1);
-                     }
-                    loadQuestion(); // Reload current question (will reset flags and restart loop)
+                        console.log(`Handling Question Failure. Reason: ${reason}`); // Debug log
+
+                        pauseTimer();    // Pause the overall quiz timer
+                        stopGameLoop();  // Stop target/bullet movement and further loop processing
+
+                        // Record failure (0 points) - Ensure this runs only ONCE per trigger
+                        // Record attempts made *up to this point* of failure
+                        userData.attempts.push({
+                                question: currentQuestion + 1,
+                                colA: quizData[currentQuestion].colA,
+                                correctAnswer: currentCorrectAnswer, // Store the correct answer
+                                time: Math.round((Date.now() - questionStartTime) / 1000), // Time elapsed for this question
+                                points: 0,
+                                attempts: questionAttempts[currentQuestion], // Record attempts made *before* this failure
+                                status: 'failed'
+                        });
+                        console.log("Recorded 'failed' status for question:", currentQuestion + 1); // Debug log
+
+                        // --- Popup specific to "Target Reached Bottom" ---
+                        let failureTitle = 'Target Reached Bottom!';
+                        let failureText = "You didn't hit the correct target in time.";
+
+                        Swal.fire({
+                                title: failureTitle,
+                                text: failureText,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Next Question (0 points)', // Confirm moves on
+                                cancelButtonText: 'Try Again',               // Cancel retries the current question
+                                confirmButtonColor: primaryColor,            // Use defined theme color
+                                cancelButtonColor: textSecondary,          // Use defined theme color
+                                allowOutsideClick: false,                   // Prevent accidental dismissal
+                                allowEscapeKey: false,                      // Prevent accidental dismissal
+                        }).then((result) => {
+                                // Note: loadQuestion() will reset the questionFailed flag to false
+                                if (result.isConfirmed) {
+                                        // User chose "Next Question"
+                                        console.log("User chose Next Question after target reached bottom.");
+                                        currentQuestion++; // Increment to the next question index
+                                        loadQuestion();    // Load the next question (or results if finished)
+                                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                        // User chose "Try Again"
+                                        console.log("User chose Try Again after target reached bottom.");
+
+                                        // Reset attempts counter *for this specific question* so they can shoot again
+                                        questionAttempts[currentQuestion] = 0;
+
+                                        // Remove the 'failed' entry we just added from userData.attempts, as they are retrying
+                                        // Search from the end to ensure the most recent 'failed' record for this question number is removed
+                                        const lastFailedIndex = userData.attempts.map(a => a.question === (currentQuestion + 1) && a.status === 'failed').lastIndexOf(true);
+                                        if(lastFailedIndex > -1) {
+                                                userData.attempts.splice(lastFailedIndex, 1);
+                                                console.log("Removed preliminary failed attempt record for retry.");
+                                        } else {
+                                                console.warn("Could not find the preliminary failed attempt record to remove for retry.");
+                                        }
+
+                                        loadQuestion(); // Reload the *current* question
+                                }
+                        });
                 }
-            });
-        }
 
 
         // --- Timer Functions ---
