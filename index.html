@@ -180,9 +180,9 @@
         }
         .target-hit-incorrect {
             animation: targetHitIncorrect 0.5s linear forwards;
-             pointer-events: none; /* Prevent hitting again during animation */
+            pointer-events: none; /* Prevent hitting again during animation */
         }
-
+        /* <--- Start of outer comment
         #bullet {
             position: absolute;
             width: 8px; /* Slimmer */
@@ -195,6 +195,8 @@
             pointer-events: none; /* Don't block clicks */
             display: none; /* Hidden initially */
         }
+        */ <--- End of outer comment
+
         /* Change the selector from #bullet to .bullet-visual */
         .bullet-visual {
             position: absolute;
