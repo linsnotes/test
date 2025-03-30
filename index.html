@@ -83,7 +83,16 @@
         .btn-secondary:hover { background-color: #d1d5db; }
 
         /* Quiz Screen Specific Styles */
-        #quizScreen { position: relative; overflow: hidden; /* Contain absolute elements */ min-height: 70vh; /* Ensure space for elements */ background: linear-gradient(180deg, #e0f7fa 0%, #b3e5fc 100%); /* Light blue gradient bg */ }
+       #quizScreen {
+            position: relative;
+            overflow: hidden; /* Contain absolute elements */
+            /* min-height: 70vh; */ /* Line removed */
+            flex-grow: 1; /* Allow quiz screen to expand */ /* <-- ADD THIS LINE */
+            background: linear-gradient(180deg, #e0f7fa 0%, #b3e5fc 100%); /* Light blue gradient bg */
+            display: flex; /* Add this to make gameArea sizing easier if needed */
+            flex-direction: column; /* Stack header/progress/gameArea vertically */
+        }
+        
         .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.7); border-radius: var(--radius); position: relative; z-index: 20; /* Above game area */ }
         .timer-container, .quiz-title-display, .question-counter { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text-secondary); padding: 0.5rem 1rem; background: var(--light); border-radius: var(--radius); }
         .timer-container i { color: var(--primary); }
@@ -93,17 +102,16 @@
         .progress-bar { height: 100%; background-color: var(--primary); transition: width 0.3s ease; }
 
         #gameArea {
-            position: absolute; /* Changed from relative */
-            top: 0; left: 0; right: 0; bottom: 0; /* Fill quizScreen */
-            /* width: 100%; */
-            /* height: 65vh; /* Adjust height as needed */
-            /* margin-top: 1rem; */ /* Removed */
-            border: none; /* Remove border if it interferes */
-            /* border: 2px dashed var(--secondary); */
+            position: relative; /* Back to relative positioning */ /* <-- CHANGED */
+            /* top: 0; left: 0; right: 0; bottom: 0; */ /* Removed */
+            flex-grow: 1; /* Make game area fill remaining vertical space */ /* <-- ADDED */
+            border: none;
             border-radius: var(--radius);
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="%23d1d5db" fill-opacity="0.1" d="M10 10 H90 V90 H10Z M0 0 H100 V100 H0Z" /></svg>'); /* Subtle background pattern */
-            overflow: hidden; /* Hide targets that might randomly go outside */
-            z-index: 1; /* Behind header/instructions */
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="%23d1d5db" fill-opacity="0.1" d="M10 10 H90 V90 H10Z M0 0 H100 V100 H0Z" /></svg>');
+            overflow: hidden;
+            /* z-index no longer strictly needed unless overlap issues arise */
+            /* You might want margin-top if needed: */
+            /* margin-top: 0.5rem;  */
         }
 
         #shooter {
