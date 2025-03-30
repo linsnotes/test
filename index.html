@@ -244,11 +244,38 @@
         /* Responsive Adjustments */
         @media (max-width: 768px) {
             .card { padding: 1.5rem; }
-            .quiz-header { flex-direction: column; align-items: flex-start; width: 100%; }
-            .timer-container, .quiz-title-display, .question-counter { width: 100%; box-sizing: border-box; margin: 0.25rem 0; padding: 0.5rem; font-size: 0.875rem; justify-content: center; }
+            /* Inside @media (max-width: 768px) */
+            .quiz-header {
+                flex-wrap: wrap;        /* Allow items to wrap to the next line */
+                align-items: center;    /* Vertically center items in each line */
+                justify-content: space-around; /* Distribute space between items */
+                gap: 0.5rem;            /* Smaller gap between items */
+                /* Removed: flex-direction, width */
+            }
+            /* Inside @media (max-width: 768px) */
+            .timer-container,
+            .quiz-title-display,
+            .question-counter,
+            #bulletCounter { /* Added #bulletCounter here */
+                width: auto; /* Let the content and flexbox decide the width */
+                flex-grow: 1; /* Allow items to grow to fill space if needed */
+                flex-basis: 45%; /* Suggest items take up roughly half width, promoting 2 columns */
+                box-sizing: border-box;
+                margin: 0.1rem 0; /* Reduced vertical margin */
+                padding: 0.4rem 0.6rem; /* Slightly reduced padding */
+                font-size: 0.8rem; /* Make font slightly smaller */
+                justify-content: center;
+                text-align: center; /* Ensure text inside centers */
+            }
+
             /* Game area height is determined by absolute positioning now */
             #shooter { padding: 0.7rem 1.5rem; font-size: calc(var(--word-box-font-size) * 0.9); bottom: 5px;}
-            .target { padding: 0.5rem 1rem; font-size: calc(var(--word-box-font-size) * 0.8); }
+            .target {
+                padding: 0.4rem; /* Reduced uniform padding for circle */
+                min-width: 2.5rem; /* Slightly smaller minimum size */
+                font-size: calc(var(--word-box-font-size) * 0.65); /* Smaller font */
+                /* Keep other properties like aspect-ratio, border-radius: 50% etc. from the main rule */
+            }
             .results-table th, .results-table td { padding: 0.5rem; font-size: 0.75rem; }
         }
         @media (max-width: 480px) {
@@ -257,7 +284,13 @@
             .btn { width: 100%; margin-bottom: 0.5rem; }
             /* Game area height is determined by absolute positioning now */
              #shooter { padding: 0.6rem 1.2rem; font-size: calc(var(--word-box-font-size) * 0.8); bottom: 2px;}
-            .target { padding: 0.4rem 0.8rem; font-size: calc(var(--word-box-font-size) * 0.7); }
+            /* Inside @media (max-width: 480px) */
+            .target {
+                padding: 0.3rem; /* Even smaller padding */
+                min-width: 2.2rem; /* Smaller min-width */
+                font-size: calc(var(--word-box-font-size) * 0.6); /* Even smaller font */
+                 /* Keep other properties */
+            }
             .quiz-title-display { font-size: 0.8rem; }
         }
 /* Add Mobile Controls CSS Here */
@@ -574,44 +607,67 @@
                     return;
                 }
 
-                // --- Movement Button Listeners (Hold to Move) ---
+                 // --- Movement Button Listeners (Hold to Move) ---
                 const handleMoveStart = (e, direction) => {
                     if (!gameActive) return;
-                    e.preventDefault(); // Prevent screen scroll/zoom on touch
+                    e.preventDefault(); // Crucial to prevent scrolling/zooming on touch hold
+
+                    // Set the correct flag in keysPressed and clear the opposite one
                     if (direction === 'left') {
                         keysPressed['ArrowLeft'] = true;
-                        keysPressed['ArrowRight'] = false; // Ensure only one direction
-                    } else {
+                        keysPressed['ArrowRight'] = false; // Ensure only left is active
+                    } else { // direction === 'right'
                         keysPressed['ArrowRight'] = true;
-                        keysPressed['ArrowLeft'] = false; // Ensure only one direction
+                        keysPressed['ArrowLeft'] = false; // Ensure only right is active
                     }
+                     // Optional: Add a small visual feedback class
+                     e.target.closest('button').classList.add('active-control');
                 };
 
                 const handleMoveEnd = (e, direction) => {
-                    if (!gameActive) return;
-                    // No preventDefault needed usually on end events
+                    // No gameActive check needed here, just clear the flag if it was set
+                    // No preventDefault usually needed on end events
+
+                    // Clear the specific flag
                     if (direction === 'left') {
                         keysPressed['ArrowLeft'] = false;
-                    } else {
+                    } else { // direction === 'right'
                         keysPressed['ArrowRight'] = false;
                     }
+                     // Optional: Remove visual feedback class
+                     // Need to handle multiple potential targets if using closest
+                     document.querySelectorAll('.active-control').forEach(el => el.classList.remove('active-control'));
                 };
 
                 // Left Button
+                // Use passive: false for touchstart to allow preventDefault()
                 leftBtn.addEventListener('touchstart', (e) => handleMoveStart(e, 'left'), { passive: false });
                 leftBtn.addEventListener('touchend', (e) => handleMoveEnd(e, 'left'));
                 leftBtn.addEventListener('touchcancel', (e) => handleMoveEnd(e, 'left')); // Handle interruption
+                // Mouse events for desktop testing/hybrid
+                leftBtn.addEventListener('mousedown', (e) => handleMoveStart(e, 'left'));
+                leftBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'left'));
+                leftBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'left')); // Stop if mouse leaves while pressed
 
                 // Right Button
+                // Use passive: false for touchstart
                 rightBtn.addEventListener('touchstart', (e) => handleMoveStart(e, 'right'), { passive: false });
                 rightBtn.addEventListener('touchend', (e) => handleMoveEnd(e, 'right'));
                 rightBtn.addEventListener('touchcancel', (e) => handleMoveEnd(e, 'right')); // Handle interruption
+                // Mouse events
+                rightBtn.addEventListener('mousedown', (e) => handleMoveStart(e, 'right'));
+                rightBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'right'));
+                rightBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'right'));
+
 
                 // --- Fire Button Listener (Tap to Fire) ---
                 fireBtn.addEventListener('touchstart', (e) => {
                     if (!gameActive) return;
                     e.preventDefault(); // Prevent screen scroll/zoom
                     fireBullet(); // Directly call the existing fire function
+                    // Optional feedback for fire button too
+                    e.target.closest('button').classList.add('active-control');
+                    setTimeout(() => e.target.closest('button').classList.remove('active-control'), 100); // Short feedback
                 }, { passive: false });
 
                 // Optional: Add mouse events for desktop testing/hybrid devices
@@ -623,10 +679,14 @@
                 rightBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'right'));
                 rightBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'right'));
 
-                fireBtn.addEventListener('mousedown', (e) => { // Use mousedown for fire as well
-                     if (!gameActive) return;
-                     fireBullet();
+                fireBtn.addEventListener('mousedown', (e) => {
+                    if (!gameActive) return;
+                    fireBullet();
+                    // Optional feedback
+                    e.target.closest('button').classList.add('active-control');
                 });
+                fireBtn.addEventListener('mouseup', (e) => e.target.closest('button').classList.remove('active-control'));
+                fireBtn.addEventListener('mouseleave', (e) => e.target.closest('button').classList.remove('active-control'));
 
             }
             // END: Add Mobile Controls Setup Function
