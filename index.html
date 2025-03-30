@@ -260,6 +260,72 @@
             .target { padding: 0.4rem 0.8rem; font-size: calc(var(--word-box-font-size) * 0.7); }
             .quiz-title-display { font-size: 0.8rem; }
         }
+/* Add Mobile Controls CSS Here */
+        #mobile-controls {
+            position: absolute; /* Position relative to #quizScreen */
+            bottom: 5px;       /* Small gap from bottom */
+            left: 10px;        /* Padding from left edge */
+            right: 10px;       /* Padding from right edge */
+            height: 60px;      /* Height for positioning buttons inside, adjust if needed */
+            z-index: 100;      /* Ensure controls are above game elements */
+            pointer-events: none; /* Allow clicks/touches to pass through the container background */
+            display: none;     /* Hide by default */
+        }
+
+        /* Show controls only when quiz screen is active */
+        #quizScreen.active #mobile-controls {
+            display: block; /* Use block display when active */
+        }
+
+        #mobile-controls button {
+            position: absolute;
+            bottom: 0; /* Align buttons to the bottom of the #mobile-controls container */
+            width: 55px;       /* Button size */
+            height: 55px;
+            background-color: rgba(100, 100, 100, 0.6); /* Semi-transparent grey */
+            border: none;
+            border-radius: 50%; /* Circular buttons */
+            color: white;      /* White icon color */
+            font-size: 1.4rem; /* Icon size */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            pointer-events: auto; /* Make buttons interactive (override container's none) */
+            user-select: none;    /* Prevent text selection on hold */
+            -webkit-user-select: none;
+            touch-action: manipulation; /* Improve touch responsiveness, prevent double-tap zoom */
+            transition: background-color 0.1s ease;
+        }
+
+        /* Style for button press */
+        #mobile-controls button:active {
+            background-color: rgba(60, 60, 60, 0.8); /* Darker when pressed */
+        }
+
+        /* Position Fire Button */
+        #mobile-fire {
+            left: 0; /* Position fire button on the left edge of the container */
+        }
+
+        /* Position Right Arrow Button */
+        #mobile-right {
+            right: 0; /* Position right arrow on the right edge of the container */
+        }
+
+        /* Position Left Arrow Button */
+        #mobile-left {
+             right: 65px; /* Position left arrow next to right arrow (55px width + 10px gap) */
+        }
+
+        /* Hide original keyboard instructions on devices that likely don't have one */
+        /* This uses a common media query for touch devices */
+        @media (hover: none) and (pointer: coarse) {
+            .quiz-instructions {
+                display: none;
+            }
+        }
+        /* END Mobile Controls CSS */
     </style>
 </head>
 <body>
@@ -363,6 +429,13 @@
                 <div id="bullet" class="bullet-visual"></div>
 
                 <!-- Targets will be added here by JS -->
+                <!-- START: Add Mobile Controls HTML -->
+                <div id="mobile-controls">
+                    <button id="mobile-fire" aria-label="Fire"><i class="fas fa-crosshairs"></i></button>
+                    <button id="mobile-left" aria-label="Move Left"><i class="fas fa-arrow-left"></i></button>
+                    <button id="mobile-right" aria-label="Move Right"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <!-- END: Add Mobile Controls HTML -->
             </div>
         </div>
 
@@ -468,7 +541,13 @@
             resultsTable: document.getElementById('resultsTable'),
             startBuiltInButton: document.querySelector('button[onclick="startSelectedQuiz()"]'),
             appHeader: document.querySelector('.app-header'),
-            appFooter: document.querySelector('.app-footer')
+            appFooter: document.querySelector('.app-footer'),
+            // START: Add mobile control elements
+            mobileControls: document.getElementById('mobile-controls'),
+            mobileLeft: document.getElementById('mobile-left'),
+            mobileRight: document.getElementById('mobile-right'),
+            mobileFire: document.getElementById('mobile-fire')
+            // END: Add mobile control elements
         };
 
         // --- Computed Styles Cache ---
@@ -482,6 +561,83 @@
             document.addEventListener('keydown', handleKeyDown);
             document.addEventListener('keyup', handleKeyUp);
 
+            // START: Add Mobile Controls Setup Function
+            function setupMobileControls() {
+                const leftBtn = DOMElements.mobileLeft;
+                const rightBtn = DOMElements.mobileRight;
+                const fireBtn = DOMElements.mobileFire;
+
+                // Basic check if elements exist
+                if (!leftBtn || !rightBtn || !fireBtn) {
+                    // Hide the container if buttons aren't found, or log warning
+                    if(DOMElements.mobileControls) DOMElements.mobileControls.style.display = 'none';
+                    console.warn("Mobile control buttons not found. Controls disabled.");
+                    return;
+                }
+
+                // --- Movement Button Listeners (Hold to Move) ---
+                const handleMoveStart = (e, direction) => {
+                    if (!gameActive) return;
+                    e.preventDefault(); // Prevent screen scroll/zoom on touch
+                    if (direction === 'left') {
+                        keysPressed['ArrowLeft'] = true;
+                        keysPressed['ArrowRight'] = false; // Ensure only one direction
+                    } else {
+                        keysPressed['ArrowRight'] = true;
+                        keysPressed['ArrowLeft'] = false; // Ensure only one direction
+                    }
+                };
+
+                const handleMoveEnd = (e, direction) => {
+                    if (!gameActive) return;
+                    // No preventDefault needed usually on end events
+                    if (direction === 'left') {
+                        keysPressed['ArrowLeft'] = false;
+                    } else {
+                        keysPressed['ArrowRight'] = false;
+                    }
+                };
+
+                // Left Button
+                leftBtn.addEventListener('touchstart', (e) => handleMoveStart(e, 'left'), { passive: false });
+                leftBtn.addEventListener('touchend', (e) => handleMoveEnd(e, 'left'));
+                leftBtn.addEventListener('touchcancel', (e) => handleMoveEnd(e, 'left')); // Handle interruption
+
+                // Right Button
+                rightBtn.addEventListener('touchstart', (e) => handleMoveStart(e, 'right'), { passive: false });
+                rightBtn.addEventListener('touchend', (e) => handleMoveEnd(e, 'right'));
+                rightBtn.addEventListener('touchcancel', (e) => handleMoveEnd(e, 'right')); // Handle interruption
+
+                // --- Fire Button Listener (Tap to Fire) ---
+                fireBtn.addEventListener('touchstart', (e) => {
+                    if (!gameActive) return;
+                    e.preventDefault(); // Prevent screen scroll/zoom
+                    fireBullet(); // Directly call the existing fire function
+                }, { passive: false });
+
+                // Optional: Add mouse events for desktop testing/hybrid devices
+                leftBtn.addEventListener('mousedown', (e) => handleMoveStart(e, 'left'));
+                leftBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'left'));
+                leftBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'left')); // Stop if mouse leaves while pressed
+
+                rightBtn.addEventListener('mousedown', (e) => handleMoveStart(e, 'right'));
+                rightBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'right'));
+                rightBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'right'));
+
+                fireBtn.addEventListener('mousedown', (e) => { // Use mousedown for fire as well
+                     if (!gameActive) return;
+                     fireBullet();
+                });
+
+            }
+            // END: Add Mobile Controls Setup Function
+
+            // Call the setup function after caching elements
+            setupMobileControls();
+
+
+
+ 
             // pageviews counter
             const pv = document.getElementById('pageviews');
 
