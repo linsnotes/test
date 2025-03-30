@@ -16,14 +16,21 @@
             --primary: #1a73e8; /* Modern blue color (Google style) */
             --primary-hover: #0b5fdb; /* Darker shade for hover */
             --secondary: #e5e7eb;
-            --accent: #8b5cf6; /* Purple accent */
+
             --text-primary: #1f2937;
             --text-secondary: #6b7280;
-            --success: #10b981; /* Green */
             --warning: #f59e0b; /* Yellow */
-            --danger: #ef4444; /* Red */
             --light: #f9fafb;
-            --dark: #111827;
+
+            /* target and shooter color */
+            --accent: #8b5cf6; /* target color */
+            --target-text-color: #333; /* target text color */
+            --dark: #111827; /* shooter color */
+            --shooter-text-color: #333; /* shooter text color */
+            --success: #10b981; /* Green */
+             --danger: #ef4444; /* Red */
+
+            
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius: 0.5rem;
             --transition: all 0.3s ease;
@@ -121,7 +128,7 @@
             /* transform: translateX(-50%); */ /* Handled by JS positioning */
             padding: 0.8rem 1.8rem; /* Slightly adjusted */
             background-color: var(--dark);
-            color: white;
+            color: var(--shooter-text-color);
             border-radius: var(--radius);
             font-family: var(--word-box-font-family);
             font-size: var(--word-box-font-size);
@@ -137,7 +144,7 @@
             position: absolute; /* Positioned within gameArea */
             padding: 0.6rem 1.2rem;
             background-color: var(--accent);
-            color: white;
+            color: var(--target-text-color);
             border-radius: 50px; /* Pill shape */
             font-family: var(--word-box-font-family);
             font-size: calc(var(--word-box-font-size) * 0.9); /* Slightly smaller than shooter */
