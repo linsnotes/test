@@ -401,6 +401,7 @@
         const TARGET_HORIZONTAL_SPEED_MAX = 1.0; // Max horizontal pixels per frame
         const TARGET_SPAWN_Y_OFFSET = -50; // Start targets slightly above the screen
         const TARGET_FAILURE_PADDING = 20; // How close target needs to get to shooter top to fail
+        let numberOfOptions = 4; // Default target count
 
         // --- Game State ---
         let gameLoopId = null;
@@ -494,35 +495,61 @@
 
         // --- Data Loading ---
         async function loadSheetData(sheetId) {
-            try {
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const csv = await response.text();
-                const workbook = XLSX.read(csv, { type: 'string' });
-                const sheetName = workbook.SheetNames[0];
-                if (!sheetName) throw new Error('No sheet found.');
+                try {
+                        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        const csv = await response.text();
+                        const workbook = XLSX.read(csv, { type: 'string' });
+                        const sheetName = workbook.SheetNames[0];
+                        if (!sheetName) throw new Error('No sheet found.');
 
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
-                window.quizTitle = rows?.[0]?.[0]?.trim() || `Quiz (${sheetId.substring(0, 6)}...)`;
-                const data = rows.slice(1)
-                    .map(row => ({
-                        colA: row[0] ? String(row[0]).trim() : null,
-                        colB: row[1] ? String(row[1]).trim() : null
-                    }))
-                    .filter(item => item.colA && item.colB);
+                        // header: 1 reads rows as arrays, 0-indexed
+                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
 
-                if (data.length === 0) {
-                    console.warn('Sheet has no valid data rows.'); return null;
+                        // Existing title read
+                        window.quizTitle = rows?.[0]?.[0]?.trim() || `Quiz (${sheetId.substring(0, 6)}...)`;
+
+                        // ---> Read number of options from C1 <---
+                        const optionsCellValue = rows?.[0]?.[2]; // Cell C1 is at index 2 in the first row (index 0)
+                        let parsedOptions = parseInt(optionsCellValue, 10); // Attempt to parse as integer
+
+                        if (isNaN(parsedOptions) || parsedOptions < 1) {
+                                // If C1 is empty, not a number, or less than 1, use the default
+                                numberOfOptions = 4;
+                                console.log("Cell C1 is empty or invalid. Defaulting to 4 target options.");
+                        } else {
+                                // Otherwise, use the valid number from C1
+                                numberOfOptions = parsedOptions;
+                                console.log(`Number of target options read from C1: ${numberOfOptions}`);
+                        }
+                        // Ensure numberOfOptions is at least 1 (to show the correct answer)
+                        if (numberOfOptions < 1) {
+                            console.warn("numberOfOptions was less than 1, setting to 1.");
+                            numberOfOptions = 1;
+                        }
+                        // ---> read from C1 <---
+
+                        // Existing data processing
+                        const data = rows.slice(1) // Start from the second row for actual quiz data
+                                .map(row => ({
+                                        colA: row[0] ? String(row[0]).trim() : null,
+                                        colB: row[1] ? String(row[1]).trim() : null
+                                        // Column C (index 2) is ignored here for quiz data itself
+                                }))
+                                .filter(item => item.colA && item.colB);
+
+                        if (data.length === 0) {
+                                console.warn('Sheet has no valid data rows.'); return null;
+                        }
+                        // Store all unique Column B values for targets (remains the same)
+                        allColBTargets = [...new Set(data.map(item => item.colB))];
+                        return data;
+                } catch (error) {
+                        console.error('Error loading sheet data:', error);
+                        Swal.fire('Error Loading Game', `Could not load game data [${sheetId}]. Check ID/sharing. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
+                        return null;
                 }
-                // Store all unique Column B values for targets
-                allColBTargets = [...new Set(data.map(item => item.colB))];
-                return data;
-            } catch (error) {
-                console.error('Error loading sheet data:', error);
-                Swal.fire('Error Loading Game', `Could not load game data [${sheetId}]. Check ID/sharing. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
-                return null;
-            }
         }
 
         async function loadQuizTitlesAndIds() {
@@ -716,46 +743,112 @@
              if(bulletState.element) bulletState.element.style.display = 'none';
         }
 
-         function spawnTargets() {
-            const gameArea = DOMElements.gameArea;
-            const areaWidth = gameArea.clientWidth;
-            const areaHeight = gameArea.clientHeight; // Use for Y spawning
+        function spawnTargets() {
+                const gameArea = DOMElements.gameArea;
+                const areaWidth = gameArea.clientWidth;
+                const areaHeight = gameArea.clientHeight; // Use for Y spawning
 
-            // Use all unique Column B words for variety
-            const targetsToSpawn = shuffle([...allColBTargets]);
+                // Clear any remnants from previous question (though clearGameElements should handle this)
+                activeTargets.forEach(t => t.element.remove());
+                activeTargets = [];
 
-            targetsToSpawn.forEach(targetWord => {
-                const targetElement = document.createElement('div');
-                targetElement.className = 'target';
-                targetElement.textContent = targetWord;
-                targetElement.dataset.word = targetWord; // Store word
+                // ---> START TARGET SELECTION LOGIC <---
 
-                gameArea.appendChild(targetElement); // Add to DOM first to measure width
+                const correctAnswer = currentCorrectAnswer; // Get the correct answer for the current question
 
-                const targetWidth = targetElement.offsetWidth;
-                const targetHeight = targetElement.offsetHeight; // Store height
+                // Filter out the correct answer to get only potential incorrect options
+                let incorrectOptions = allColBTargets.filter(target => target !== correctAnswer);
 
-                // Initial Position (Random X, slightly above screen)
-                const x = Math.random() * (areaWidth - targetWidth);
-                const y = TARGET_SPAWN_Y_OFFSET - (Math.random() * areaHeight * 0.2); // Randomize starting height slightly
+                // Shuffle the available incorrect options
+                incorrectOptions = shuffle(incorrectOptions);
 
-                // Initial Velocity (Random horizontal, constant downward)
-                const vx = (Math.random() * 2 - 1) * TARGET_HORIZONTAL_SPEED_MAX; // -Max to +Max
-                const vy = TARGET_DOWNWARD_SPEED;
+                // Determine how many incorrect options we need (total options - 1 for the correct one)
+                // Ensure it's not negative if numberOfOptions is 1
+                const numberOfIncorrectNeeded = Math.max(0, numberOfOptions - 1);
 
-                targetElement.style.left = `${x}px`;
-                targetElement.style.top = `${y}px`;
+                // Select the required number of incorrect options
+                // .slice will handle cases where fewer incorrect options are available than needed
+                const selectedIncorrect = incorrectOptions.slice(0, numberOfIncorrectNeeded);
 
-                activeTargets.push({
-                    element: targetElement,
-                    x: x, y: y,
-                    vx: vx, vy: vy,
-                    word: targetWord,
-                    width: targetWidth, // Store dimensions for collision
-                    height: targetHeight,
-                    hit: false // Flag to prevent multiple hits/checks
+                // Combine the correct answer with the selected incorrect ones
+                // Handle the case where the correct answer might be the ONLY option available in the sheet
+                let finalTargetsToShow = [];
+                if (allColBTargets.includes(correctAnswer)) {
+                        finalTargetsToShow = [correctAnswer, ...selectedIncorrect];
+                } else {
+                        // Fallback: if the correct answer isn't even in the list (shouldn't happen with current logic, but safe)
+                        finalTargetsToShow = selectedIncorrect.slice(0, numberOfOptions); // Just show incorrect ones up to the limit
+                        console.warn("Correct answer was not found in allColBTargets list.");
+                }
+
+                // Ensure the total number of targets doesn't exceed numberOfOptions
+                // This mainly handles edge cases like numberOfOptions=1 or very few unique Col B values.
+                finalTargetsToShow = finalTargetsToShow.slice(0, numberOfOptions);
+
+                // Shuffle the final list so the correct answer's position is random
+                finalTargetsToShow = shuffle(finalTargetsToShow);
+
+                console.log(`Spawning ${finalTargetsToShow.length} targets (requested ${numberOfOptions}):`, finalTargetsToShow); // Optional: for debugging
+
+                // Now, create target elements ONLY for the words in finalTargetsToShow
+                finalTargetsToShow.forEach(targetWord => {
+                        const targetElement = document.createElement('div');
+                        targetElement.className = 'target';
+                        targetElement.textContent = targetWord;
+                        targetElement.dataset.word = targetWord; // Store word
+
+                        gameArea.appendChild(targetElement); // Add to DOM first to measure width
+
+                        const targetWidth = targetElement.offsetWidth;
+                        const targetHeight = targetElement.offsetHeight; // Store height
+
+                        // Initial Position (Random X, slightly above screen)
+                        // Ensure targets don't overlap too much horizontally initially if many targets
+                        let x;
+                        let attempts = 0;
+                        const maxAttempts = 10; // Prevent infinite loop if space is tight
+                        let placed = false;
+
+                        do {
+                            x = Math.random() * (areaWidth - targetWidth);
+                            placed = true;
+                            // Basic check against already placed targets in this spawn cycle
+                            // Note: This isn't perfect collision avoidance but helps initial spread
+                            activeTargets.forEach(existingTarget => {
+                                if (Math.abs(x - existingTarget.x) < (targetWidth + existingTarget.width) / 2) { // Approximate horizontal overlap check
+                                    placed = false;
+                                }
+                            });
+                            attempts++;
+                        } while (!placed && attempts < maxAttempts);
+
+                        // If we failed to find a non-overlapping spot after attempts, just use the last random X
+                        if (!placed) {
+                            x = Math.random() * (areaWidth - targetWidth);
+                        }
+
+                        // Spread out initial Y based on height and randomness
+                        const y = TARGET_SPAWN_Y_OFFSET - (Math.random() * areaHeight * 0.3) - (targetHeight * activeTargets.length * 0.1);
+
+                        // Initial Velocity (Random horizontal, constant downward)
+                        const vx = (Math.random() * 2 - 1) * TARGET_HORIZONTAL_SPEED_MAX; // -Max to +Max
+                        const vy = TARGET_DOWNWARD_SPEED;
+
+                        targetElement.style.left = `${x}px`;
+                        targetElement.style.top = `${y}px`;
+
+                        activeTargets.push({
+                                element: targetElement,
+                                x: x, y: y,
+                                vx: vx, vy: vy,
+                                word: targetWord,
+                                width: targetWidth, // Store dimensions for collision
+                                height: targetHeight,
+                                hit: false // Flag to prevent multiple hits/checks
+                        });
                 });
-            });
+
+                // ---> END TARGET SELECTION LOGIC <---
         }
 
         // --- Input Handling ---
