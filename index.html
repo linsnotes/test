@@ -1045,7 +1045,7 @@
                  setTimeout(() => {
                      Swal.fire({
                         title: 'Correct!', text: `+${points} points!`, icon: 'success',
-                        toast: true, position: 'top-end', showConfirmButton: false, timer: 1200, timerProgressBar: true
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 600, timerProgressBar: true
                      }).then(() => {
                          currentQuestion++;
                          loadQuestion(); // Load next (will resume timer and start loop)
@@ -1057,7 +1057,7 @@
                 target.element.classList.add('target-hit-incorrect');
                  Swal.fire({
                     title: 'Incorrect!', icon: 'error',
-                    toast: true, position: 'top-end', showConfirmButton: false, timer: 1000, timerProgressBar: true
+                    toast: true, position: 'top-end', showConfirmButton: false, timer: 600, timerProgressBar: true
                  });
 
                  // Remove the hit target after animation, allow player to try again
