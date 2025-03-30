@@ -1798,21 +1798,26 @@
                 Swal.fire('Error', 'Could not generate screenshot.', 'error', { confirmButtonColor: primaryColor });
             });
         }
-
         function reviewQuestions() {
-             Swal.fire({
-                title: 'Play Again?', text: 'Restart the same quiz? Previous results will be cleared.',
-                icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, Restart', cancelButtonText: 'No, Go Home',
-                confirmButtonColor: primaryColor, cancelButtonColor: textSecondary, reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                     if (!currentSheetId) { Swal.fire("Error", "Cannot determine quiz to restart.", "error"); goHome(); return; }
-                    // Reset state and reload data for the *same* quiz, then go to name screen
-                    startQuizFlow(currentSheetId);
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    goHome();
-                }
-            });
+            // Check if we know which quiz to restart (essential)
+            if (!currentSheetId) {
+                console.error("Play Again clicked, but currentSheetId is missing. Cannot restart.");
+                // Show an error and go home as a fallback
+                Swal.fire({
+                    title: "Error",
+                    text: "Could not determine which game to play again. Returning home.",
+                    icon: "error",
+                    confirmButtonColor: primaryColor // Use your theme color
+                });
+                goHome(); // Go back to the landing screen
+                return;
+            }
+
+            console.log(`Restarting quiz with ID: ${currentSheetId}`); // Optional: for debugging
+
+            // Directly call the function that handles resetting state,
+            // loading data, and showing the name screen for the current quiz ID.
+            startQuizFlow(currentSheetId);
         }
 
     </script>
