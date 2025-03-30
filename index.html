@@ -182,20 +182,6 @@
             animation: targetHitIncorrect 0.5s linear forwards;
             pointer-events: none; /* Prevent hitting again during animation */
         }
-        /* <--- Start of outer comment
-        #bullet {
-            position: absolute;
-            width: 8px; /* Slimmer */
-            height: 18px; /* Longer */
-            background: linear-gradient(to top, var(--warning), gold); /* Gradient */
-            border-radius: 4px 4px 0 0; /* Rounded top */
-            box-shadow: 0 0 6px yellow;
-            z-index: 9;
-            /* transition: top 0.016s linear, left 0.016s linear; */ /* Movement handled by JS animation frame */
-            pointer-events: none; /* Don't block clicks */
-            display: none; /* Hidden initially */
-        }
-        */ <--- End of outer comment
 
         /* Change the selector from #bullet to .bullet-visual */
         .bullet-visual {
