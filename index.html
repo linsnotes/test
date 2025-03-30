@@ -196,6 +196,18 @@
             pointer-events: none; /* Don't block clicks */
             display: none; /* Hidden initially */
         }
+        /* Change the selector from #bullet to .bullet-visual */
+        .bullet-visual {
+            position: absolute;
+            width: 8px; /* Slimmer */
+            height: 18px; /* Longer */
+            background: linear-gradient(to top, var(--warning), gold); /* Gradient */
+            border-radius: 4px 4px 0 0; /* Rounded top */
+            box-shadow: 0 0 6px yellow;
+            z-index: 9;
+            pointer-events: none; /* Don't block clicks */
+            display: none; /* Keep hidden for the template */
+        }
 
 
         /* Results Screen (Mostly reused styles) */
@@ -336,7 +348,7 @@
                 </div>
 
                 <!-- Bullet Element (initially hidden) -->
-                <div id="bullet"></div>
+                <div id="bullet" class="bullet-visual"></div>
 
                 <!-- Targets will be added here by JS -->
             </div>
