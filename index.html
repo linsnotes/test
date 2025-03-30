@@ -253,7 +253,7 @@
                 <div class="card-body">
                     <!-- Quiz Selection -->
                     <div class="form-group">
-                        <label for="quizSelect" class="form-label">Built-in Quiz:</label>
+                        <label for="quizSelect" class="form-label">Built-in Games:</label>
                         <select id="quizSelect" class="form-control"></select> <!-- Options populated by JS -->
                     </div>
                     <div class="center-button">
@@ -500,15 +500,15 @@
                 return data;
             } catch (error) {
                 console.error('Error loading sheet data:', error);
-                Swal.fire('Error Loading Quiz', `Could not load quiz data [${sheetId}]. Check ID/sharing. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
+                Swal.fire('Error Loading Game', `Could not load game data [${sheetId}]. Check ID/sharing. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
                 return null;
             }
         }
 
         async function loadQuizTitlesAndIds() {
              if (!QUIZ_LIST_SHEET_ID || QUIZ_LIST_SHEET_ID === 'YOUR_QUIZ_LIST_SHEET_ID_HERE') { // Check if ID is set
-                console.warn("Quiz List Sheet ID not set. Disabling built-in quiz option.");
-                DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Built-in Quizzes Unavailable</option>';
+                console.warn("Quiz/Game List Sheet ID not set. Disabling built-in quiz/game option.");
+                DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Built-in Games Unavailable</option>';
                 DOMElements.quizSelect.disabled = true;
                 DOMElements.startBuiltInButton.disabled = true;
                 return;
@@ -529,8 +529,8 @@
                 populateQuizSelect();
             } catch (error) {
                 console.error('Error loading quiz titles:', error);
-                 Swal.fire('Error Loading Quiz List', `Could not load built-in quizzes. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
-                DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Error Loading Quizzes</option>';
+                 Swal.fire('Error Loading Quiz List', `Could not load built-in Games. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
+                DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Error Loading Games</option>';
                 DOMElements.quizSelect.disabled = true;
                 DOMElements.startBuiltInButton.disabled = true;
             }
@@ -540,12 +540,12 @@
             const select = DOMElements.quizSelect;
             select.innerHTML = '';
             if (quizTitlesAndIds.length === 0) {
-                select.innerHTML = '<option value="" disabled selected>No Built-in Quizzes Found</option>';
+                select.innerHTML = '<option value="" disabled selected>No Built-in Games Found</option>';
                 select.disabled = true;
                 DOMElements.startBuiltInButton.disabled = true; return;
             }
             const defaultOption = document.createElement('option');
-            defaultOption.value = ""; defaultOption.textContent = "-- Select a Built-in Quiz --";
+            defaultOption.value = ""; defaultOption.textContent = "-- Select a Built-in Game --";
             defaultOption.disabled = true; defaultOption.selected = true; select.appendChild(defaultOption);
             quizTitlesAndIds.forEach(quiz => {
                 const option = document.createElement('option'); option.value = quiz.id; option.textContent = quiz.title; select.appendChild(option);
