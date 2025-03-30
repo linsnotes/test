@@ -552,6 +552,8 @@
         let keysPressed = {}; // Track pressed keys for smoother movement
         let gameActive = false; // Is the game loop running?
 
+        let detachedQuizScreen = null;
+
         // --- DOM Cache ---
         const DOMElements = {
             landingScreen: document.getElementById('landingScreen'),
@@ -894,6 +896,13 @@
             currentSheetId = sheetId; startQuizFlow(sheetId);
         }
         async function startQuizFlow(sheetId) {
+            // Re-attach quizScreen if it was detached
+            if (detachedQuizScreen) {
+                document.querySelector('.app-container').appendChild(detachedQuizScreen);
+                // Update the DOM cache (if needed)
+                DOMElements.quizScreen = document.getElementById('quizScreen');
+                detachedQuizScreen = null;
+            }
             Swal.fire({ title: 'Loading Game', text: 'Please wait...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading() });
             const data = await loadSheetData(sheetId);
             if (!data || data.length === 0) {
@@ -1722,7 +1731,10 @@
             stopGameLoop(); // Ensure game loop is stopped
             clearInterval(timerInterval);
             // Explicitly hide the quiz screen to be absolutely sure
-            DOMElements.quizScreen.style.display = 'none';
+            // Remove quizScreen from the DOM to avoid leaving an empty gap
+            if (DOMElements.quizScreen.parentNode) {
+                detachedQuizScreen = DOMElements.quizScreen.parentNode.removeChild(DOMElements.quizScreen);
+            }
             showScreen('resultsScreen');
 
             const completionDate = new Date();
