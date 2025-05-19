@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="referrer" content="no-referrer">
   <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.min.js" integrity="sha512-59m22Tdj5NpJr4WpRAJl+HXy96LWKmG2f3drO7abM5kW6WaI7nMHVx7cwJON1z6OdCH0HaZVMnXnRsdFeHQtDA==" crossorigin="anonymous"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha512-AXreDm/maQt99+BKeuV5VUY8x0xBAZPX6OYenHRlRwG/C35PKcZ7GQXITTR8Zf3cLHeTfwVDLEMBBPf7laKtAA==" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha512-AXreDm/maQt99+BKeuV5VUY8x0xBAZPX6OYenHRlRwG/C35PKcZ7GQXITTR8Zf3cLHeTfwVDLEMBBPf7laKtAA==" crossorigin="anonymous"></script>
   <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js" integrity="sha512-JAlHYZ7sDXF98EQK5HABwb2k1jplfFP93BqY4B6fdHSh0XiAqIjO4gyXe8tdNFdHPYrg75grUX853FHYCzw3Dg==" crossorigin="anonymous"></script>
   <title>博闻强记</title>
-  <style>
+    <style>
     /* --------------------------------------------------
        CSS Variables for Translation Font Sizes
        - Adjust these values to change the translation font sizes.
          --translation-font-size-desktop: Font size for desktop (default).
          --translation-font-size-mobile: Font size for mobile (set here to 70% of desktop).
     ----------------------------------------------------- */
-    :root {
+        :root {
       --translation-font-size-desktop: 3rem;
       --translation-font-size-mobile: calc(var(--translation-font-size-desktop) * 0.7);
       
@@ -44,7 +44,7 @@
     ----------------------------------------------------- */
     * {
       box-sizing: border-box;
-      margin: 0;
+            margin: 0;
       padding: 0;
     }
     
@@ -60,12 +60,12 @@
     #visitor-counter {
       font-size: 1em;
       margin: 10px 0;
-      text-align: center;
+            text-align: center;
       color: var(--secondary-text);
     }
     
     #visitor-counter #pageviews {
-      font-weight: 500;
+            font-weight: 500;
       color: var(--text);
     }
 
@@ -77,9 +77,9 @@
     #other-chinese-tools a {
       color: var(--accent);
       text-decoration: none;
-      font-weight: 500;
-    }
-    
+            font-weight: 500;
+        }
+
     #other-chinese-tools a:hover {
       text-decoration: underline;
     }
@@ -136,8 +136,8 @@
        - Styles for the textarea, dropdown selection, toggle button, and start button.
     ----------------------------------------------------- */
     .input-section {
-      display: flex;
-      flex-direction: column;
+            display: flex;
+            flex-direction: column;
       margin-bottom: 24px;
     }
     
@@ -190,7 +190,7 @@
     
     /* Custom input style */
     textarea {
-      width: 100%;
+            width: 100%;
       padding: 12px;
       font-size: 1rem;
       border: 1px solid var(--border);
@@ -212,7 +212,7 @@
       color: #06c;
       padding: 12px;
       background-color: var(--card-bg);
-      border-radius: 8px;
+            border-radius: 8px;
       margin-top: 12px;
       margin-bottom: 16px;
     }
@@ -362,9 +362,9 @@
         width: 100%;
         height: 100%;
         backface-visibility: hidden; /* Hide back face during flip */
-        display: flex;
-        align-items: center;
-        justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         border-radius: 16px;
         padding: 24px;
         text-align: center;
@@ -377,17 +377,6 @@
         background-color: var(--card-bg);
         color: var(--text);
         border: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    #hanzi-writer-target {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
     
     /* --------------------------------------------------
@@ -420,14 +409,14 @@
        - Styles for navigation, flip, return, and shuffle buttons.
     ----------------------------------------------------- */
     .controls {
-      display: flex;
-      flex-direction: column;
+            display: flex;
+            flex-direction: column; 
       justify-content: center;
       margin-top: 24px;
-    }
+        }
 
     .controls .top-row, .controls .bottom-row {
-      display: flex;
+            display: flex;
       justify-content: center;
       gap: 12px;
       width: 100%;
@@ -550,7 +539,7 @@
       }
       
       .input-tabs {
-        flex-direction: column;
+            flex-direction: column;
       }
       
       .input-tab {
@@ -568,7 +557,7 @@
       }
       
       textarea, .sheet-input {
-        padding: 10px;
+            padding: 10px;
         margin-bottom: 12px;
       }
       
@@ -590,11 +579,65 @@
         padding: 10px;
       }
     }
-  </style>
+
+    /* --------------------------------------------------
+       Stroke Order Overlay Styles
+    ----------------------------------------------------- */
+    .stroke-order-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stroke-order-container {
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      max-width: 90%;
+      max-height: 90vh;
+      overflow: auto;
+    }
+
+    .stroke-order-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    #stroke-order-canvas {
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+    }
+
+    .stroke-order-btn {
+      background-color: var(--accent);
+      color: white;
+      margin: 0 5px;
+    }
+
+    .stroke-order-btn:hover {
+      background-color: #0055b3;
+    }
+    </style>
 </head>
 <body>
   <!-- Main container for all content -->
-  <div class="container">
+    <div class="container">
     <!-- Header: Displays the title -->
     <h1>My Flashcards</h1>
     
@@ -605,7 +648,7 @@
         <button type="button" class="input-tab active" data-type="custom">Chinese & Pinyin</button>
         <button type="button" class="input-tab" data-type="built-in">SG Chinese Textbook Words</button>
         <button type="button" class="input-tab" data-type="google-sheet">Import from Google Sheet</button>
-      </div>
+                    </div>
       
       <!-- Custom word list input (active by default) -->
       <div id="custom-input" class="input-content active">
@@ -614,8 +657,8 @@
                   rows="3"></textarea>
         <div class="textarea-input-help">
           Please note that the custom word list only shows Pinyin on the back of the flashcard.
-        </div>
-      </div>
+                </div>
+                        </div>
       
       <!-- Built-in word list input -->
       <div id="built-in-input" class="input-content">
@@ -629,7 +672,7 @@
               <option value="G1">G1</option>
               <option value="HCL">HCL</option>
             </select>
-          </div>
+                    </div>
           <div class="dropdown-container" id="levelContainer">
             <label for="level" class="input-label">年级 Level</label>
             <select id="level" name="level" class="dropdown">
@@ -639,7 +682,7 @@
               <option value="中三">中三</option>
               <option value="中四">中四</option>
             </select>
-          </div>
+                        </div>
           <div class="dropdown-container" id="unitContainer">
             <label for="unit" class="input-label">单元 Unit</label>
             <select id="unit" name="unit" class="dropdown">
@@ -651,7 +694,7 @@
               <option value="单元五">单元五</option>
               <option value="单元六">单元六</option>
             </select>
-          </div>
+                    </div>
           <div class="dropdown-container" id="passageContainer">
             <label for="passage" class="input-label">课文 Passage</label>
             <select id="passage" name="passage" class="dropdown">
@@ -661,10 +704,10 @@
               <option value="巩固">巩固</option>
               <option value="进阶">进阶</option>
             </select>
-          </div>
+                </div>
+            </div>
         </div>
-      </div>
-      
+
       <!-- Google Sheet import input -->
       <div id="google-sheet-input" class="input-content">
         <div class="sheet-input-container">
@@ -676,10 +719,10 @@
             Your sheet should have at least 2 columns:<br>
             - First column: Term/word for front of flashcard<br>
             - Second column: Definition for back of flashcard
-          </div>
-        </div>
-      </div>
-      
+                        </div>
+                    </div>
+                </div>
+
       <!-- Start button remains at the bottom of the input section -->
       <button onclick="initDeck()" class="start-btn">Start</button>
       
@@ -687,8 +730,8 @@
       <div id="spinner-container" class="hidden">
         <div class="spinner"></div>
         <p class="loading-text">Loading... Please wait!</p>
-      </div>
-    </div>
+                            </div>
+                        </div>
 
     <!-- Flashcard Container: Initially hidden; displays flashcard once deck is initialized -->
     <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
@@ -697,8 +740,8 @@
         <div class="front"></div>
         <!-- Back Side of the Flashcard -->
         <div class="back"></div>
-      </div>
-    </div>
+                        </div>
+                    </div>
 
     <!-- Progress Indicator: Shows current flashcard progress -->
     <div id="progress" class="hidden"></div>
@@ -709,15 +752,25 @@
         <button onclick="prevCard()" class="prev-btn">← Previous</button>
         <button onclick="flipCard()" class="flip-btn">Flip</button>   
         <button onclick="nextCard()" class="next-btn">Next →</button>
+        <button onclick="showStrokeOrder()" class="stroke-order-btn">Stroke Order</button>
       </div>
       <div class="bottom-row">
         <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
         <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
       </div>
     </div>
+
+    <!-- Stroke Order Overlay -->
+    <div id="strokeOrderOverlay" class="stroke-order-overlay">
+      <button class="stroke-order-close" onclick="hideStrokeOrder()">×</button>
+      <div class="stroke-order-container">
+        <h2>Stroke Order</h2>
+        <div id="stroke-order-canvas"></div>
+      </div>
+    </div>
     
-  </div>
-  
+    </div>
+
   <footer>
     <div id="visitor-counter">
       Welcome! You're visitor #<span id="pageviews">Loading...</span> 
@@ -738,6 +791,7 @@
     let deck = [];
     let fullWordData = [];
     let inputMode = 'custom';
+    let writer = null;
 
     function initCustomPinyin() {
       if (window.pinyinPro && window.pinyinPro.addDict) {
@@ -874,8 +928,8 @@
         const sheetId = extractSheetId(sheetUrl);
         if (!sheetId) {
           alert("Invalid Google Sheet URL. Please check the URL and try again.");
-          return;
-        }
+                return;
+            }
         try {
           const sheetData = await fetchGoogleSheetData(sheetId);
           if (sheetData.length === 0) {
@@ -886,7 +940,7 @@
           deck = sheetData.map(word => word.chinese);
           initCustomPinyin();
           showFlashcards();
-        } catch (error) {
+                } catch (error) {
           alert("An error occurred while processing the Google Sheet: " + error.message);
         }
       }
@@ -930,54 +984,7 @@
       if (deck[currentIndex]) {
         const currentWord = deck[currentIndex];
         const wordData = fullWordData[currentIndex];
-        
-        // Clear previous content
-        front.innerHTML = '<div id="hanzi-writer-target"></div>';
-        
-        // Initialize Hanzi Writer
-        const writer = HanziWriter.create('hanzi-writer-target', currentWord, {
-          width: 200,
-          height: 200,
-          padding: 5,
-          showOutline: true,
-          strokeAnimationSpeed: 1,
-          delayBetweenStrokes: 200,
-          delayBetweenLoops: 1000,
-          strokeFadeDuration: 400,
-          strokeHighlightSpeed: 200,
-          strokeHighlightDuration: 200,
-          showCharacter: true,
-          showHintAfterMisses: 3,
-          highlightOnComplete: true,
-          outlineColor: '#000000',
-          strokeColor: '#000000',
-          radicalColor: '#000000',
-          highlightColor: '#000000',
-          drawingColor: '#000000',
-          drawingWidth: 4,
-          outlineWidth: 2,
-          strokeWidth: 2,
-          radicalStrokeColor: '#000000',
-          radicalStrokeWidth: 2,
-          showOutline: true,
-          showCharacter: true,
-          showHintAfterMisses: 3,
-          highlightOnComplete: true,
-          outlineColor: '#000000',
-          strokeColor: '#000000',
-          radicalColor: '#000000',
-          highlightColor: '#000000',
-          drawingColor: '#000000',
-          drawingWidth: 4,
-          outlineWidth: 2,
-          strokeWidth: 2,
-          radicalStrokeColor: '#000000',
-          radicalStrokeWidth: 2
-        });
-        
-        // Animate the character
-        writer.animateCharacter();
-        
+        front.textContent = currentWord;
         let pinyinText = wordData.pinyin || getPinyin(currentWord);
         if (inputMode === 'built-in') {
           let englishText = wordData.english || currentWord;
@@ -1031,9 +1038,9 @@
         if (confirm("You've reached the end of the flashcards! Restart from the beginning?")) {
           currentIndex = 0;
         } else {
-          return;
-        }
-      } else {
+                return;
+            }
+                } else {
         currentIndex++;
       }
       document.getElementById('flashcard').classList.remove('flipped');
@@ -1052,6 +1059,52 @@
       document.getElementById('flashcard').classList.remove('flipped');
       updateCard();
     }
+
+    function showStrokeOrder() {
+      const overlay = document.getElementById('strokeOrderOverlay');
+      const canvas = document.getElementById('stroke-order-canvas');
+      overlay.style.display = 'flex';
+      
+      if (writer) {
+        writer.setCharacter(deck[currentIndex]);
+      } else {
+        writer = HanziWriter.create('stroke-order-canvas', deck[currentIndex], {
+          width: 200,
+          height: 200,
+          padding: 5,
+          showOutline: true,
+          strokeAnimationSpeed: 1,
+          delayBetweenStrokes: 500,
+          delayBetweenLoops: 2000,
+          strokeFadeDuration: 400,
+          strokeHighlightSpeed: 200,
+          strokeHighlightDuration: 800,
+        });
+      }
+      writer.animateCharacter();
+    }
+
+    function hideStrokeOrder() {
+      const overlay = document.getElementById('strokeOrderOverlay');
+      overlay.style.display = 'none';
+      if (writer) {
+        writer.cancelAnimation();
+      }
+    }
+
+    // Close overlay when clicking outside the container
+    document.getElementById('strokeOrderOverlay').addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideStrokeOrder();
+      }
+    });
+
+    // Close overlay with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && document.getElementById('strokeOrderOverlay').style.display === 'flex') {
+        hideStrokeOrder();
+      }
+    });
 
     window.addEventListener('load', () => {
       setupInputTabs();
@@ -1087,6 +1140,6 @@
           });
       }
     });
-  </script>
+    </script>
 
 </html>
