@@ -9,6 +9,7 @@
   <meta name="referrer" content="no-referrer">
   <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.min.js" integrity="sha512-59m22Tdj5NpJr4WpRAJl+HXy96LWKmG2f3drO7abM5kW6WaI7nMHVx7cwJON1z6OdCH0HaZVMnXnRsdFeHQtDA==" crossorigin="anonymous"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha512-AXreDm/maQt99+BKeuV5VUY8x0xBAZPX6OYenHRlRwG/C35PKcZ7GQXITTR8Zf3cLHeTfwVDLEMBBPf7laKtAA==" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js" integrity="sha512-JAlHYZ7sDXF98EQK5HABwb2k1jplfFP93BqY4B6fdHSh0XiAqIjO4gyXe8tdNFdHPYrg75grUX853FHYCzw3Dg==" crossorigin="anonymous"></script>
   <title>博闻强记</title>
   <style>
@@ -126,7 +127,6 @@
       );
       background-size: 200%;
       -webkit-background-clip: text;
-      background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: gradientMove 3s ease-in-out infinite;
     }
@@ -326,123 +326,80 @@
          and the front/back sides of the card.
     ----------------------------------------------------- */
     .flashcard {
-        font-size: 3rem;
-        height: 300px;
+        font-size: 3rem; /* Keep original font size as requested */
+        height: 300px; /* Fixed height for larger screens */
         margin: 24px auto;
-        cursor: pointer;
-        perspective: 1000px;
+        cursor: pointer; /* Indicates clickable card */
+        perspective: 1000px; /* Set up 3D perspective for flip effect */
         width: 100%;
         max-width: 400px;
         position: relative;
-        transition: transform 0.3s ease;
-        touch-action: pan-y pinch-zoom;
     }
     
-    .flashcard:hover {
-        transform: translateY(-5px);
-    }
-    
+    /* Define the flashcard inner container with consistent sizing and GPU optimization */
     .flashcard-inner {
         position: relative;
         width: 100%;
-        height: 100%;
-        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%; /* Ensure inner container fills the flashcard */
+        transition: transform 0.6s; /* Smooth flip transition */
         transform-style: preserve-3d;
         border-radius: 16px;
         box-shadow: var(--card-shadow);
         will-change: transform;
     }
     
+    /* Apply the flip transform without altering height */
     .flashcard.flipped .flashcard-inner {
         transform: rotateY(180deg);
     }
     
+    /* --------------------------------------------------
+       Common Styles for Front and Back Sides
+       - Both sides will be exactly the same size.
+    ----------------------------------------------------- */
     .front, .back {
         position: absolute;
         width: 100%;
         height: 100%;
-        backface-visibility: hidden;
+        backface-visibility: hidden; /* Hide back face during flip */
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 16px;
         padding: 24px;
         text-align: center;
-        transition: all 0.3s ease;
     }
     
+    /* --------------------------------------------------
+       Front Side Styles
+    ----------------------------------------------------- */
     .front {
         background-color: var(--card-bg);
         color: var(--text);
         border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
+    #hanzi-writer-target {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* --------------------------------------------------
+       Back Side Styles
+       - The back is pre-rotated for the flip effect.
+    ----------------------------------------------------- */
     .back {
         background-color: var(--card-bg);
         color: var(--text);
         flex-direction: column;
-        transform: rotateY(180deg);
+        transform: rotateY(180deg); /* Pre-rotated for flip effect */
         border: 1px solid var(--border);
-    }
-
-    /* Keyboard shortcuts indicator */
-    .keyboard-shortcuts {
-        text-align: center;
-        margin-top: 12px;
-        font-size: 0.85rem;
-        color: var(--secondary-text);
-    }
-
-    .keyboard-shortcuts kbd {
-        background-color: var(--card-bg);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        padding: 2px 6px;
-        font-size: 0.8em;
-        margin: 0 2px;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-    }
-
-    /* Progress bar */
-    .progress-container {
-        width: 100%;
-        max-width: 400px;
-        margin: 16px auto;
-        background-color: var(--card-bg);
-        border-radius: 8px;
-        padding: 4px;
-        box-shadow: var(--card-shadow);
-    }
-
-    .progress-bar {
-        height: 8px;
-        background-color: var(--accent);
-        border-radius: 4px;
-        transition: width 0.3s ease;
-    }
-
-    /* Card navigation hints */
-    .card-hints {
-        display: flex;
-        justify-content: space-between;
-        max-width: 400px;
-        margin: 8px auto;
-        color: var(--secondary-text);
-        font-size: 0.9rem;
-    }
-
-    .hint-left, .hint-right {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .hint-left kbd, .hint-right kbd {
-        background-color: var(--card-bg);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        padding: 2px 6px;
-        font-size: 0.8em;
     }
 
     /* CurrentWord and Pinyin Text Styling on the Back of the Card */
@@ -491,8 +448,6 @@
       transition: all 0.2s ease;
       font-weight: 500;
       box-shadow: var(--button-shadow);
-      position: relative;
-      overflow: hidden;
     }
     
     button:active {
@@ -635,55 +590,6 @@
         padding: 10px;
       }
     }
-
-    /* Card interaction feedback */
-    .flashcard:active {
-        transform: scale(0.98);
-    }
-
-    .flashcard.flipped {
-        pointer-events: none;
-    }
-
-    .flashcard.flipped .flashcard-inner {
-        animation: flip-sound 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes flip-sound {
-        0% { transform: rotateY(0); }
-        50% { transform: rotateY(90deg); }
-        100% { transform: rotateY(180deg); }
-    }
-
-    /* Button hover effects */
-    button::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 5px;
-        height: 5px;
-        background: rgba(255, 255, 255, 0.5);
-        opacity: 0;
-        border-radius: 100%;
-        transform: scale(1, 1) translate(-50%);
-        transform-origin: 50% 50%;
-    }
-
-    button:focus:not(:active)::after {
-        animation: ripple 1s ease-out;
-    }
-
-    @keyframes ripple {
-        0% {
-            transform: scale(0, 0);
-            opacity: 0.5;
-        }
-        100% {
-            transform: scale(20, 20);
-            opacity: 0;
-        }
-    }
   </style>
 </head>
 <body>
@@ -795,34 +701,19 @@
     </div>
 
     <!-- Progress Indicator: Shows current flashcard progress -->
-    <div id="progress" class="hidden">
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div class="card-hints">
-            <div class="hint-left">
-                <kbd>←</kbd> Previous
-            </div>
-            <div class="hint-right">
-                Next <kbd>→</kbd>
-            </div>
-        </div>
-    </div>
+    <div id="progress" class="hidden"></div>
 
     <!-- Controls: Navigation, flip, return, and shuffle buttons; initially hidden -->
     <div class="controls hidden" id="controls">
-        <div class="top-row">
-            <button onclick="prevCard()" class="prev-btn">← Previous</button>
-            <button onclick="flipCard()" class="flip-btn">Flip</button>   
-            <button onclick="nextCard()" class="next-btn">Next →</button>
-        </div>
-        <div class="bottom-row">
-            <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
-            <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
-        </div>
-        <div class="keyboard-shortcuts">
-            <kbd>Space</kbd> or <kbd>Enter</kbd> to flip • <kbd>←</kbd> <kbd>→</kbd> to navigate
-        </div>
+      <div class="top-row">
+        <button onclick="prevCard()" class="prev-btn">← Previous</button>
+        <button onclick="flipCard()" class="flip-btn">Flip</button>   
+        <button onclick="nextCard()" class="next-btn">Next →</button>
+      </div>
+      <div class="bottom-row">
+        <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
+        <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
+      </div>
     </div>
     
   </div>
@@ -1036,21 +927,65 @@
       const front = document.querySelector('.front');
       const back = document.querySelector('.back');
       const progress = document.getElementById('progress');
-      const progressBar = document.getElementById('progressBar');
-      
       if (deck[currentIndex]) {
         const currentWord = deck[currentIndex];
         const wordData = fullWordData[currentIndex];
-        front.textContent = currentWord;
-        let pinyinText = wordData.pinyin || getPinyin(currentWord);
         
+        // Clear previous content
+        front.innerHTML = '<div id="hanzi-writer-target"></div>';
+        
+        // Initialize Hanzi Writer
+        const writer = HanziWriter.create('hanzi-writer-target', currentWord, {
+          width: 200,
+          height: 200,
+          padding: 5,
+          showOutline: true,
+          strokeAnimationSpeed: 1,
+          delayBetweenStrokes: 200,
+          delayBetweenLoops: 1000,
+          strokeFadeDuration: 400,
+          strokeHighlightSpeed: 200,
+          strokeHighlightDuration: 200,
+          showCharacter: true,
+          showHintAfterMisses: 3,
+          highlightOnComplete: true,
+          outlineColor: '#000000',
+          strokeColor: '#000000',
+          radicalColor: '#000000',
+          highlightColor: '#000000',
+          drawingColor: '#000000',
+          drawingWidth: 4,
+          outlineWidth: 2,
+          strokeWidth: 2,
+          radicalStrokeColor: '#000000',
+          radicalStrokeWidth: 2,
+          showOutline: true,
+          showCharacter: true,
+          showHintAfterMisses: 3,
+          highlightOnComplete: true,
+          outlineColor: '#000000',
+          strokeColor: '#000000',
+          radicalColor: '#000000',
+          highlightColor: '#000000',
+          drawingColor: '#000000',
+          drawingWidth: 4,
+          outlineWidth: 2,
+          strokeWidth: 2,
+          radicalStrokeColor: '#000000',
+          radicalStrokeWidth: 2
+        });
+        
+        // Animate the character
+        writer.animateCharacter();
+        
+        let pinyinText = wordData.pinyin || getPinyin(currentWord);
         if (inputMode === 'built-in') {
           let englishText = wordData.english || currentWord;
           const englishFontSize = calculateEnglishFontSize(englishText);
           back.innerHTML = `<div>
                               <div class="pinyin">${pinyinText}</div>
                               <div class="english" style="font-size: ${englishFontSize};">${englishText}</div>
-                          </div>`;
+                            </div>`;
         } else if (inputMode === 'custom') {
           back.innerHTML = `<div><div class="pinyin">${pinyinText}</div></div>`;
         } else if (inputMode === 'google-sheet') {
@@ -1058,17 +993,13 @@
           const definitionFontSize = calculateEnglishFontSize(definition);
           const currentWordFontSize = definition.length > 80 ? '1.2rem' :
             definition.length > 50 ? '2rem' :
-            definition.length > 30 ? '2.5rem' : 'var(--translation-font-size-desktop)';
+              definition.length > 30 ? '2.5rem' : 'var(--translation-font-size-desktop)';
           back.innerHTML = `<div>
                               <div class="current-word" style="font-size: ${currentWordFontSize};">${currentWord}</div>
                               <div class="english" style="font-size: ${definitionFontSize};">${definition}</div>
-                          </div>`;
+                            </div>`;
         }
-        
-        // Update progress text and progress bar
         progress.textContent = `Card ${currentIndex + 1} of ${deck.length}`;
-        const progressPercentage = ((currentIndex + 1) / deck.length) * 100;
-        progressBar.style.width = `${progressPercentage}%`;
         progress.classList.remove('hidden');
       }
     }
@@ -1086,17 +1017,12 @@
     }
 
     function flipCard() {
-      const flashcard = document.getElementById('flashcard');
-      if (!flashcard.classList.contains('flipped')) {
-        playFlipSound();
-      }
-      flashcard.classList.toggle('flipped');
+      document.getElementById('flashcard').classList.toggle('flipped');
     }
 
     function prevCard() {
       currentIndex = Math.max(0, currentIndex - 1);
       document.getElementById('flashcard').classList.remove('flipped');
-      vibrate();
       updateCard();
     }
 
@@ -1111,7 +1037,6 @@
         currentIndex++;
       }
       document.getElementById('flashcard').classList.remove('flipped');
-      vibrate();
       updateCard();
     }
 
@@ -1137,26 +1062,9 @@
     });
 
     document.addEventListener('keydown', (e) => {
-      const flashcard = document.getElementById('flashcard');
-      if (!flashcard.classList.contains('hidden')) {
-        if (e.key === 'ArrowLeft') {
-          flashcard.style.transform = 'translateX(-10px)';
-          setTimeout(() => {
-            flashcard.style.transform = '';
-            prevCard();
-          }, 100);
-        }
-        if (e.key === 'ArrowRight') {
-          flashcard.style.transform = 'translateX(10px)';
-          setTimeout(() => {
-            flashcard.style.transform = '';
-            nextCard();
-          }, 100);
-        }
-        if (e.key === ' ' || e.key === 'Enter') {
-          flipCard();
-        }
-      }
+      if (e.key === 'ArrowLeft') prevCard();
+      if (e.key === 'ArrowRight') nextCard();
+      if (e.key === ' ' || e.key === 'Enter') flipCard();
     });
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -1179,48 +1087,6 @@
           });
       }
     });
-
-    // Add touch event handling for mobile swipe
-    let touchStartX = 0;
-    let touchEndX = 0;
-    
-    document.getElementById('flashcard').addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    }, false);
-    
-    document.getElementById('flashcard').addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    }, false);
-    
-    function handleSwipe() {
-        const swipeThreshold = 50;
-        if (touchEndX < touchStartX - swipeThreshold) {
-            // Swipe left - next card
-            nextCard();
-        } else if (touchEndX > touchStartX + swipeThreshold) {
-            // Swipe right - previous card
-            prevCard();
-        } else {
-            // Tap - flip card
-            flipCard();
-        }
-    }
-
-    // Add sound effects for card interactions
-    const flipSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
-    
-    function playFlipSound() {
-        flipSound.currentTime = 0;
-        flipSound.play().catch(() => {}); // Ignore errors if sound can't play
-    }
-
-    // Add haptic feedback for mobile devices
-    function vibrate() {
-        if ('vibrate' in navigator) {
-            navigator.vibrate(50);
-        }
-    }
   </script>
 
 </html>
