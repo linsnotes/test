@@ -1,1849 +1,1226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Language Marksman</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="referrer" content="no-referrer">
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.min.js" integrity="sha512-59m22Tdj5NpJr4WpRAJl+HXy96LWKmG2f3drO7abM5kW6WaI7nMHVx7cwJON1z6OdCH0HaZVMnXnRsdFeHQtDA==" crossorigin="anonymous"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha512-AXreDm/maQt99+BKeuV5VUY8x0xBAZPX6OYenHRlRwG/C35PKcZ7GQXITTR8Zf3cLHeTfwVDLEMBBPf7laKtAA==" crossorigin="anonymous"></script>
+  <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js" integrity="sha512-JAlHYZ7sDXF98EQK5HABwb2k1jplfFP93BqY4B6fdHSh0XiAqIjO4gyXe8tdNFdHPYrg75grUX853FHYCzw3Dg==" crossorigin="anonymous"></script>
+  <title>博闻强记</title>
+  <style>
+    /* --------------------------------------------------
+       CSS Variables for Translation Font Sizes
+       - Adjust these values to change the translation font sizes.
+         --translation-font-size-desktop: Font size for desktop (default).
+         --translation-font-size-mobile: Font size for mobile (set here to 70% of desktop).
+    ----------------------------------------------------- */
+    :root {
+      --translation-font-size-desktop: 3rem;
+      --translation-font-size-mobile: calc(var(--translation-font-size-desktop) * 0.7);
+      
+      /* Color palette */
+      --background: #f5f5f7;
+      --card-bg: #ffffff;
+      --accent: #0066cc;
+      --text: #1d1d1f;
+      --secondary-text: #86868b;
+      --border: rgba(0, 0, 0, 0.1);
+      --success: #34c759;
+      --warning: #ff9500;
+      --danger: #ff3b30;
+      --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --button-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Removed SortableJS CSS -->
-    <style>
-        /* Base Styles (Adapted from provided CSS) */
-        :root {
-            --primary: #1a73e8; /* Modern blue color (Google style) */
-            --primary-hover: #0b5fdb; /* Darker shade for hover */
-            --secondary: #e5e7eb;
+    /* --------------------------------------------------
+       Global Reset and Base Styles
+       - Removes default margins and paddings.
+       - Sets a base font, background, and text color.
+    ----------------------------------------------------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --warning: #f59e0b; /* Yellow */
-            --light: #f9fafb;
+    #visitor-counter {
+      font-size: 1em;
+      margin: 10px 0;
+      text-align: center;
+      color: var(--secondary-text);
+    }
+    
+    #visitor-counter #pageviews {
+      font-weight: 500;
+      color: var(--text);
+    }
 
-            /* target and shooter color */
-            --accent: #8b5cf6; /* target color */
-            --target-text-color: white; /* target text color */
-            --dark: #111827; /* shooter color */
-            --shooter-text-color: white; /* shooter text color */
-            --success: #10b981; /* Green */
-             --danger: #ef4444; /* Red */
+    #other-chinese-tools {
+      text-align: center;
+      margin-top: 15px;
+    }
+    
+    #other-chinese-tools a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    #other-chinese-tools a:hover {
+      text-decoration: underline;
+    }
 
-            
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --radius: 0.5rem;
-            --transition: all 0.3s ease;
+    footer {
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
 
-            /* Font for targets/shooter */
-             --word-box-font-family: KaiTi, 'Kaiti SC', DFKai-SB, BiauKai, 'Microsoft YaHei', 'SimHei', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-             --word-box-font-size: 1.6rem; /* Slightly larger for game elements */
+    /* --------------------------------------------------
+       Header Styles
+       - Styles for the page header.
+    ----------------------------------------------------- */
+    @keyframes gradientMove {
+      0% {
+        background-position: 0%;
+      }
+      50% {
+        background-position: 100%;
+      }
+      100% {
+        background-position: 0%;
+      }
+    }
 
-            /* Game Speeds */
-            --shooter-speed: 15px; /* Pixels moved per arrow key press */
-            --bullet-speed: 15px; /* Pixels moved per frame */
-            --target-downward-speed: 0.5px; /* Pixels moved down per frame */
-            --target-horizontal-speed-max: 1.5px; /* Max absolute horizontal speed */
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      font-weight: 600;
+      font-style: italic;
+      background: linear-gradient(90deg,
+        #4285F4 0%,
+        #34A853 20%,
+        #60C99A 35%,
+        #A6D96A 50%,
+        #F5A623 65%,
+        #FBBC05 80%,
+        #EA4335 100%
+      );
+      background-size: 200%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientMove 3s ease-in-out infinite;
+    }
+    
+    /* --------------------------------------------------
+       Input Section Styles
+       - Styles for the textarea, dropdown selection, toggle button, and start button.
+    ----------------------------------------------------- */
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 24px;
+    }
+    
+    /* Input method tabs */
+    .input-tabs {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .input-tab {
+      padding: 12px 15px;
+      background-color: rgba(0, 102, 204, 0.1);
+      color: var(--accent);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      flex: 1;
+      margin: 0 5px;
+      text-align: center;
+    }
+    
+    .input-tab:first-child {
+      margin-left: 0;
+    }
+    
+    .input-tab:last-child {
+      margin-right: 0;
+    }
+    
+    .input-tab.active {
+      background-color: var(--accent);
+      color: white;
+    }
+    
+    .input-tab:hover:not(.active) {
+      background-color: rgba(0, 102, 204, 0.2);
+    }
+    
+    /* Input content sections */
+    .input-content {
+      display: none;
+    }
+    
+    .input-content.active {
+      display: block;
+    }
+    
+    /* Custom input style */
+    textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      resize: vertical;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+      outline: none;
+    }
+    
+    /* Input help styles (shared by textarea and sheet inputs) */
+    .textarea-input-help, .sheet-input-help {
+      font-size: 0.85rem;
+      color: #06c;
+      padding: 12px;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      margin-top: 12px;
+      margin-bottom: 16px;
+    }
+    
+    /* Google Sheet input style */
+    .sheet-input-container {
+      margin-bottom: 16px;
+    }
+    
+    .sheet-input {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .sheet-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+      outline: none;
+    }
+    
+    /* Dropdown styling */
+    #dropdownSection {
+      margin: 0 0 16px 0; /* top, right, bottom, left */
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background-color: var(--card-bg);
+      box-shadow: var(--card-shadow);
+    }
+    
+    #dropdownSection p {
+      margin-bottom: 12px;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    
+    .dropdown-container {
+      margin-bottom: 16px;
+    }
+    
+    .dropdown-container label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      color: var(--secondary-text);
+      font-weight: 500;
+    }
+    
+    .dropdown {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background-color: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .dropdown:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+      outline: none;
+    }
+
+    /* -----------------------------
+       Spinner CSS
+    ------------------------------ */
+    #spinner-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 24px;
+      margin-bottom: 16px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 102, 204, 0.1);
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    .loading-text {
+      margin-top: 16px;
+      font-size: 1rem;
+      color: var(--secondary-text);
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    #spinner-container.hidden {
+      display: none;
+    }
+
+    /* --------------------------------------------------
+       Flashcard Container and Card Styles
+       - Styles for the flashcard container, the inner card,
+         and the front/back sides of the card.
+    ----------------------------------------------------- */
+    .flashcard {
+        font-size: 3rem;
+        height: 300px;
+        margin: 24px auto;
+        cursor: pointer;
+        perspective: 1000px;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        transition: transform 0.3s ease;
+        touch-action: pan-y pinch-zoom;
+    }
+    
+    .flashcard:hover {
+        transform: translateY(-5px);
+    }
+    
+    .flashcard-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-style: preserve-3d;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        will-change: transform;
+    }
+    
+    .flashcard.flipped .flashcard-inner {
+        transform: rotateY(180deg);
+    }
+    
+    .front, .back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .front {
+        background-color: var(--card-bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+    }
+    
+    .back {
+        background-color: var(--card-bg);
+        color: var(--text);
+        flex-direction: column;
+        transform: rotateY(180deg);
+        border: 1px solid var(--border);
+    }
+
+    /* Keyboard shortcuts indicator */
+    .keyboard-shortcuts {
+        text-align: center;
+        margin-top: 12px;
+        font-size: 0.85rem;
+        color: var(--secondary-text);
+    }
+
+    .keyboard-shortcuts kbd {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 0.8em;
+        margin: 0 2px;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    }
+
+    /* Progress bar */
+    .progress-container {
+        width: 100%;
+        max-width: 400px;
+        margin: 16px auto;
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        padding: 4px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .progress-bar {
+        height: 8px;
+        background-color: var(--accent);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    /* Card navigation hints */
+    .card-hints {
+        display: flex;
+        justify-content: space-between;
+        max-width: 400px;
+        margin: 8px auto;
+        color: var(--secondary-text);
+        font-size: 0.9rem;
+    }
+
+    .hint-left, .hint-right {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .hint-left kbd, .hint-right kbd {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 0.8em;
+    }
+
+    /* CurrentWord and Pinyin Text Styling on the Back of the Card */
+    .current-word, .pinyin {
+      font-size: var(--translation-font-size-desktop);
+      color: var(--accent);
+    }
+    
+    /* English Translation Container Styling */
+    .english {
+      margin-top: 16px;
+      font-size: var(--translation-font-size-desktop);
+      color: var(--secondary-text);
+    }
+
+    /* --------------------------------------------------
+       Controls (Buttons) Styles
+       - Styles for navigation, flip, return, and shuffle buttons.
+    ----------------------------------------------------- */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    .controls .top-row, .controls .bottom-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    .controls .bottom-row {
+      margin-top: 12px;
+    }
+
+    /* Common Button Styles */
+    button {
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      box-shadow: var(--button-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Button Styles */
+    .start-btn, .prev-btn, .next-btn {
+      background-color: var(--accent);
+      color: white;
+    }
+    
+    .start-btn:hover, .prev-btn:hover, .next-btn:hover {
+      background-color: #0055b3;
+      transform: translateY(-1px);
+    }
+
+    /* Flip Button Specific Styles */
+    .flip-btn {
+      background-color: var(--warning);
+      color: white;
+    }
+    
+    .flip-btn:hover {
+      background-color: #e68600;
+      transform: translateY(-1px);
+    }
+
+    /* Shuffle Button Specific Styles */
+    .shuffle-btn {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .shuffle-btn:hover {
+      background-color: #28b14d;
+      transform: translateY(-1px);
+    }
+
+    /* Return Button Specific Styles */
+    .return-btn {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--secondary-text);
+    }
+    
+    .return-btn:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    /* Utility Class to Hide Elements */
+    .hidden {
+      display: none;
+    }
+
+    /* --------------------------------------------------
+       Progress Indicator Styles
+       - Displays the current card number out of total.
+    ----------------------------------------------------- */
+    #progress {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 1rem;
+      color: var(--secondary-text);
+      font-weight: 500;
+    }
+
+    /* --------------------------------------------------
+       Responsive Design Adjustments for Small Screens
+    ----------------------------------------------------- */
+    @media (max-width: 576px) {
+      .container {
+        padding: 20px 16px;
+      }
+      
+      h1 {
+        margin-bottom: 20px;
+      }
+      
+      .flashcard {
+        font-size: 2rem;
+        height: 200px;  /* Override fixed height for smaller screens */
+        margin: 16px auto;
+        max-width: 320px;
+      }
+      
+      .front, .back {
+        padding: 16px;
+      }
+      
+      button {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+      }
+      
+      /* On mobile, reduce the pinyin and English translation font size to 50% */
+      .current-word, .pinyin, .english {
+        font-size: var(--translation-font-size-mobile);
+      }
+      
+      .input-tabs {
+        flex-direction: column;
+      }
+      
+      .input-tab {
+        margin: 4px 0;
+        padding: 10px 12px;
+      }
+      
+      .controls .top-row, .controls .bottom-row {
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      
+      .controls .bottom-row {
+        margin-top: 8px;
+      }
+      
+      textarea, .sheet-input {
+        padding: 10px;
+        margin-bottom: 12px;
+      }
+      
+      .textarea-input-help, .sheet-input-help {
+        padding: 10px;
+        margin-bottom: 12px;
+      }
+      
+      #dropdownSection {
+        padding: 12px;
+        margin: 8px 0;
+      }
+      
+      .dropdown-container {
+        margin-bottom: 12px;
+      }
+      
+      .dropdown {
+        padding: 10px;
+      }
+    }
+
+    /* Card interaction feedback */
+    .flashcard:active {
+        transform: scale(0.98);
+    }
+
+    .flashcard.flipped {
+        pointer-events: none;
+    }
+
+    .flashcard.flipped .flashcard-inner {
+        animation: flip-sound 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes flip-sound {
+        0% { transform: rotateY(0); }
+        50% { transform: rotateY(90deg); }
+        100% { transform: rotateY(180deg); }
+    }
+
+    /* Button hover effects */
+    button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.5);
+        opacity: 0;
+        border-radius: 100%;
+        transform: scale(1, 1) translate(-50%);
+        transform-origin: 50% 50%;
+    }
+
+    button:focus:not(:active)::after {
+        animation: ripple 1s ease-out;
+    }
+
+    @keyframes ripple {
+        0% {
+            transform: scale(0, 0);
+            opacity: 0.5;
         }
-
-        /* Rotating icon animation */
-        .rotate-icon { display: inline-block; animation: spin 3s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Text fill effect */
-        .fill-text { display: inline-block; background: linear-gradient(90deg, var(--primary), var(--accent)); background-size: 200% 100%; -webkit-background-clip: text; color: transparent; animation: fillText 5s ease infinite; }
-        @keyframes fillText { from { background-position: -100% 0; } to { background-position: 0 0; } }
-
-        /* Typography */
-        body { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: var(--text-primary); line-height: 1.5; }
-        h1, h2, h3, h4, h5, h6 { font-weight: 600; margin-top: 0; color: var(--dark); }
-        h1 { font-size: 2rem; margin-bottom: 1.5rem; }
-        h2 { font-size: 1.5rem; margin-bottom: 1rem; }
-
-        /* Layout */
-        .app-container { max-width: 1000px; margin: 0 auto; padding: 1rem; min-height: 100vh; display: flex; flex-direction: column; }
-        .app-header { text-align: center; padding: 1rem 0; border-bottom: 1px solid var(--secondary); margin-bottom: 2rem; }
-        .app-footer { margin-top: auto; text-align: center; padding: 1rem 0; font-size: 0.875rem; color: var(--text-secondary); border-top: 1px solid var(--secondary); }
-        .app-footer a { color: #6b7280; text-decoration: none; }
-
-        /* Cards and Screens */
-        .screen { display: none; opacity: 0; transition: opacity 0.5s ease, transform 0.5s ease; transform: translateY(10px); }
-        .screen.active { display: block; opacity: 1; transform: translateY(0); }
-        .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; margin-bottom: 1.5rem; transition: var(--transition); }
-        .card-header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--secondary); padding-bottom: 1rem; }
-        .card-title { font-size: 1.25rem; margin: 0; }
-        .card-body { margin-bottom: 1.5rem; }
-        .card-footer { border-top: 1px solid var(--secondary); padding-top: 1rem; display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; }
-
-        /* Form Elements */
-        .form-group { margin-bottom: 1.5rem; }
-        .form-control { display: block; width: 100%; padding: 0.75rem; font-size: 1rem; border: 1px solid var(--secondary); border-radius: var(--radius); transition: var(--transition); box-sizing: border-box; }
-        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2); }
-        #quizId, #userName { width: 100%; margin: 0; padding: 0.75rem; }
-        .center-button { text-align: center; }
-
-        /* Buttons */
-        .btn { display: inline-block; font-weight: 500; text-align: center; vertical-align: middle; user-select: none; padding: 0.75rem 1.5rem; font-size: 1rem; line-height: 1.5; border-radius: var(--radius); transition: var(--transition); cursor: pointer; border: none; }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
-        .btn-secondary { background-color: var(--secondary); color: var(--text-primary); }
-        .btn-secondary:hover { background-color: #d1d5db; }
-
-        /* Quiz Screen Specific Styles */
-       #quizScreen {
-            position: relative;
-            overflow: hidden; /* Contain absolute elements */
-            /* min-height: 70vh; */ /* Line removed */
-            flex-grow: 1; /* Allow quiz screen to expand */ /* <-- ADD THIS LINE */
-            background: linear-gradient(180deg, #e0f7fa 0%, #b3e5fc 100%); /* Light blue gradient bg */
-            display: flex; /* Add this to make gameArea sizing easier if needed */
-            flex-direction: column; /* Stack header/progress/gameArea vertically */
+        100% {
+            transform: scale(20, 20);
+            opacity: 0;
         }
-        
-        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.7); border-radius: var(--radius); position: relative; z-index: 20; /* Above game area */ }
-        .timer-container, .quiz-title-display, .question-counter { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text-secondary); padding: 0.5rem 1rem; background: var(--light); border-radius: var(--radius); }
-        .timer-container i { color: var(--primary); }
-        .timer-value { color: var(--text-primary); }
-        .quiz-instructions { margin: 0.5rem 0 1rem 0; padding: 0.75rem; background-color: rgba(26, 115, 232, 0.1); border-left: 4px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.875rem; color: var(--text-secondary); position: relative; z-index: 20; /* Above game area */}
-        .progress-container { width: 100%; height: 8px; background-color: var(--secondary); border-radius: 4px; overflow: hidden; margin-bottom: 1rem; position: relative; z-index: 20; /* Above game area */}
-        .progress-bar { height: 100%; background-color: var(--primary); transition: width 0.3s ease; }
-
-        #gameArea {
-            position: relative; /* Back to relative positioning */ /* <-- CHANGED */
-            /* top: 0; left: 0; right: 0; bottom: 0; */ /* Removed */
-            flex-grow: 1; /* Make game area fill remaining vertical space */ /* <-- ADDED */
-            border: none;
-            border-radius: var(--radius);
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="%23d1d5db" fill-opacity="0.1" d="M10 10 H90 V90 H10Z M0 0 H100 V100 H0Z" /></svg>');
-            overflow: hidden;
-            /* z-index no longer strictly needed unless overlap issues arise */
-            /* You might want margin-top if needed: */
-            /* margin-top: 0.5rem;  */
-        }
-
-
-        /* Target Animations */
-        @keyframes targetHitCorrect {
-            0% { transform: scale(1) rotate(0deg); opacity: 1; background-color: var(--success); }
-            50% { transform: scale(1.3) rotate(15deg); opacity: 0.5; }
-            100% { transform: scale(0.5) rotate(-15deg); opacity: 0; background-color: var(--success); }
-        }
-        .target-hit-correct {
-            animation: targetHitCorrect 0.5s ease-out forwards;
-            pointer-events: none; /* Prevent hitting again during animation */
-        }
-
-        @keyframes targetHitIncorrect { /* Simple shake and fade */
-             0% { transform: translateX(0); opacity: 1; background-color: var(--danger); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-8px); }
-            80% { transform: translateX(8px); }
-            100% { transform: translateX(0); opacity: 0; background-color: var(--danger); }
-        }
-        .target-hit-incorrect {
-            animation: targetHitIncorrect 0.5s linear forwards;
-            pointer-events: none; /* Prevent hitting again during animation */
-        }
-
-        /* --- MODIFICATION 1: Make Targets Circular --- */
-        .target {
-            position: absolute; /* Positioned within gameArea */
-            /* padding: 0.6rem 1.2rem; */ /* Remove or adjust this */
-            padding: 0.8rem; /* Make padding uniform for circle */
-            width: auto; /* Let width be determined by content */
-            min-width: 3rem; /* Ensure a minimum size */
-            aspect-ratio: 1 / 1; /* Force it into a square shape */
-            display: flex; /* Needed for centering text in aspect-ratio circle */
-            justify-content: center; /* Center text horizontally */
-            align-items: center; /* Center text vertically */
-            background-color: var(--accent);
-            color: var(--target-text-color);
-            /* border-radius: 50px; */ /* REMOVE Pill shape */
-            border-radius: 50%;   /* ADD THIS for Circle shape */
-            font-family: var(--word-box-font-family);
-            font-size: calc(var(--word-box-font-size) * 0.8); /* Adjust if text overflows */
-            transition: transform 0.2s ease, background-color 0.2s ease; /* Keep for animations */
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 5;
-            user-select: none; /* Prevent text selection */
-            white-space: nowrap; /* Prevent wrapping */
-            text-align: center; /* Ensure text centers if it somehow wraps */
-        }
-
-        #shooter {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            min-width: 60px;
-            width: auto;
-            padding: 0 10px;
-            height: 40px;
-            background-color: var(--dark);
-            border-radius: 5px;
-            transform: translateX(-50%);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            white-space: nowrap;
-            text-align: center;
-            line-height: 40px;
-            color: var(--shooter-text-color);  /* Text color set here */
-        }
-
-        #shooter::before {
-            content: '';
-            position: absolute;
-            width: 6px;            /* Increased width for a thicker barrel */
-            height: 20px;
-            background-color: var(--dark);
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        #shooter::after {
-            content: '';
-            position: absolute;
-            width: 30px;           /* Width of the turret */
-            height: 15px;          /* Height of the turret */
-            background-color: var(--dark);
-            top: -10px;            /* Position above the tank body */
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 3px;
-        }
-
-        /* Optional: Style bullet slightly differently */
-        .bullet-visual {
-            position: absolute;
-            width: 6px; /* Slimmer */
-            height: 12px; /* Shorter */
-            background: black; 
-            /* background: linear-gradient(to top, var(--warning), gold); */ /* Gradient */
-            border-radius: 50% 50% 0 0; /* More rounded top */
-            /* box-shadow: 0 0 6px yellow; */
-            z-index: 9;
-            pointer-events: none; /* Don't block clicks */
-            display: none; /* Keep hidden for the template */
-        }
-        /* Results Screen (Mostly reused styles) */
-        .result-summary { padding: 1.5rem; background-color: #f3f4f6; border-radius: var(--radius); margin-bottom: 1.5rem; }
-        .result-stat { display: flex; align-items: center; margin-bottom: 0.75rem; }
-        .result-stat i { margin-right: 0.75rem; color: var(--primary); width: 24px; text-align: center; }
-        .results-table-container { overflow-x: auto; margin-bottom: 1.5rem; }
-        .results-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        .results-table th, .results-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--secondary); }
-        .results-table th { background-color: #f9fafb; font-weight: 600; color: var(--text-secondary); }
-        .results-table tr:hover td { background-color: #f3f4f6; }
-        .results-table td.correct { color: var(--success); font-weight: bold; }
-        .results-table td.incorrect { color: var(--danger); font-style: italic; }
-        .results-table td.failed { color: var(--danger); font-style: italic; } /* For failed questions */
-
-        /* Divider */
-        .divider { display: flex; align-items: center; margin: 1.5rem 0; color: var(--text-secondary); font-size: 0.875rem; }
-        .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--secondary); }
-        .divider::before { margin-right: 1rem; }
-        .divider::after { margin-left: 1rem; }
-
-        /* Google Sheet Dropdown Styling */
-        #quizSelect { /* Style reused */ width: 100%; padding: 0.75rem; font-size: 1rem; border: 1px solid var(--secondary); border-radius: var(--radius); transition: var(--transition); background-color: white; color: var(--text-primary); appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem top 50%; background-size: 1.25rem; }
-        #quizSelect:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2); }
-
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            .card { padding: 1.5rem; }
-            /* Inside @media (max-width: 768px) */
-            .quiz-header {
-                flex-wrap: wrap;        /* Allow items to wrap to the next line */
-                align-items: center;    /* Vertically center items in each line */
-                justify-content: space-around; /* Distribute space between items */
-                gap: 0.5rem;            /* Smaller gap between items */
-                /* Removed: flex-direction, width */
-            }
-            /* Inside @media (max-width: 768px) */
-            .timer-container,
-            .quiz-title-display,
-            .question-counter,
-            #bulletCounter { /* Added #bulletCounter here */
-                width: auto; /* Let the content and flexbox decide the width */
-                flex-grow: 1; /* Allow items to grow to fill space if needed */
-                flex-basis: 45%; /* Suggest items take up roughly half width, promoting 2 columns */
-                box-sizing: border-box;
-                margin: 0.1rem 0; /* Reduced vertical margin */
-                padding: 0.4rem 0.6rem; /* Slightly reduced padding */
-                font-size: 0.8rem; /* Make font slightly smaller */
-                justify-content: center;
-                text-align: center; /* Ensure text inside centers */
-            }
-
-            /* Game area height is determined by absolute positioning now */
-            #shooter { padding: 0.7rem 1.5rem; font-size: calc(var(--word-box-font-size) * 0.9); bottom: 5px;}
-            .target {
-                padding: 0.4rem; /* Reduced uniform padding for circle */
-                min-width: 2.5rem; /* Slightly smaller minimum size */
-                font-size: calc(var(--word-box-font-size) * 0.65); /* Smaller font */
-                /* Keep other properties like aspect-ratio, border-radius: 50% etc. from the main rule */
-            }
-            .results-table th, .results-table td { padding: 0.5rem; font-size: 0.75rem; }
-        }
-        @media (max-width: 480px) {
-            h1 { font-size: 1.8rem; }
-            .card-footer { justify-content: center; }
-            .btn { width: 100%; margin-bottom: 0.5rem; }
-            /* Game area height is determined by absolute positioning now */
-             #shooter { padding: 0.6rem 1.2rem; font-size: calc(var(--word-box-font-size) * 0.8); bottom: 2px;}
-            /* Inside @media (max-width: 480px) */
-            .target {
-                padding: 0.3rem; /* Even smaller padding */
-                min-width: 2.2rem; /* Smaller min-width */
-                font-size: calc(var(--word-box-font-size) * 0.6); /* Even smaller font */
-                 /* Keep other properties */
-            }
-            .quiz-title-display { font-size: 0.8rem; }
-        }
-/* Add Mobile Controls CSS Here */
-        #mobile-controls {
-            position: absolute; /* Position relative to #quizScreen */
-            bottom: 5px;       /* Small gap from bottom */
-            left: 10px;        /* Padding from left edge */
-            right: 10px;       /* Padding from right edge */
-            height: 60px;      /* Height for positioning buttons inside, adjust if needed */
-            z-index: 100;      /* Ensure controls are above game elements */
-            pointer-events: none; /* Allow clicks/touches to pass through the container background */
-            display: none;     /* Hide by default */
-        }
-
-        /* Show controls only when quiz screen is active */
-        #quizScreen.active #mobile-controls {
-            display: block; /* Use block display when active */
-        }
-
-        #mobile-controls button {
-            position: absolute;
-            bottom: 0; /* Align buttons to the bottom of the #mobile-controls container */
-            width: 55px;       /* Button size */
-            height: 55px;
-            background-color: rgba(100, 100, 100, 0.6); /* Semi-transparent grey */
-            border: none;
-            border-radius: 50%; /* Circular buttons */
-            color: white;      /* White icon color */
-            font-size: 1.4rem; /* Icon size */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            pointer-events: auto; /* Make buttons interactive (override container's none) */
-            user-select: none;    /* Prevent text selection on hold */
-            -webkit-user-select: none;
-            touch-action: manipulation; /* Improve touch responsiveness, prevent double-tap zoom */
-            transition: background-color 0.1s ease;
-        }
-
-        /* Style for button press */
-        #mobile-controls button:active {
-            background-color: rgba(60, 60, 60, 0.8); /* Darker when pressed */
-        }
-
-        /* Position Fire Button */
-        #mobile-fire {
-            left: 0; /* Position fire button on the left edge of the container */
-        }
-
-        /* Position Right Arrow Button */
-        #mobile-right {
-            right: 0; /* Position right arrow on the right edge of the container */
-        }
-
-        /* Position Left Arrow Button */
-        #mobile-left {
-             right: 65px; /* Position left arrow next to right arrow (55px width + 10px gap) */
-        }
-
-        /* Hide original keyboard instructions on devices that likely don't have one */
-        /* This uses a common media query for touch devices */
-        @media (hover: none) and (pointer: coarse) {
-            .quiz-instructions {
-                display: none;
-            }
-        }
-        /* END Mobile Controls CSS */
-    </style>
+    }
+  </style>
 </head>
 <body>
-    <div class="app-container">
-        <header class="app-header">
-             <h1><i class="fas fa-location-crosshairs rotate-icon"></i>
-                <span class="fill-text">Language Marksman</span>
-             </h1>
-        </header>
-
-        <!-- Landing Screen -->
-        <div id="landingScreen" class="screen active">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Welcome to Language Marksman</h2>
-                    <p><span style="margin-right: 0.4rem;">🚀</span>See it. Shoot it. Master it.</p>
-                </div>
-                <div class="card-body">
-                    <!-- Quiz Selection -->
-                    <div class="form-group">
-                        <label for="quizSelect" class="form-label">Built-in Games:</label>
-                        <select id="quizSelect" class="form-control"></select> <!-- Options populated by JS -->
-                    </div>
-                    <div class="center-button">
-                        <button onclick="startSelectedQuiz()" class="btn btn-primary" disable> <!-- Initially disabled -->
-                            <i class="fas fa-play-circle"></i> Start Built-in Game
-                        </button>
-                    </div>
-                    <div class="divider">OR</div>
-
-                    <div class="form-group">
-                        <label for="quizId" class="form-label">Have a custom game?</label>
-                        <p class="form-text" style="margin-top: 0.25rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
-                            <i class="fas fa-info-circle"></i> Game ID is provided by your teacher
-                        </p>
-                        <input type="text" id="quizId" placeholder="Enter Game ID" class="form-control">
-                    </div>
-                </div>
-                 <div class="center-button">
-                    <button onclick="startCustomQuiz()" class="btn btn-secondary">
-                        <i class="fas fa-file-import"></i> Start Custom Game
-                    </button>
-                </div>
-            </div>
+  <!-- Main container for all content -->
+  <div class="container">
+    <!-- Header: Displays the title -->
+    <h1>My Flashcards</h1>
+    
+    <!-- Input Section: Contains tabbed interface for input selection and start button -->
+    <div class="input-section" id="inputSection">
+      <!-- Input method selection tabs -->
+      <div class="input-tabs">
+        <button type="button" class="input-tab active" data-type="custom">Chinese & Pinyin</button>
+        <button type="button" class="input-tab" data-type="built-in">SG Chinese Textbook Words</button>
+        <button type="button" class="input-tab" data-type="google-sheet">Import from Google Sheet</button>
+      </div>
+      
+      <!-- Custom word list input (active by default) -->
+      <div id="custom-input" class="input-content active">
+        <textarea id="input-words"
+                  placeholder="Enter Chinese words, separated by commas, e.g. 你好, 世界"
+                  rows="3"></textarea>
+        <div class="textarea-input-help">
+          Please note that the custom word list only shows Pinyin on the back of the flashcard.
         </div>
-
-        <!-- Name Screen -->
-        <div id="nameScreen" class="screen">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Ready Player?</h2>
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="userName" class="form-label">Enter Your Name</label>
-                        <input type="text" id="userName" required class="form-control" placeholder="Your Name">
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <button onclick="startQuiz()" class="btn btn-primary">
-                        <i class="fas fa-gamepad"></i> Start Game
-                    </button>
-                    <button onclick="goHome()" class="btn btn-secondary">
-                        <i class="fas fa-home"></i> Back to Home
-                    </button>
-                </div>
-            </div>
+      </div>
+      
+      <!-- Built-in word list input -->
+      <div id="built-in-input" class="input-content">
+        <div id="dropdownSection">
+          <div class="dropdown-container" id="bandingContainer">
+            <label for="banding" class="input-label">科目 Course</label>
+            <select id="banding" name="banding" class="dropdown">
+              <option value="">选择科目 Select Course</option>
+              <option value="G3">G3</option>
+              <option value="G2">G2</option>
+              <option value="G1">G1</option>
+              <option value="HCL">HCL</option>
+            </select>
+          </div>
+          <div class="dropdown-container" id="levelContainer">
+            <label for="level" class="input-label">年级 Level</label>
+            <select id="level" name="level" class="dropdown">
+              <option value="">选择年级 Select Level</option>
+              <option value="中一">中一</option>
+              <option value="中二">中二</option>
+              <option value="中三">中三</option>
+              <option value="中四">中四</option>
+            </select>
+          </div>
+          <div class="dropdown-container" id="unitContainer">
+            <label for="unit" class="input-label">单元 Unit</label>
+            <select id="unit" name="unit" class="dropdown">
+              <option value="">选择单元 Select Unit</option>
+              <option value="单元一">单元一</option>
+              <option value="单元二">单元二</option>
+              <option value="单元三">单元三</option>
+              <option value="单元四">单元四</option>
+              <option value="单元五">单元五</option>
+              <option value="单元六">单元六</option>
+            </select>
+          </div>
+          <div class="dropdown-container" id="passageContainer">
+            <label for="passage" class="input-label">课文 Passage</label>
+            <select id="passage" name="passage" class="dropdown">
+              <option value="">选择课文 Select Passage</option>
+              <option value="生活空间">生活空间</option>
+              <option value="核心">核心</option>
+              <option value="巩固">巩固</option>
+              <option value="进阶">进阶</option>
+            </select>
+          </div>
         </div>
-
-        <!-- Quiz Screen -->
-        <div id="quizScreen" class="screen">
-             <!-- Header elements (now above game area) -->
-            <div class="quiz-header">
-                <div class="timer-container">
-                    <i class="fas fa-clock"></i> Time: <span id="timer" class="timer-value">0</span>s
-                </div>
-                 <div id="quizTitleDisplay" class="quiz-title-display">
-                     <!-- Quiz title will be shown here -->
-                 </div>
-                
-                <div class="question-counter" id="questionNumber"></div>
-                <div id="bulletCounter" class="bullet-counter" style="display: none; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text-secondary); padding: 0.5rem 1rem; background: var(--light); border-radius: var(--radius); margin-left: 1rem;"> {/* Added margin-left for spacing */}
-                    <!-- Content set by JS -->
-                </div>
-            </div>
-            <div id="progressContainer" class="progress-container">
-                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
-            </div>
-             <div class="quiz-instructions">
-                <i class="fas fa-arrows-alt-h"></i> Move: Left/Right Arrows    <i class="fas fa-keyboard"></i> Fire: Spacebar
-            </div>
-
-            <!-- Game Area -->
-            <div id="gameArea">
-                 <!-- Shooter -->
-                <div id="shooter">
-                    <!-- Current Column A word here -->
-                </div>
-
-                <!-- Bullet Element (initially hidden) -->
-                <div id="bullet" class="bullet-visual"></div>
-            </div>
-                <!-- Targets will be added here by JS -->
-                <!-- START: Add Mobile Controls HTML -->
-            <div id="mobile-controls">
-                <button id="mobile-fire" aria-label="Fire"><i class="fas fa-crosshairs"></i></button>
-                <button id="mobile-left" aria-label="Move Left"><i class="fas fa-arrow-left"></i></button>
-                <button id="mobile-right" aria-label="Move Right"><i class="fas fa-arrow-right"></i></button>
-            </div>
-                <!-- END: Add Mobile Controls HTML -->
+      </div>
+      
+      <!-- Google Sheet import input -->
+      <div id="google-sheet-input" class="input-content">
+        <div class="sheet-input-container">
+          <input type="text" id="sheet-url" class="sheet-input" 
+                 placeholder="Paste your Google Sheet URL here..." />
+          <div class="sheet-input-help">
+            Make sure your Google Sheet is set to "<span>Anyone with the link can view</span>".
+            <a href="https://docs.google.com/spreadsheets/d/1Rc_-NzmUOKOOPgmLkIwW0uKbPAjzgroXqawx4E1CBDM/edit?gid=0#gid=0" target="_blank">View Sample</a><br>
+            Your sheet should have at least 2 columns:<br>
+            - First column: Term/word for front of flashcard<br>
+            - Second column: Definition for back of flashcard
+          </div>
         </div>
-
-        <!-- Results Screen -->
-        <div id="resultsScreen" class="screen">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Game Results</h2>
-                </div>
-                <div class="card-body">
-                    <div class="result-summary" id="resultSummary">
-                        <!-- Results summary will be inserted here -->
-                    </div>
-
-                    <div class="results-table-container">
-                        <table id="resultsTable" class="results-table">
-                            <!-- Results table will be inserted here -->
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <button onclick="screenshotResults()" class="btn btn-secondary">
-                        <i class="fas fa-camera"></i> Screenshot Results
-                    </button>
-                    <button onclick="reviewQuestions()" class="btn btn-primary">
-                        <i class="fas fa-redo"></i> Play Again
-                    </button>
-                     <button onclick="goHome()" class="btn btn-secondary">
-                        <i class="fas fa-home"></i> Back to Home
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <footer class="app-footer">
-            <div id="visitor-counter">
-               Welcome! You're visitor #<span id="pageviews">Loading...</span>
-            </div>
-            <p><a href="https://linsnotes.com">linsnotes.com</a></p>
-        </footer>
+      </div>
+      
+      <!-- Start button remains at the bottom of the input section -->
+      <button onclick="initDeck()" class="start-btn">Start</button>
+      
+      <!-- Spinner container (hidden by default) -->
+      <div id="spinner-container" class="hidden">
+        <div class="spinner"></div>
+        <p class="loading-text">Loading... Please wait!</p>
+      </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+    <!-- Flashcard Container: Initially hidden; displays flashcard once deck is initialized -->
+    <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
+      <div class="flashcard-inner">
+        <!-- Front Side of the Flashcard -->
+        <div class="front"></div>
+        <!-- Back Side of the Flashcard -->
+        <div class="back"></div>
+      </div>
+    </div>
 
-    <script>
-        // --- Global State ---
-        let currentQuestion = 0;
-        let quizData = []; // Array of { colA: "word1", colB: "match1" }
-        let allColBTargets = []; // Array of all unique Column B words for target generation
-        let userData = { name: '', startTime: 0, attempts: [], totalPoints: 0 }; // Attempts: { question: num, colA: str, correctAnswer: str, time: sec, points: num, attempts: num, status: 'correct' | 'failed' | 'skipped' }
-        let timerInterval;
-        let timerPaused = false;
-        let elapsedTime = 0;
-        let questionStartTime = 0; // Track start time for each question
-        let questionAttempts = {}; // Tracks shots fired per question index { index: count }
-        let questionFailed = false; // Flag if the current question failed due to target reaching bottom
+    <!-- Progress Indicator: Shows current flashcard progress -->
+    <div id="progress" class="hidden">
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="card-hints">
+            <div class="hint-left">
+                <kbd>←</kbd> Previous
+            </div>
+            <div class="hint-right">
+                Next <kbd>→</kbd>
+            </div>
+        </div>
+    </div>
 
-        // --- Constants & Config ---
-        const QUIZ_LIST_SHEET_ID = '1b_yzMM-qy_g9Sa-kO5mPtAL67neZdaIW_QIQcfFHaNg'; // Replace if needed
-        const SHOOTER_MOVE_SPEED = 15; // Pixels per keydown event
-        const BULLET_SPEED = 12; // Pixels per frame
-        const TARGET_DOWNWARD_SPEED = 0.5; // Pixels per frame
-        const TARGET_HORIZONTAL_SPEED_MAX = 1.0; // Max horizontal pixels per frame
-        const TARGET_SPAWN_Y_OFFSET = -50; // Start targets slightly above the screen
-        const TARGET_FAILURE_PADDING = 20; // How close target needs to get to shooter top to fail
-        let numberOfOptions = 4; // Default target count
+    <!-- Controls: Navigation, flip, return, and shuffle buttons; initially hidden -->
+    <div class="controls hidden" id="controls">
+        <div class="top-row">
+            <button onclick="prevCard()" class="prev-btn">← Previous</button>
+            <button onclick="flipCard()" class="flip-btn">Flip</button>   
+            <button onclick="nextCard()" class="next-btn">Next →</button>
+        </div>
+        <div class="bottom-row">
+            <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
+            <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
+        </div>
+        <div class="keyboard-shortcuts">
+            <kbd>Space</kbd> or <kbd>Enter</kbd> to flip • <kbd>←</kbd> <kbd>→</kbd> to navigate
+        </div>
+    </div>
+    
+  </div>
+  
+  <footer>
+    <div id="visitor-counter">
+      Welcome! You're visitor #<span id="pageviews">Loading...</span> 
+    </div>
 
-        // --- NEW CONSTANTS FOR POPUP TIMERS ---
-        const POPUP_TIMER_CORRECT_MS = 1200;    // Duration for the "Correct!" popup (milliseconds)
-        const POPUP_TIMER_INCORRECT_MS = 1200;  // Duration for the "Incorrect!" popup (milliseconds)
-
-        // --- Game State ---
-        let gameLoopId = null;
-        let shooterX = 0; // Current horizontal position (pixels from left)
-        let unlimitedBulletsEnabled = false; // default to limited
-        let activeBullets = []; // Array of { element: DOMEl, x: num, y: num, width: num, height: num } // ADD THIS LINE
-        let activeTargets = []; // Array of { element: DOMEl, x: num, y: num, vx: num, vy: num, word: str, hit: bool }
-        let keysPressed = {}; // Track pressed keys for smoother movement
-        let gameActive = false; // Is the game loop running?
-
-        let detachedQuizScreen = null;
-
-        // --- DOM Cache ---
-        const DOMElements = {
-            landingScreen: document.getElementById('landingScreen'),
-            nameScreen: document.getElementById('nameScreen'),
-            quizScreen: document.getElementById('quizScreen'),
-            resultsScreen: document.getElementById('resultsScreen'),
-            quizSelect: document.getElementById('quizSelect'),
-            quizIdInput: document.getElementById('quizId'),
-            userNameInput: document.getElementById('userName'),
-            timerDisplay: document.getElementById('timer'),
-            quizTitleDisplay: document.getElementById('quizTitleDisplay'),
-            questionNumberDisplay: document.getElementById('questionNumber'),
-            progressBar: document.getElementById('progressBar'),
-            gameArea: document.getElementById('gameArea'),
-            shooter: document.getElementById('shooter'),
-            bulletTemplate: document.getElementById('bullet'), 
-            bulletCounter: document.getElementById('bulletCounter'),
-            resultSummary: document.getElementById('resultSummary'),
-            resultsTable: document.getElementById('resultsTable'),
-            startBuiltInButton: document.querySelector('button[onclick="startSelectedQuiz()"]'),
-            appHeader: document.querySelector('.app-header'),
-            appFooter: document.querySelector('.app-footer'),
-            // START: Add mobile control elements
-            mobileControls: document.getElementById('mobile-controls'),
-            mobileLeft: document.getElementById('mobile-left'),
-            mobileRight: document.getElementById('mobile-right'),
-            mobileFire: document.getElementById('mobile-fire')
-            // END: Add mobile control elements
-        };
-
-        // --- Computed Styles Cache ---
-        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-        const textSecondary = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadQuizTitlesAndIds();
-            // Add keyboard listeners globally, but only act when gameActive
-            document.addEventListener('keydown', handleKeyDown);
-            document.addEventListener('keyup', handleKeyUp);
-
-            // START: Add Mobile Controls Setup Function
-            function setupMobileControls() {
-                const leftBtn = DOMElements.mobileLeft;
-                const rightBtn = DOMElements.mobileRight;
-                const fireBtn = DOMElements.mobileFire;
-
-                // Basic check if elements exist
-                if (!leftBtn || !rightBtn || !fireBtn) {
-                    // Hide the container if buttons aren't found, or log warning
-                    if(DOMElements.mobileControls) DOMElements.mobileControls.style.display = 'none';
-                    console.warn("Mobile control buttons not found. Controls disabled.");
-                    return;
-                }
-
-                 // --- Movement Button Listeners (Hold to Move) ---
-                const handleMoveStart = (e, direction) => {
-                    if (!gameActive) return;
-                    e.preventDefault(); // Crucial to prevent scrolling/zooming on touch hold
-
-                    // Set the correct flag in keysPressed and clear the opposite one
-                    if (direction === 'left') {
-                        keysPressed['ArrowLeft'] = true;
-                        keysPressed['ArrowRight'] = false; // Ensure only left is active
-                    } else { // direction === 'right'
-                        keysPressed['ArrowRight'] = true;
-                        keysPressed['ArrowLeft'] = false; // Ensure only right is active
-                    }
-                     // Optional: Add a small visual feedback class
-                     e.target.closest('button').classList.add('active-control');
-                };
-
-                const handleMoveEnd = (e, direction) => {
-                    // No gameActive check needed here, just clear the flag if it was set
-                    // No preventDefault usually needed on end events
-
-                    // Clear the specific flag
-                    if (direction === 'left') {
-                        keysPressed['ArrowLeft'] = false;
-                    } else { // direction === 'right'
-                        keysPressed['ArrowRight'] = false;
-                    }
-                     // Optional: Remove visual feedback class
-                     // Need to handle multiple potential targets if using closest
-                     document.querySelectorAll('.active-control').forEach(el => el.classList.remove('active-control'));
-                };
-
-                // Left Button
-                // Use passive: false for touchstart to allow preventDefault()
-                leftBtn.addEventListener('touchstart', (e) => handleMoveStart(e, 'left'), { passive: false });
-                leftBtn.addEventListener('touchend', (e) => handleMoveEnd(e, 'left'));
-                leftBtn.addEventListener('touchcancel', (e) => handleMoveEnd(e, 'left')); // Handle interruption
-                // Mouse events for desktop testing/hybrid
-                leftBtn.addEventListener('mousedown', (e) => handleMoveStart(e, 'left'));
-                leftBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'left'));
-                leftBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'left')); // Stop if mouse leaves while pressed
-
-                // Right Button
-                // Use passive: false for touchstart
-                rightBtn.addEventListener('touchstart', (e) => handleMoveStart(e, 'right'), { passive: false });
-                rightBtn.addEventListener('touchend', (e) => handleMoveEnd(e, 'right'));
-                rightBtn.addEventListener('touchcancel', (e) => handleMoveEnd(e, 'right')); // Handle interruption
-                // Mouse events
-                rightBtn.addEventListener('mousedown', (e) => handleMoveStart(e, 'right'));
-                rightBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'right'));
-                rightBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'right'));
+    <div id="other-chinese-tools">
+      <a href="https://linsnotes.com/apps/">Other Chinese Learning Tools</a>
+    </div>
+  </footer>
 
 
-                // --- Fire Button Listener (Tap to Fire) ---
-                fireBtn.addEventListener('touchstart', (e) => {
-                    if (!gameActive) return;
-                    e.preventDefault(); // Prevent screen scroll/zoom
-                    fireBullet(); // Directly call the existing fire function
-                    // Optional feedback for fire button too
-                    e.target.closest('button').classList.add('active-control');
-                    setTimeout(() => e.target.closest('button').classList.remove('active-control'), 100); // Short feedback
-                }, { passive: false });
+  <script>
+    // Data source ID constant - replace with your actual data source ID
+    const DATA_SOURCE_ID = '17v5FSgIQbGiMbseAYWbTAncfW-XNnk7iknssc1hGaTs';
 
-                // Optional: Add mouse events for desktop testing/hybrid devices
-                leftBtn.addEventListener('mousedown', (e) => handleMoveStart(e, 'left'));
-                leftBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'left'));
-                leftBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'left')); // Stop if mouse leaves while pressed
+    // Global variables: current card index, the deck array, and input mode
+    let currentIndex = 0;
+    let deck = [];
+    let fullWordData = [];
+    let inputMode = 'custom';
 
-                rightBtn.addEventListener('mousedown', (e) => handleMoveStart(e, 'right'));
-                rightBtn.addEventListener('mouseup', (e) => handleMoveEnd(e, 'right'));
-                rightBtn.addEventListener('mouseleave', (e) => handleMoveEnd(e, 'right'));
-
-                fireBtn.addEventListener('mousedown', (e) => {
-                    if (!gameActive) return;
-                    fireBullet();
-                    // Optional feedback
-                    e.target.closest('button').classList.add('active-control');
-                });
-                fireBtn.addEventListener('mouseup', (e) => e.target.closest('button').classList.remove('active-control'));
-                fireBtn.addEventListener('mouseleave', (e) => e.target.closest('button').classList.remove('active-control'));
-
-            }
-            // END: Add Mobile Controls Setup Function
-
-            // Call the setup function after caching elements
-            setupMobileControls();
-
-
-
- 
-            // pageviews counter
-            const pv = document.getElementById('pageviews');
-
-            if (pv !== null) {
-                const uri = location.pathname.replace(/\/$/, '');
-                const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
-
-                fetch(url)
-                    .then((response) => response.json())
-                    .then((data) => {
-                        const count = data.count.replace(/\s/g, '');
-                        pv.innerText = new Intl.NumberFormat().format(count);
-                    })
-                    .catch((error) => {
-                        pv.innerText = '1';
-                    });
-            }
+    function initCustomPinyin() {
+      if (window.pinyinPro && window.pinyinPro.addDict) {
+        window.pinyinPro.addDict({
+          '嗯': 'ḿ',
+          '嗄': 'á',
+          '咯': 'lo',
+          '谁': 'shéi',
+          '〇': 'líng'
         });
+      }
+    }
 
-        // --- Screen Management ---
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => {
-                s.classList.remove('active');
-                s.style.display = ''; // Clear any inline display styling
-            });
-            const targetScreen = DOMElements[screenId];
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-                targetScreen.style.display = (screenId === 'quizScreen') ? 'flex' : 'block';
-            } else {
-                console.error(`Screen with ID ${screenId} not found.`);
-                DOMElements.landingScreen.classList.add('active'); // Fallback
-            }
-            const showHeaderFooter = (screenId !== 'quizScreen');
-            DOMElements.appHeader.style.display = showHeaderFooter ? 'block' : 'none';
-            DOMElements.appFooter.style.display = showHeaderFooter ? 'block' : 'none';
-            gameActive = (screenId === 'quizScreen'); // Control game loop activity
+    function setupInputTabs() {
+      const tabs = document.querySelectorAll('.input-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function () {
+          document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.input-content').forEach(content => content.classList.remove('active'));
+
+          this.classList.add('active');
+          inputMode = this.getAttribute('data-type');
+          const contentId = `${inputMode}-input`;
+          document.getElementById(contentId).classList.add('active');
+        });
+      });
+    }
+
+    function extractSheetId(url) {
+      const regex = /https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/;
+      const match = url.match(regex);
+      return match && match[1] ? match[1] : null;
+    }
+
+    async function fetchVocabularyData() {
+      try {
+        document.getElementById('spinner-container').classList.remove('hidden');
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${DATA_SOURCE_ID}/export?format=xlsx`;
+        const response = await fetch(exportUrl);
+        if (!response.ok) throw new Error(`Failed to fetch vocabulary data: ${response.status} ${response.statusText}`);
+        const data = await response.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        document.getElementById('spinner-container').classList.add('hidden');
+        return jsonData;
+      } catch (error) {
+        document.getElementById('spinner-container').classList.add('hidden');
+        console.error('Error fetching vocabulary data:', error);
+        alert(`Failed to fetch word data: ${error.message}`);
+        return [];
+      }
+    }
+
+    async function fetchGoogleSheetData(sheetId) {
+      try {
+        document.getElementById('spinner-container').classList.remove('hidden');
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+        const response = await fetch(exportUrl);
+        if (!response.ok) throw new Error(`Failed to fetch Google Sheet data: ${response.status} ${response.statusText}`);
+        const data = await response.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const processedData = rawData
+          .filter(row => row.length >= 2 && row[0] && row[1])
+          .map(row => ({
+            chinese: String(row[0]),
+            english: String(row[1]),
+            pinyin: ""
+          }));
+        document.getElementById('spinner-container').classList.add('hidden');
+        return processedData;
+      } catch (error) {
+        document.getElementById('spinner-container').classList.add('hidden');
+        console.error('Error fetching Google Sheet data:', error);
+        alert(`Failed to fetch data from Google Sheet: ${error.message}`);
+        return [];
+      }
+    }
+
+    function filterWordsBySelections(allWords, banding, level, unit, passage) {
+      return allWords.filter(word =>
+        word.banding === banding &&
+        word.level === level &&
+        word.unit === unit &&
+        word.passage === passage
+      );
+    }
+
+    async function initDeck() {
+      if (inputMode === 'custom') {
+        const input = document.getElementById('input-words').value;
+        const manualWords = input.split(/[,，]/).map(word => word.trim()).filter(word => word);
+        if (manualWords.length === 0) {
+          alert("Please enter valid Chinese vocabulary or select an existing vocabulary list.");
+          return;
         }
-
-        function goHome() {
-            stopGameLoop();
-            resetQuizState();
-            DOMElements.quizIdInput.value = '';
-            DOMElements.quizSelect.selectedIndex = 0;
-            DOMElements.startBuiltInButton.disabled = true;
-            DOMElements.appHeader.style.display = 'block';
-            DOMElements.appFooter.style.display = 'block';
-            showScreen('landingScreen');
+        fullWordData = manualWords.map(word => ({ chinese: word, english: "", pinyin: "" }));
+        deck = manualWords;
+        showFlashcards();
+      } else if (inputMode === 'built-in') {
+        if (!isDropdownSelectionComplete()) {
+          alert("Please select all dropdown options to retrieve the vocabulary.");
+          return;
         }
-
-        // --- Data Loading ---
-        async function loadSheetData(sheetId) {
-                try {
-                        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
-                        const response = await fetch(url);
-                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                        const csv = await response.text();
-                        const workbook = XLSX.read(csv, { type: 'string' });
-                        const sheetName = workbook.SheetNames[0];
-                        if (!sheetName) throw new Error('No sheet found.');
-
-                        // header: 1 reads rows as arrays, 0-indexed
-                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
-
-                        // Existing title read
-                        window.quizTitle = rows?.[0]?.[0]?.trim() || `Quiz (${sheetId.substring(0, 6)}...)`;
-
-                        // ---> Read number of options from C1 <---
-                        const optionsCellValue = rows?.[0]?.[2]; // Cell C1 is at index 2 in the first row (index 0)
-                        let parsedOptions = parseInt(optionsCellValue, 10); // Attempt to parse as integer
-
-                        if (isNaN(parsedOptions) || parsedOptions < 1) {
-                                // If C1 is empty, not a number, or less than 1, use the default
-                                numberOfOptions = 4;
-                                console.log("Cell C1 is empty or invalid. Defaulting to 4 target options.");
-                        } else {
-                                // Otherwise, use the valid number from C1
-                                numberOfOptions = parsedOptions;
-                                console.log(`Number of target options read from C1: ${numberOfOptions}`);
-                        }
-                        // Ensure numberOfOptions is at least 1 (to show the correct answer)
-                        if (numberOfOptions < 1) {
-                            console.warn("numberOfOptions was less than 1, setting to 1.");
-                            numberOfOptions = 1;
-                        }
-                        // ---> read from C1 <---
-
-                        // ---> Read D1 for Unlimited Bullets <---
-                        const unlimitedCellValue = rows?.[0]?.[3]; // Cell D1 (0-indexed column 3)
-                        // Check if the cell has *any* text content after trimming whitespace
-                        if (unlimitedCellValue !== undefined && unlimitedCellValue !== null && String(unlimitedCellValue).trim() !== '') {
-                                unlimitedBulletsEnabled = true;
-                                console.log("Cell D1 is not empty. Unlimited bullets ENABLED.");
-                        } else {
-                                unlimitedBulletsEnabled = false;
-                                console.log("Cell D1 is empty. Limited bullets ENABLED.");
-                        }
-                        // ---> END READ D1 <---
-
-                    
-                        // Existing data processing
-                        const data = rows.slice(1) // Start from the second row for actual quiz data
-                                .map(row => ({
-                                        colA: row[0] ? String(row[0]).trim() : null,
-                                        colB: row[1] ? String(row[1]).trim() : null
-                                        // Column C (index 2) is ignored here for quiz data itself
-                                }))
-                                .filter(item => item.colA && item.colB);
-
-                        if (data.length === 0) {
-                                console.warn('Sheet has no valid data rows.'); return null;
-                        }
-                        // Store all unique Column B values for targets (remains the same)
-                        allColBTargets = [...new Set(data.map(item => item.colB))];
-                        return data;
-                } catch (error) {
-                        console.error('Error loading sheet data:', error);
-                        Swal.fire('Error Loading Game', `Could not load game data [${sheetId}]. Check ID/sharing. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
-                        return null;
-                }
+        try {
+          const allWords = await fetchVocabularyData();
+          if (allWords.length === 0) {
+            alert("No data was retrieved from the database. Please try again later.");
+            return;
+          }
+          const banding = document.getElementById('banding').value;
+          const level = document.getElementById('level').value;
+          const unit = document.getElementById('unit').value;
+          const passage = document.getElementById('passage').value;
+          const filteredWords = filterWordsBySelections(allWords, banding, level, unit, passage);
+          if (filteredWords.length === 0) {
+            alert("No vocabulary found matching your selection criteria. Please try different selections.");
+            return;
+          }
+          fullWordData = filteredWords;
+          deck = filteredWords.map(word => word.chinese);
+          showFlashcards();
+        } catch (error) {
+          alert("An error occurred while retrieving the vocabulary: " + error.message);
         }
-
-        async function loadQuizTitlesAndIds() {
-             if (!QUIZ_LIST_SHEET_ID || QUIZ_LIST_SHEET_ID === 'YOUR_QUIZ_LIST_SHEET_ID_HERE') { // Check if ID is set
-                console.warn("Quiz/Game List Sheet ID not set. Disabling built-in quiz/game option.");
-                DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Built-in Games Unavailable</option>';
-                DOMElements.quizSelect.disabled = true;
-                DOMElements.startBuiltInButton.disabled = true;
-                return;
-             }
-            try {
-                const url = `https://docs.google.com/spreadsheets/d/${QUIZ_LIST_SHEET_ID}/export?format=csv&gid=0`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const csv = await response.text();
-                const workbook = XLSX.read(csv, { type: 'string' });
-                const sheetName = workbook.SheetNames[0];
-                if (!sheetName) throw new Error('No sheet found for quiz list.');
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
-
-                quizTitlesAndIds = rows.slice(1)
-                    .map(row => ({ title: row[0]?.trim(), id: row[1]?.trim() }))
-                    .filter(quiz => quiz.title && quiz.id);
-                populateQuizSelect();
-            } catch (error) {
-                console.error('Error loading game titles:', error);
-                 Swal.fire('Error Loading Game List', `Could not load built-in Games. Details: ${error.message}`, 'error', { confirmButtonColor: primaryColor });
-                DOMElements.quizSelect.innerHTML = '<option value="" disabled selected>Error Loading Games</option>';
-                DOMElements.quizSelect.disabled = true;
-                DOMElements.startBuiltInButton.disabled = true;
-            }
+      } else if (inputMode === 'google-sheet') {
+        const sheetUrl = document.getElementById('sheet-url').value.trim();
+        if (!sheetUrl) {
+          alert("Please enter a Google Sheet URL.");
+          return;
         }
-
-        function populateQuizSelect() {
-            const select = DOMElements.quizSelect;
-            select.innerHTML = '';
-            if (quizTitlesAndIds.length === 0) {
-                select.innerHTML = '<option value="" disabled selected>No Built-in Games Found</option>';
-                select.disabled = true;
-                DOMElements.startBuiltInButton.disabled = true; return;
-            }
-            const defaultOption = document.createElement('option');
-            defaultOption.value = ""; defaultOption.textContent = "-- Select a Built-in Game --";
-            defaultOption.disabled = true; defaultOption.selected = true; select.appendChild(defaultOption);
-            quizTitlesAndIds.forEach(quiz => {
-                const option = document.createElement('option'); option.value = quiz.id; option.textContent = quiz.title; select.appendChild(option);
-            });
-            select.disabled = false; DOMElements.startBuiltInButton.disabled = true;
-            select.addEventListener('change', function() {
-                currentSheetId = this.value; DOMElements.quizIdInput.value = '';
-                DOMElements.startBuiltInButton.disabled = !this.value;
-            });
+        const sheetId = extractSheetId(sheetUrl);
+        if (!sheetId) {
+          alert("Invalid Google Sheet URL. Please check the URL and try again.");
+          return;
         }
-
-        // --- Quiz Flow Control ---
-        function startSelectedQuiz() {
-            // Check if a built-in quiz is selected
-            if (!currentSheetId) {
-                // Use Swal.fire for the popup, matching the puzzle app style
-                Swal.fire({
-                    title: 'No Game Selected', // Changed title slightly for Shooter context
-                    text: 'Please select a game from the dropdown list.', // Matched puzzle app text
-                    icon: 'warning', // Matched puzzle app icon
-                    confirmButtonColor: primaryColor // Use the cached primary color variable
-                });
-                return; // Stop the function here
-            }
-            // If a sheet ID is selected, proceed
-            startQuizFlow(currentSheetId);
+        try {
+          const sheetData = await fetchGoogleSheetData(sheetId);
+          if (sheetData.length === 0) {
+            alert("No data found in the Google Sheet, or the sheet may be empty.");
+            return;
+          }
+          fullWordData = sheetData;
+          deck = sheetData.map(word => word.chinese);
+          initCustomPinyin();
+          showFlashcards();
+        } catch (error) {
+          alert("An error occurred while processing the Google Sheet: " + error.message);
         }
+      }
+    }
 
-        async function startCustomQuiz() {
-            const sheetId = DOMElements.quizIdInput.value.trim();
-            if (!sheetId) { Swal.fire('Missing Input', 'Please enter a Custom Quiz Google Sheet ID.', 'warning', { confirmButtonColor: primaryColor }); return; }
-            currentSheetId = sheetId; startQuizFlow(sheetId);
-        }
-        async function startQuizFlow(sheetId) {
-            // Re-attach quizScreen if it was detached
-            if (detachedQuizScreen) {
-                document.querySelector('.app-container').appendChild(detachedQuizScreen);
-                // Update the DOM cache (if needed)
-                DOMElements.quizScreen = document.getElementById('quizScreen');
-                detachedQuizScreen = null;
-            }
-            Swal.fire({ title: 'Loading Game', text: 'Please wait...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading() });
-            const data = await loadSheetData(sheetId);
-            if (!data || data.length === 0) {
-                Swal.close(); if (data !== null) { Swal.fire('Empty or Invalid Quiz', 'No valid questions found.', 'warning', { confirmButtonColor: primaryColor }); } return;
-            }
-            quizData = data;
-            resetQuizState(false); // Reset state but keep name/sheetId if already entered
-            Swal.close();
-            showScreen('nameScreen');
-        }
+    function showFlashcards() {
+      document.getElementById('inputSection').classList.add('hidden');
+      document.getElementById('controls').classList.remove('hidden');
+      document.getElementById('flashcard').classList.remove('hidden');
+      document.getElementById('progress').classList.remove('hidden');
+      currentIndex = 0;
+      updateCard();
+    }
 
-        // --- UPDATED resetQuizState Function ---
-        function resetQuizState(fullReset = true) {
-                stopGameLoop(); // Ensure loop is stopped
-                clearInterval(timerInterval);
-                currentQuestion = 0;
-                quizData = fullReset ? [] : quizData;
-                allColBTargets = fullReset ? [] : allColBTargets;
-                userData.startTime = 0;
-                userData.attempts = [];
-                userData.totalPoints = 0;
-                timerInterval = null;
-                timerPaused = false;
-                elapsedTime = 0;
-                questionStartTime = 0;
-                questionAttempts = {};
-                questionFailed = false;
-                currentCorrectAnswer = '';
-                activeTargets = []; // Clear active targets array
-                // ---> ADD THIS: Clear active bullets (DOM and Array) <---
-                activeBullets.forEach(b => {
-                        if (b.element && b.element.parentNode) {
-                                b.element.remove();
-                        }
-                });
-                activeBullets = [];
-                // ---> END ADD <---
+    function isDropdownSelectionComplete() {
+      return document.getElementById('banding').value !== "" &&
+        document.getElementById('level').value !== "" &&
+        document.getElementById('unit').value !== "" &&
+        document.getElementById('passage').value !== "";
+    }
 
-                keysPressed = {}; // Clear pressed keys
+    function returnToEdit() {
+      document.getElementById('inputSection').classList.remove('hidden');
+      document.getElementById('controls').classList.add('hidden');
+      document.getElementById('flashcard').classList.add('hidden');
+      document.getElementById('progress').classList.add('hidden');
+    }
 
-                if (fullReset) {
-                        userData.name = ''; currentSheetId = ''; window.quizTitle = '';
-                }
+    function calculateEnglishFontSize(text) {
+      const baseSize = window.innerWidth <= 576 ? 1.5 : 3;
+      if (text.length > 80) return '1rem';
+      if (text.length > 50) return (baseSize * 0.5) + 'rem';
+      if (text.length > 30) return (baseSize * 0.7) + 'rem';
+      return baseSize + 'rem';
+    }
 
-                // Clear UI elements
-                DOMElements.resultSummary.innerHTML = '';
-                DOMElements.resultsTable.innerHTML = '';
-
-                // Clear dynamically added children from gameArea (targets, bullets)
-                // Keep shooter and bullet template
-                Array.from(DOMElements.gameArea.children).forEach(child => {
-                        // Check against the cached elements
-                        if (child !== DOMElements.shooter && child !== DOMElements.bulletTemplate) {
-                                child.remove();
-                        }
-                });
-
-                // Reset other UI specific to the quiz screen
-                DOMElements.shooter.textContent = '';
-                DOMElements.progressBar.style.width = '0%';
-                DOMElements.timerDisplay.textContent = '0';
-                DOMElements.questionNumberDisplay.textContent = '';
-                DOMElements.quizTitleDisplay.textContent = '';
-
-                 // ---> Reset Bullet Counter UI <---
-                 const bulletCounterEl = DOMElements.bulletCounter; // Use cached element
-                 if (bulletCounterEl) {
-                     bulletCounterEl.style.display = 'none'; // Hide it
-                     bulletCounterEl.innerHTML = ''; // Clear content
-                 }
-                 // ---> END Reset Bullet Counter UI <---
-            
-                // Ensure the bullet template remains hidden (CSS should primarily handle this)
-                if (DOMElements.bulletTemplate) {
-                        DOMElements.bulletTemplate.style.display = 'none';
-                }
-        }
-
+    function updateCard() {
+      const front = document.querySelector('.front');
+      const back = document.querySelector('.back');
+      const progress = document.getElementById('progress');
+      const progressBar = document.getElementById('progressBar');
+      
+      if (deck[currentIndex]) {
+        const currentWord = deck[currentIndex];
+        const wordData = fullWordData[currentIndex];
+        front.textContent = currentWord;
+        let pinyinText = wordData.pinyin || getPinyin(currentWord);
         
-        function startQuiz() {
-            userData.name = DOMElements.userNameInput.value.trim();
-            if (!userData.name) { Swal.fire('Missing Input', 'Please enter your name.', 'warning', { confirmButtonColor: primaryColor }); return; }
-            quizData.forEach((_, idx) => { questionAttempts[idx] = 0; });
-            showScreen('quizScreen');
-            DOMElements.quizTitleDisplay.textContent = window.quizTitle || 'Language Shooter';
-            positionShooter(); // Set initial shooter position
-            loadQuestion(); // Will also start the game loop
-            startTimer(); // Start the overall quiz timer
+        if (inputMode === 'built-in') {
+          let englishText = wordData.english || currentWord;
+          const englishFontSize = calculateEnglishFontSize(englishText);
+          back.innerHTML = `<div>
+                              <div class="pinyin">${pinyinText}</div>
+                              <div class="english" style="font-size: ${englishFontSize};">${englishText}</div>
+                          </div>`;
+        } else if (inputMode === 'custom') {
+          back.innerHTML = `<div><div class="pinyin">${pinyinText}</div></div>`;
+        } else if (inputMode === 'google-sheet') {
+          let definition = wordData.english || '';
+          const definitionFontSize = calculateEnglishFontSize(definition);
+          const currentWordFontSize = definition.length > 80 ? '1.2rem' :
+            definition.length > 50 ? '2rem' :
+            definition.length > 30 ? '2.5rem' : 'var(--translation-font-size-desktop)';
+          back.innerHTML = `<div>
+                              <div class="current-word" style="font-size: ${currentWordFontSize};">${currentWord}</div>
+                              <div class="english" style="font-size: ${definitionFontSize};">${definition}</div>
+                          </div>`;
         }
-
-        // --- Game Logic ---
-        function positionShooter() {
-            const gameAreaWidth = DOMElements.gameArea.clientWidth;
-            const shooterWidth = DOMElements.shooter.offsetWidth;
-            shooterX = (gameAreaWidth - shooterWidth) / 2; // Center initial position
-            DOMElements.shooter.style.left = `${shooterX}px`;
-        }
-
-        // --- Updated loadQuestion function ---
-        function loadQuestion() {
-             // Stop previous loop if any - necessary to reset target/bullet state for the new question
-             if (gameLoopId) {
-                 cancelAnimationFrame(gameLoopId);
-                 gameLoopId = null; // Explicitly clear the ID
-             }
-
-             gameActive = true; // Ensure game is active for this screen
-             questionFailed = false; // Reset failure flag for the new question
-
-             // Check if quiz is finished
-             if (currentQuestion >= quizData.length) {
-                 showResults(); // Assumes showResults exists
-                 return;
-             }
-
-            // --- Clear old game elements FIRST ---
-            clearGameElements(); // This will remove any remaining targets/bullet from the previous question
-
-            // Get data for the current question
-            const questionData = quizData[currentQuestion];
-            currentCorrectAnswer = questionData.colB;
-
-            // Update UI elements
-            DOMElements.shooter.textContent = questionData.colA; // Assumes DOMElements cache exists
-
-            // Reposition shooter after text content potentially changes its width
-            // Use requestAnimationFrame to ensure accurate measurement after render
-             requestAnimationFrame(() => {
-                 positionShooter(); // Assumes positionShooter exists
-             });
-
-            // Update progress bar and question counter
-            const progress = ((currentQuestion + 1) / quizData.length) * 100;
-            DOMElements.progressBar.style.width = `${progress}%`; // Assumes DOMElements cache exists
-            DOMElements.questionNumberDisplay.textContent = `Question ${currentQuestion + 1} of ${quizData.length}`; // Assumes DOMElements cache exists
-            // ---> Update Bullet Counter UI <---
-            const bulletCounterEl = DOMElements.bulletCounter; // Use cached element
-            if (bulletCounterEl) { // Check if element exists in cache
-                 bulletCounterEl.style.color = 'var(--text-secondary)'; // Reset color
-                 bulletCounterEl.style.display = 'flex'; // Make sure it's visible
-
-                 if (unlimitedBulletsEnabled) {
-                      bulletCounterEl.innerHTML = `<i class="fas fa-infinity"></i> Unlimited`;
-                 } else {
-                      const shotsFired = questionAttempts[currentQuestion] || 0; // Get attempts for *this* question
-                      const remaining = Math.max(0, numberOfOptions - shotsFired); // Ensure not negative
-                      bulletCounterEl.innerHTML = `<i class="fas fa-crosshairs"></i> Bullets: ${remaining}/${numberOfOptions}`;
-                      if (remaining <= 0) {
-                           bulletCounterEl.style.color = 'var(--danger)'; // Optional: Indicate zero remaining
-                      }
-                 }
-            } else {
-                 console.warn("Bullet counter element not found in DOM cache.");
-            }
-            // ---> END Update Bullet Counter UI <---
-
-            // Prepare and display NEW targets for the current question
-            spawnTargets(); // Assumes spawnTargets exists
-
-            // Reset timer for the question & ensure the overall timer is running
-            questionStartTime = Date.now();
-            resumeTimer(); // Assumes resumeTimer exists (ensures timer is not paused)
-
-            // Start the game loop for this new question
-            startGameLoop(); // Assumes startGameLoop exists
-        }
-
-        function clearGameElements() {
-                // Remove target DOM elements (existing code)
-                activeTargets.forEach(t => {
-                        if (t.element && t.element.parentNode) { // Check if element exists and is in DOM
-                                t.element.remove();
-                        }
-                });
-                activeTargets = [];
-
-                // ---> ADD THIS: Remove active bullet DOM elements <---
-                activeBullets.forEach(b => {
-                        if (b.element && b.element.parentNode) { // Check if element exists and is in DOM
-                                b.element.remove();
-                        }
-                });
-                activeBullets = []; // Clear the tracking array
-                // ---> END ADD <---
-
-                // Hide bullet TEMPLATE (redundant if CSS handles it, but safe)
-                // if (DOMElements.bulletTemplate) {
-                //     DOMElements.bulletTemplate.style.display = 'none';
-                // }
-        }
-
-
-
-        function spawnTargets() {
-                const gameArea = DOMElements.gameArea;
-                const areaWidth = gameArea.clientWidth;
-                const areaHeight = gameArea.clientHeight; // Use for Y spawning
-
-                // Clear any remnants from previous question (though clearGameElements should handle this)
-                activeTargets.forEach(t => t.element.remove());
-                activeTargets = [];
-
-                // ---> START TARGET SELECTION LOGIC <---
-
-                const correctAnswer = currentCorrectAnswer; // Get the correct answer for the current question
-
-                // Filter out the correct answer to get only potential incorrect options
-                let incorrectOptions = allColBTargets.filter(target => target !== correctAnswer);
-
-                // Shuffle the available incorrect options
-                incorrectOptions = shuffle(incorrectOptions);
-
-                // Determine how many incorrect options we need (total options - 1 for the correct one)
-                // Ensure it's not negative if numberOfOptions is 1
-                const numberOfIncorrectNeeded = Math.max(0, numberOfOptions - 1);
-
-                // Select the required number of incorrect options
-                // .slice will handle cases where fewer incorrect options are available than needed
-                const selectedIncorrect = incorrectOptions.slice(0, numberOfIncorrectNeeded);
-
-                // Combine the correct answer with the selected incorrect ones
-                // Handle the case where the correct answer might be the ONLY option available in the sheet
-                let finalTargetsToShow = [];
-                if (allColBTargets.includes(correctAnswer)) {
-                        finalTargetsToShow = [correctAnswer, ...selectedIncorrect];
-                } else {
-                        // Fallback: if the correct answer isn't even in the list (shouldn't happen with current logic, but safe)
-                        finalTargetsToShow = selectedIncorrect.slice(0, numberOfOptions); // Just show incorrect ones up to the limit
-                        console.warn("Correct answer was not found in allColBTargets list.");
-                }
-
-                // Ensure the total number of targets doesn't exceed numberOfOptions
-                // This mainly handles edge cases like numberOfOptions=1 or very few unique Col B values.
-                finalTargetsToShow = finalTargetsToShow.slice(0, numberOfOptions);
-
-                // Shuffle the final list so the correct answer's position is random
-                finalTargetsToShow = shuffle(finalTargetsToShow);
-
-                console.log(`Spawning ${finalTargetsToShow.length} targets (requested ${numberOfOptions}):`, finalTargetsToShow); // Optional: for debugging
-
-                // Now, create target elements ONLY for the words in finalTargetsToShow
-                finalTargetsToShow.forEach(targetWord => {
-                        const targetElement = document.createElement('div');
-                        targetElement.className = 'target';
-                        targetElement.textContent = targetWord;
-                        targetElement.dataset.word = targetWord; // Store word
-
-                        gameArea.appendChild(targetElement); // Add to DOM first to measure width
-
-                        const targetWidth = targetElement.offsetWidth;
-                        const targetHeight = targetElement.offsetHeight; // Store height
-
-                        // Initial Position (Random X, slightly above screen)
-                        // Ensure targets don't overlap too much horizontally initially if many targets
-                        let x;
-                        let attempts = 0;
-                        const maxAttempts = 10; // Prevent infinite loop if space is tight
-                        let placed = false;
-
-                        do {
-                            x = Math.random() * (areaWidth - targetWidth);
-                            placed = true;
-                            // Basic check against already placed targets in this spawn cycle
-                            // Note: This isn't perfect collision avoidance but helps initial spread
-                            activeTargets.forEach(existingTarget => {
-                                if (Math.abs(x - existingTarget.x) < (targetWidth + existingTarget.width) / 2) { // Approximate horizontal overlap check
-                                    placed = false;
-                                }
-                            });
-                            attempts++;
-                        } while (!placed && attempts < maxAttempts);
-
-                        // If we failed to find a non-overlapping spot after attempts, just use the last random X
-                        if (!placed) {
-                            x = Math.random() * (areaWidth - targetWidth);
-                        }
-
-                        // Spread out initial Y based on height and randomness
-                        const y = TARGET_SPAWN_Y_OFFSET - (Math.random() * areaHeight * 0.3) - (targetHeight * activeTargets.length * 0.1);
-
-                        // Initial Velocity (Random horizontal, constant downward)
-                        const vx = (Math.random() * 2 - 1) * TARGET_HORIZONTAL_SPEED_MAX; // -Max to +Max
-                        const vy = TARGET_DOWNWARD_SPEED;
-
-                        targetElement.style.left = `${x}px`;
-                        targetElement.style.top = `${y}px`;
-
-                        activeTargets.push({
-                                element: targetElement,
-                                x: x, y: y,
-                                vx: vx, vy: vy,
-                                word: targetWord,
-                                width: targetWidth, // Store dimensions for collision
-                                height: targetHeight,
-                                hit: false // Flag to prevent multiple hits/checks
-                        });
-                });
-
-                // ---> END TARGET SELECTION LOGIC <---
-        }
-
-        // --- Input Handling ---
-        function handleKeyDown(event) {
-            if (!gameActive) return; // Only handle keys during the quiz screen
-            keysPressed[event.code] = true;
-
-            // Handle firing immediately on Space press down
-            if (event.code === 'Space') {
-                fireBullet();
-                event.preventDefault(); // Prevent scrolling page down
-            }
-        }
-        function handleKeyUp(event) {
-            if (!gameActive) return;
-            keysPressed[event.code] = false;
-        }
-
-        function updateShooterPosition() {
-            const gameAreaWidth = DOMElements.gameArea.clientWidth;
-            const shooterWidth = DOMElements.shooter.offsetWidth;
-            const moveAmount = SHOOTER_MOVE_SPEED; // Adjust speed here
-
-            if (keysPressed['ArrowLeft'] || keysPressed['KeyA']) {
-                shooterX -= moveAmount;
-            }
-            if (keysPressed['ArrowRight'] || keysPressed['KeyD']) {
-                shooterX += moveAmount;
-            }
-
-            // Adjust clamping to account for transform (shooterX is the center)
-            shooterX = Math.max(shooterWidth / 2, Math.min(shooterX, gameAreaWidth - shooterWidth / 2));
-
-            DOMElements.shooter.style.left = `${shooterX}px`;
-        }
-
-        function fireBullet() {
-            // REMOVED: if (bulletState.active) return; // No longer limiting to one bullet
-            // ---> ADD BULLET LIMIT CHECK & POPUP TRIGGER <---
-            if (!unlimitedBulletsEnabled) {
-                 const shotsFired = questionAttempts[currentQuestion] || 0;
-                 if (shotsFired >= numberOfOptions) {
-                      console.log("Attempted to fire with no bullets left.");
-                      showOutOfBulletsPopup(); // <--- CALL THE NEW POPUP FUNCTION
-                      return; // Stop execution here, don't fire
-                 }
-            }
-            // ---> END BULLET LIMIT CHECK <---
-
-            
-            questionAttempts[currentQuestion]++; // Count every shot as an attempt
-
-            // ---> Update Bullet Counter UI AFTER successful shot <---
-            if (!unlimitedBulletsEnabled) {
-                 const bulletCounterEl = DOMElements.bulletCounter;
-                 if (bulletCounterEl) {
-                      const remaining = Math.max(0, numberOfOptions - questionAttempts[currentQuestion]); // Ensure not negative
-                      bulletCounterEl.innerHTML = `<i class="fas fa-crosshairs"></i> Bullets: ${remaining}/${numberOfOptions}`;
-                      if (remaining <= 0) {
-                           bulletCounterEl.style.color = 'var(--danger)'; // Indicate zero
-                      }
-                 }
-            }
-            // ---> END UI UPDATE <---
-
-
-            
-            const shooterRect = DOMElements.shooter.getBoundingClientRect();
-            const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
-
-            // Clone the template bullet
-            const newBulletElement = DOMElements.bulletTemplate.cloneNode(true);
-            newBulletElement.style.display = 'block'; // Make it visible
-            newBulletElement.removeAttribute('id'); // Avoid duplicate IDs
-
-            // Calculate initial position - get dimensions robustly
-            // Use computedStyle as fallback if offsetWidth/Height isn't available immediately
-            const computedStyle = getComputedStyle(DOMElements.bulletTemplate);
-            const bulletWidth = newBulletElement.offsetWidth || parseInt(computedStyle.width) || 8; // Default width 8px
-            const bulletHeight = newBulletElement.offsetHeight || parseInt(computedStyle.height) || 18; // Default height 18px
-
-            const startX = shooterRect.left - gameAreaRect.left + (shooterRect.width / 2) - (bulletWidth / 2);
-            const startY = shooterRect.top - gameAreaRect.top - bulletHeight; // Start just above shooter
-
-            // Position the new bullet element
-            newBulletElement.style.left = `${startX}px`;
-            newBulletElement.style.top = `${startY}px`;
-
-            // Add the element to the game area
-            DOMElements.gameArea.appendChild(newBulletElement);
-
-            // Add the new bullet's state to our tracking array
-            activeBullets.push({
-                element: newBulletElement,
-                x: startX,
-                y: startY,
-                width: bulletWidth,  // Store dimensions for collision detection
-                height: bulletHeight
-            });
-        }
-
-        // --- NEW FUNCTION for Out of Bullets Popup ---
-        function showOutOfBulletsPopup() {
-            // Prevent triggering if already failed or paused in a way we shouldn't interrupt
-            if (questionFailed || !gameActive) return;
-
-            questionFailed = true; // Mark question as failed state to prevent other actions
-            pauseTimer();        // Pause the timer
-            stopGameLoop();      // Stop target/bullet movement
-
-            // Record failure immediately before showing popup
-            // Important: Record with the number of attempts used (which is numberOfOptions)
-            userData.attempts.push({
-                question: currentQuestion + 1,
-                colA: quizData[currentQuestion].colA,
-                correctAnswer: currentCorrectAnswer,
-                time: Math.round((Date.now() - questionStartTime) / 1000), // Time until failure trigger
-                points: 0,
-                attempts: numberOfOptions, // They used all allowed attempts
-                status: 'failed'
-            });
-
-            Swal.fire({
-                title: 'Out of Bullets!',
-                text: `You used all ${numberOfOptions} bullet${numberOfOptions === 1 ? '' : 's'} without hitting the correct target.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Next Question (0 points)', // Confirm moves on
-                cancelButtonText: 'Try Again',               // Cancel retries
-                confirmButtonColor: primaryColor,
-                cancelButtonColor: textSecondary,
-                allowOutsideClick: false, // Prevent closing by clicking outside
-                allowEscapeKey: false,    // Prevent closing with Esc key
-            }).then((result) => {
-                // loadQuestion will reset questionFailed flag and restart necessary timers/loops
-                if (result.isConfirmed) {
-                    // User chose "Next Question"
-                    console.log("User chose Next Question after running out of bullets.");
-                    currentQuestion++; // Move to the next question index
-                    loadQuestion();    // Load the next question
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // User chose "Try Again"
-                    console.log("User chose Try Again after running out of bullets.");
-
-                     // Reset attempts counter *for this specific question* so they get full bullets again
-                     questionAttempts[currentQuestion] = 0;
-
-                     // Remove the 'failed' entry we just added for this attempt, as they are retrying
-                     const lastFailedIndex = userData.attempts.map(a => a.question === (currentQuestion + 1) && a.status === 'failed').lastIndexOf(true);
-                     if(lastFailedIndex > -1) {
-                        userData.attempts.splice(lastFailedIndex, 1);
-                        console.log("Removed preliminary failed attempt record for retry.");
-                     } else {
-                        console.warn("Could not find the preliminary failed attempt record to remove for retry.");
-                     }
-
-                    loadQuestion(); // Reload the *current* question
-                }
-            });
-        }
-
-        // --- Game Loop ---
-        function startGameLoop() {
-            if (gameLoopId) cancelAnimationFrame(gameLoopId); // Clear any existing loop
-            gameLoopId = requestAnimationFrame(gameLoop);
-        }
-        function stopGameLoop() {
-            if (gameLoopId) cancelAnimationFrame(gameLoopId);
-            gameLoopId = null;
-            gameActive = false; // Explicitly stop game activity
-            keysPressed = {}; // Clear keys when stopping loop
-        }
-
         
-        function gameLoop() {
-            // --- Core Loop Condition Check ---
-            // Stop processing if game isn't active, timer is paused, or the question has already failed
-            if (!gameActive || timerPaused || questionFailed) {
-                // Still request the next frame to keep checking the state, but do nothing else
-                gameLoopId = requestAnimationFrame(gameLoop);
-                return;
-            }
+        // Update progress text and progress bar
+        progress.textContent = `Card ${currentIndex + 1} of ${deck.length}`;
+        const progressPercentage = ((currentIndex + 1) / deck.length) * 100;
+        progressBar.style.width = `${progressPercentage}%`;
+        progress.classList.remove('hidden');
+      }
+    }
 
-            // --- Get Necessary Dimensions/Positions ---
-            // Get these each frame as window/element sizes might change (though unlikely mid-game)
-            const gameAreaRect = DOMElements.gameArea.getBoundingClientRect();
-            const shooterRect = DOMElements.shooter.getBoundingClientRect(); // Current shooter position
+    function getPinyin(word) {
+      if (window.pinyinPro && window.pinyinPro.pinyin) {
+        return window.pinyinPro.pinyin(word, {
+          toneType: 'symbol',
+          type: 'array',
+          multiple: true,
+          mode: 'surname'
+        }).join(' ');
+      }
+      return word;
+    }
 
-            // --- 1. Update Shooter Position ---
-            // Handles movement based on currently pressed keys ('ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD')
-            updateShooterPosition(); // Assumes this function exists and correctly updates shooterX and style.left
+    function flipCard() {
+      const flashcard = document.getElementById('flashcard');
+      if (!flashcard.classList.contains('flipped')) {
+        playFlipSound();
+      }
+      flashcard.classList.toggle('flipped');
+    }
 
-            // --- 2. Update Bullets & Check Collisions / Offscreen ---
-            // Iterate backwards through active bullets for safe removal during loop
-            for (let i = activeBullets.length - 1; i >= 0; i--) {
-                let bullet = activeBullets[i];
-                let bulletRemoved = false; // Flag to track removal in this iteration
+    function prevCard() {
+      currentIndex = Math.max(0, currentIndex - 1);
+      document.getElementById('flashcard').classList.remove('flipped');
+      vibrate();
+      updateCard();
+    }
 
-                // Update bullet's vertical position
-                bullet.y -= BULLET_SPEED; // Move bullet upwards
-                bullet.element.style.top = `${bullet.y}px`;
-
-                // Check if bullet is off-screen (above the game area)
-                if (bullet.y < -bullet.height) { // Use stored bullet height
-                    bullet.element.remove();      // Remove from DOM
-                    activeBullets.splice(i, 1); // Remove from tracking array
-                    bulletRemoved = true;         // Mark as removed
-                    continue; // Skip collision checks for this removed bullet
-                }
-
-                // If bullet is still on screen, check for collisions with active targets
-                if (!bulletRemoved) {
-                    // Define the bullet's bounding box for collision detection
-                    const bulletRect = {
-                        left: bullet.x,
-                        top: bullet.y,
-                        right: bullet.x + bullet.width,
-                        bottom: bullet.y + bullet.height
-                    };
-
-                    // Check against each active target
-                    // Iterate backwards is safe for removal, though not strictly needed here as we break on hit
-                    for (let j = activeTargets.length - 1; j >= 0; j--) {
-                        let target = activeTargets[j];
-
-                        // Skip targets that have already been hit in this question
-                        if (target.hit) continue;
-
-                        // Define the target's bounding box
-                        const targetRect = {
-                            left: target.x,
-                            top: target.y,
-                            right: target.x + target.width,
-                            bottom: target.y + target.height
-                        };
-
-                        // Simple AABB (Axis-Aligned Bounding Box) collision check
-                        if (bulletRect.left < targetRect.right &&
-                            bulletRect.right > targetRect.left &&
-                            bulletRect.top < targetRect.bottom &&
-                            bulletRect.bottom > targetRect.top)
-                        {
-                            // --- Collision Detected! ---
-                            bullet.element.remove();      // Remove the bullet from DOM
-                            activeBullets.splice(i, 1); // Remove bullet from tracking array
-                            bulletRemoved = true;         // Mark bullet as removed
-
-                            target.hit = true; // Mark the target as hit (prevents multiple hits)
-
-                            // Handle consequences of the hit (scoring, animation, next question)
-                            handleBulletHit(target); // Assumes this function exists
-
-                            // Since this bullet hit a target, break the inner target loop (j)
-                            // and proceed to the next bullet (i) in the outer loop.
-                            break;
-                        }
-                    } // End of target collision check loop (j)
-                } // End of collision check block (if !bulletRemoved)
-            } // End of activeBullets loop (i)
-
-
-            // --- 3. Update Target Positions & Check Bounce / Failure (Target Reaching Bottom) ---
-            let targetReachedBottom = false; // Reset flag for this frame check
-            // Calculate shooter's top position relative to the game area for the failure check
-            const shooterTopRelative = shooterRect.top - gameAreaRect.top;
-
-            // Iterate through all active targets
-            activeTargets.forEach(target => {
-                // Skip targets that have already been hit
-                if (target.hit) return;
-
-                // Update target position based on its velocity
-                target.x += target.vx;
-                target.y += target.vy; // vy is the downward speed
-
-                // Handle horizontal bouncing off the game area edges
-                if (target.x <= 0 || (target.x + target.width) >= gameAreaRect.width) {
-                    target.vx *= -1; // Reverse horizontal direction
-                    // Clamp position to prevent sticking slightly outside bounds
-                    target.x = Math.max(0, Math.min(target.x, gameAreaRect.width - target.width));
-                }
-
-                // Apply the updated position to the target's element style
-                target.element.style.left = `${target.x}px`;
-                target.element.style.top = `${target.y}px`;
-
-                // Check for Failure: Target reaches near the shooter level
-                // Check only if the question hasn't already failed from another cause
-                 if (!questionFailed && (target.y + target.height) >= (shooterTopRelative - TARGET_FAILURE_PADDING)) {
-                    targetReachedBottom = true; // Set flag if ANY unhit target reaches the line
-                    // Optional: Visually indicate the failing target (e.g., change color)
-                    // target.element.style.backgroundColor = 'orange';
-                 }
-            });
-
-            // --- 4. Handle Failure State (Target Reaching Bottom) ---
-            // This check is done *after* iterating through all targets for the frame
-            if (targetReachedBottom) {
-                 // Call the specific failure handler for this scenario
-                 handleQuestionFailure("TargetReachedBottom"); // Pass reason for clarity/future use
-                 // Note: The loop continues briefly, but game logic pauses via the questionFailed flag set inside handleQuestionFailure
-            }
-
-            // --- 5. Request Next Frame ---
-            // Continue the loop only if the game is still considered active
-            if (gameActive) { // Added check just to be safe, though top check should catch most exits
-                 gameLoopId = requestAnimationFrame(gameLoop);
-            } else {
-                 console.log("Game loop stopping because gameActive is false."); // Debug log
-                 stopGameLoop(); // Ensure cleanup if gameActive becomes false unexpectedly
-            }
+    function nextCard() {
+      if (currentIndex >= deck.length - 1) {
+        if (confirm("You've reached the end of the flashcards! Restart from the beginning?")) {
+          currentIndex = 0;
+        } else {
+          return;
         }
+      } else {
+        currentIndex++;
+      }
+      document.getElementById('flashcard').classList.remove('flipped');
+      vibrate();
+      updateCard();
+    }
 
+    function shuffleDeck() {
+      const indices = Array.from({ length: deck.length }, (_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      deck = indices.map(i => deck[i]);
+      fullWordData = indices.map(i => fullWordData[i]);
+      currentIndex = 0;
+      document.getElementById('flashcard').classList.remove('flipped');
+      updateCard();
+    }
 
-        function handleBulletHit(target) {
-            // No pausing timer or game loop needed for this approach
+    window.addEventListener('load', () => {
+      setupInputTabs();
+      if (!window.pinyinPro) {
+        alert("An error occurred while loading the pinyin-pro library. Please refresh the page.");
+      }
+      initCustomPinyin();
+    });
 
-            if (target.word === currentCorrectAnswer) {
-                // --- CORRECT HIT ---
-                target.element.classList.add('target-hit-correct'); // Start animation immediately
-
-                const timeTaken = Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
-                const timeBasedPoints = calculatePoints(timeTaken); // Get time-based points
-
-                // ---> START: Bonus Point Calculation <---
-                const shotsFired = questionAttempts[currentQuestion] || 1; // Get shots for this question (default to 1 if somehow undefined)
-                let bonusPoints = 0;
-                if (shotsFired === 1) {
-                    bonusPoints = 10;
-                } else if (shotsFired === 2) {
-                    bonusPoints = 5;
-                } else if (shotsFired === 3) {
-                    bonusPoints = 1;
-                } // bonusPoints remains 0 for > 3 shots
-
-                const totalPointsThisRound = timeBasedPoints + bonusPoints; // Combine points
-                // ---> END: Bonus Point Calculation <---
-
-                userData.totalPoints += totalPointsThisRound; // Add TOTAL points to overall score
-
-                // Record attempt data (store TOTAL points and shots fired)
-                userData.attempts.push({
-                    question: currentQuestion + 1,
-                    colA: quizData[currentQuestion].colA,
-                    correctAnswer: currentCorrectAnswer,
-                    time: timeTaken,
-                    points: totalPointsThisRound, // Store the combined points
-                    attempts: shotsFired,         // Store the actual attempts for this question
-                    status: 'correct'
-                });
-
-                // Construct popup text showing the breakdown
-                let popupText = `+${timeBasedPoints} (time)`;
-                if (bonusPoints > 0) {
-                    popupText += ` +${bonusPoints} (bonus)`;
-                }
-                popupText += ` = ${totalPointsThisRound} total!`;
-
-                // Show a *non-blocking* toast immediately (with updated text)
-                Swal.fire({
-                    title: 'Correct!',
-                    text: popupText, // Use the new text showing breakdown
-                    icon: 'success',
-                    toast: true, position: 'top-end', // Use 'top-end' or similar for less intrusion
-                    showConfirmButton: false, timer: POPUP_TIMER_CORRECT_MS, timerProgressBar: true, // Assumes POPUP_TIMER_CORRECT_MS exists
-                    // Prevent focus stealing which can interrupt gameplay
-                    didOpen: (toast) => {
-                         toast.addEventListener('mouseenter', Swal.stopTimer);
-                         toast.addEventListener('mouseleave', Swal.resumeTimer);
-                         // Try to prevent focus shift
-                         const focusedElement = document.activeElement;
-                         if (focusedElement && focusedElement !== document.body) {
-                             setTimeout(() => focusedElement.focus(), 0);
-                         }
-                    }
-                });
-
-                // --- IMMEDIATE NEXT QUESTION --- (Remains the same)
-                currentQuestion++;
-                // Use requestAnimationFrame to ensure the animation *starts* before we potentially clear it
-                requestAnimationFrame(() => {
-                     // Optional small delay if transition feels TOO abrupt, but 0 is fine
-                     setTimeout(() => {
-                        loadQuestion(); // Load next question right away (Assumes loadQuestion exists)
-                     }, 0); // 0ms delay - load ASAP after current frame renders
-                });
-
-            } else {
-                // --- INCORRECT HIT --- (Remains unchanged from your previous version)
-                target.element.classList.add('target-hit-incorrect'); // Start animation immediately
-
-                // Show a non-blocking toast
-                Swal.fire({
-                   title: 'Incorrect!', icon: 'error',
-                   toast: true, position: 'top-end',
-                   showConfirmButton: false, timer: POPUP_TIMER_INCORRECT_MS, timerProgressBar: true, // Assumes POPUP_TIMER_INCORRECT_MS exists
-                    // Prevent focus stealing
-                    didOpen: (toast) => {
-                         toast.addEventListener('mouseenter', Swal.stopTimer);
-                         toast.addEventListener('mouseleave', Swal.resumeTimer);
-                         const focusedElement = document.activeElement;
-                         if (focusedElement && focusedElement !== document.body) {
-                             setTimeout(() => focusedElement.focus(), 0);
-                         }
-                    }
-                });
-
-                // Remove the hit target *after* its animation completes
-                // Use setTimeout matching the animation duration (0.5s = 500ms from your CSS)
-                // Make sure this duration matches your .target-hit-incorrect animation duration
-                const incorrectAnimationDuration = 500; // Adjust if your CSS animation time is different
-                setTimeout(() => {
-                    if (target.element && target.element.parentNode) { // Check if element still exists and is in DOM
-                        target.element.remove();
-                    }
-                    // Remove from activeTargets array regardless, to prevent future checks on it
-                    activeTargets = activeTargets.filter(t => t !== target);
-                }, incorrectAnimationDuration);
-
-                // --- DO NOT load next question here ---
-                // --- DO NOT pause/resume timer --- The game continues immediately
-            }
+    document.addEventListener('keydown', (e) => {
+      const flashcard = document.getElementById('flashcard');
+      if (!flashcard.classList.contains('hidden')) {
+        if (e.key === 'ArrowLeft') {
+          flashcard.style.transform = 'translateX(-10px)';
+          setTimeout(() => {
+            flashcard.style.transform = '';
+            prevCard();
+          }, 100);
         }
-
-
-                function handleQuestionFailure(reason = "TargetReachedBottom") { // Reason primarily for clarity now
-                        // Prevent multiple failure popups/logic execution for the same question instance
-                        if (questionFailed) {
-                                console.log("handleQuestionFailure called but questionFailed is already true. Skipping.");
-                                return;
-                        }
-                        questionFailed = true; // Set flag immediately to prevent race conditions/other actions
-
-                        console.log(`Handling Question Failure. Reason: ${reason}`); // Debug log
-
-                        pauseTimer();    // Pause the overall quiz timer
-                        stopGameLoop();  // Stop target/bullet movement and further loop processing
-
-                        // Record failure (0 points) - Ensure this runs only ONCE per trigger
-                        // Record attempts made *up to this point* of failure
-                        userData.attempts.push({
-                                question: currentQuestion + 1,
-                                colA: quizData[currentQuestion].colA,
-                                correctAnswer: currentCorrectAnswer, // Store the correct answer
-                                time: Math.round((Date.now() - questionStartTime) / 1000), // Time elapsed for this question
-                                points: 0,
-                                attempts: questionAttempts[currentQuestion], // Record attempts made *before* this failure
-                                status: 'failed'
-                        });
-                        console.log("Recorded 'failed' status for question:", currentQuestion + 1); // Debug log
-
-                        // --- Popup specific to "Target Reached Bottom" ---
-                        let failureTitle = 'Target Reached Bottom!';
-                        let failureText = "You didn't hit the correct target in time.";
-
-                        Swal.fire({
-                                title: failureTitle,
-                                text: failureText,
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonText: 'Next Question (0 points)', // Confirm moves on
-                                cancelButtonText: 'Try Again',               // Cancel retries the current question
-                                confirmButtonColor: primaryColor,            // Use defined theme color
-                                cancelButtonColor: textSecondary,          // Use defined theme color
-                                allowOutsideClick: false,                   // Prevent accidental dismissal
-                                allowEscapeKey: false,                      // Prevent accidental dismissal
-                        }).then((result) => {
-                                // Note: loadQuestion() will reset the questionFailed flag to false
-                                if (result.isConfirmed) {
-                                        // User chose "Next Question"
-                                        console.log("User chose Next Question after target reached bottom.");
-                                        currentQuestion++; // Increment to the next question index
-                                        loadQuestion();    // Load the next question (or results if finished)
-                                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                                        // User chose "Try Again"
-                                        console.log("User chose Try Again after target reached bottom.");
-
-                                        // Reset attempts counter *for this specific question* so they can shoot again
-                                        questionAttempts[currentQuestion] = 0;
-
-                                        // Remove the 'failed' entry we just added from userData.attempts, as they are retrying
-                                        // Search from the end to ensure the most recent 'failed' record for this question number is removed
-                                        const lastFailedIndex = userData.attempts.map(a => a.question === (currentQuestion + 1) && a.status === 'failed').lastIndexOf(true);
-                                        if(lastFailedIndex > -1) {
-                                                userData.attempts.splice(lastFailedIndex, 1);
-                                                console.log("Removed preliminary failed attempt record for retry.");
-                                        } else {
-                                                console.warn("Could not find the preliminary failed attempt record to remove for retry.");
-                                        }
-
-                                        loadQuestion(); // Reload the *current* question
-                                }
-                        });
-                }
-
-
-        // --- Timer Functions ---
-        function startTimer() {
-            clearInterval(timerInterval); elapsedTime = 0;
-            DOMElements.timerDisplay.textContent = elapsedTime; timerPaused = false;
-            userData.startTime = Date.now();
-            timerInterval = setInterval(() => {
-                if (!timerPaused && gameActive) { // Only advance timer if game is active and not paused
-                    elapsedTime = Math.floor((Date.now() - userData.startTime) / 1000);
-                    DOMElements.timerDisplay.textContent = elapsedTime;
-                }
-            }, 1000);
+        if (e.key === 'ArrowRight') {
+          flashcard.style.transform = 'translateX(10px)';
+          setTimeout(() => {
+            flashcard.style.transform = '';
+            nextCard();
+          }, 100);
         }
-        function pauseTimer() { timerPaused = true; }
-        function resumeTimer() { timerPaused = false; }
-
-        // --- Scoring ---
-        function calculatePoints(seconds) {
-             const brackets = [[5,10],[10,9],[15,8],[20,7],[25,6],[30,5],[40,4],[50,3],[60,2],[Infinity,1]];
-            for (const [max, points] of brackets) { if (seconds <= max) return points; } return 0;
+        if (e.key === ' ' || e.key === 'Enter') {
+          flipCard();
         }
+      }
+    });
 
-        // --- Utility ---
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]];
-            } return array;
+    document.addEventListener('DOMContentLoaded', () => {
+      const pv = document.getElementById('pageviews');
+      if (pv !== null) {
+        let uri = location.pathname;
+        if (uri !== "/" && uri.endsWith("/")) uri = uri.slice(0, -1);
+        if (!uri) uri = "/";
+        const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
+        fetch(url)
+          .then(response => response.ok ? response.json() : { count: "0" })
+          .then(data => {
+            const count = data.count.replace(/\s/g, '');
+            pv.innerText = new Intl.NumberFormat().format(count);
+            pv.classList.remove('loading');
+          })
+          .catch(() => {
+            pv.innerText = '0';
+            pv.classList.remove('loading');
+          });
+      }
+    });
+
+    // Add touch event handling for mobile swipe
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    document.getElementById('flashcard').addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    
+    document.getElementById('flashcard').addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, false);
+    
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        if (touchEndX < touchStartX - swipeThreshold) {
+            // Swipe left - next card
+            nextCard();
+        } else if (touchEndX > touchStartX + swipeThreshold) {
+            // Swipe right - previous card
+            prevCard();
+        } else {
+            // Tap - flip card
+            flipCard();
         }
+    }
 
-        // --- Results Display ---
-        function showResults() {
-            stopGameLoop(); // Ensure game loop is stopped
-            clearInterval(timerInterval);
-            // Explicitly hide the quiz screen to be absolutely sure
-            // Remove quizScreen from the DOM to avoid leaving an empty gap
-            if (DOMElements.quizScreen.parentNode) {
-                detachedQuizScreen = DOMElements.quizScreen.parentNode.removeChild(DOMElements.quizScreen);
-            }
-            showScreen('resultsScreen');
+    // Add sound effects for card interactions
+    const flipSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
+    
+    function playFlipSound() {
+        flipSound.currentTime = 0;
+        flipSound.play().catch(() => {}); // Ignore errors if sound can't play
+    }
 
-            const completionDate = new Date();
-            const day = completionDate.getDate().toString().padStart(2, '0');
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const month = monthNames[completionDate.getMonth()];
-            const year = completionDate.getFullYear();
-            const hours = completionDate.getHours().toString().padStart(2, '0');
-            const minutes = completionDate.getMinutes().toString().padStart(2, '0');
-            const completionTimestamp = `${day} ${month} ${year}, ${hours}:${minutes}`;
-
-            const correctCount = userData.attempts.filter(a => a.status === 'correct').length;
-            const failedCount = userData.attempts.filter(a => a.status === 'failed').length;
-             // Skipped = total questions - (correct + failed)
-            const skippedCount = quizData.length - userData.attempts.length;
-
-
-            // Update Summary
-            DOMElements.resultSummary.innerHTML = `
-                <div class="result-stat"><i class="fas fa-user"></i><span><strong>Name:</strong> ${userData.name || 'N/A'}</span></div>
-                <div class="result-stat"><i class="fas fa-calendar-check"></i><span><strong>Completed:</strong> ${completionTimestamp}</span></div>
-                <div class="result-stat"><i class="fas fa-book"></i><span><strong>Quiz Title:</strong> ${window.quizTitle || 'N/A'}</span></div>
-                <div class="result-stat"><i class="fas fa-trophy"></i><span><strong>Total Score:</strong> ${userData.totalPoints} points</span></div>
-                <div class="result-stat"><i class="fas fa-check-circle" style="color: var(--success);"></i><span><strong>Correct:</strong> ${correctCount} / ${quizData.length}</span></div>
-                <div class="result-stat"><i class="fas fa-times-circle" style="color: var(--danger);"></i><span><strong>Failed/Skipped:</strong> ${failedCount + skippedCount} / ${quizData.length}</span></div>
-            `;
-
-            // Update Table
-            const table = DOMElements.resultsTable;
-            let tableHTML = `
-                <thead><tr><th>#</th><th>Word</th><th>Correct Match</th><th>Status</th><th>Time (s)</th><th>Attempts</th><th>Points</th></tr></thead>
-                <tbody>`;
-
-             for (let i = 0; i < quizData.length; i++) {
-                 const questionNum = i + 1;
-                 const attemptData = userData.attempts.find(a => a.question === questionNum);
-                 const questionInfo = quizData[i];
-
-                 if (attemptData) { // Question was attempted (correct or failed)
-                     let statusClass = '';
-                     let statusText = '';
-                     if (attemptData.status === 'correct') {
-                         statusClass = 'correct'; statusText = 'Correct';
-                     } else if (attemptData.status === 'failed') {
-                         statusClass = 'failed'; statusText = 'Failed';
-                     }
-                     tableHTML += `
-                        <tr>
-                            <td>${questionNum}</td><td>${questionInfo.colA}</td><td>${questionInfo.colB}</td>
-                            <td class="${statusClass}">${statusText}</td>
-                            <td>${attemptData.time}</td><td>${attemptData.attempts}</td><td>${attemptData.points}</td>
-                        </tr>`;
-                 } else { // Question was skipped (game ended before reaching it)
-                      tableHTML += `
-                        <tr>
-                            <td>${questionNum}</td><td>${questionInfo.colA}</td><td>${questionInfo.colB}</td>
-                            <td class="incorrect"><em>Skipped</em></td><td>-</td><td>0</td><td>0</td>
-                        </tr>`;
-                 }
-             }
-            tableHTML += `</tbody>`;
-            table.innerHTML = tableHTML;
+    // Add haptic feedback for mobile devices
+    function vibrate() {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(50);
         }
+    }
+  </script>
 
-        // --- Results Actions ---
-        function screenshotResults() {
-            Swal.fire({ title: 'Generating Screenshot', text: 'Please wait...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading() });
-            const resultsElement = DOMElements.resultsScreen.querySelector('.card');
-            html2canvas(resultsElement, { scale: 2, useCORS: true }).then(canvas => {
-                Swal.close(); const link = document.createElement('a');
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                link.download = `LanguageShooter-Results-${userData.name || 'User'}-${timestamp}.png`;
-                link.href = canvas.toDataURL("image/png"); link.click();
-                Swal.fire('Success!', 'Results screenshot downloaded.', 'success', { confirmButtonColor: primaryColor });
-            }).catch(err => {
-                Swal.close(); console.error("Screenshot error:", err);
-                Swal.fire('Error', 'Could not generate screenshot.', 'error', { confirmButtonColor: primaryColor });
-            });
-        }
-        function reviewQuestions() {
-            // Check if we know which quiz to restart (essential)
-            if (!currentSheetId) {
-                console.error("Play Again clicked, but currentSheetId is missing. Cannot restart.");
-                // Show an error and go home as a fallback
-                Swal.fire({
-                    title: "Error",
-                    text: "Could not determine which game to play again. Returning home.",
-                    icon: "error",
-                    confirmButtonColor: primaryColor // Use your theme color
-                });
-                goHome(); // Go back to the landing screen
-                return;
-            }
-
-            console.log(`Restarting quiz with ID: ${currentSheetId}`); // Optional: for debugging
-
-            // Directly call the function that handles resetting state,
-            // loading data, and showing the name screen for the current quiz ID.
-            startQuizFlow(currentSheetId);
-        }
-
-    </script>
-</body>
 </html>
