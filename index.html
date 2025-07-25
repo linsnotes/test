@@ -1,1145 +1,992 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <meta name="referrer" content="no-referrer">
-  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.min.js" integrity="sha512-59m22Tdj5NpJr4WpRAJl+HXy96LWKmG2f3drO7abM5kW6WaI7nMHVx7cwJON1z6OdCH0HaZVMnXnRsdFeHQtDA==" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha512-AXreDm/maQt99+BKeuV5VUY8x0xBAZPX6OYenHRlRwG/C35PKcZ7GQXITTR8Zf3cLHeTfwVDLEMBBPf7laKtAA==" crossorigin="anonymous"></script>
-  <script data-goatcounter="https://linsnotes.goatcounter.com/count" async src="https://gc.zgo.at/count.js" integrity="sha512-JAlHYZ7sDXF98EQK5HABwb2k1jplfFP93BqY4B6fdHSh0XiAqIjO4gyXe8tdNFdHPYrg75grUX853FHYCzw3Dg==" crossorigin="anonymous"></script>
-  <title>博闻强记</title>
-    <style>
-    /* --------------------------------------------------
-       CSS Variables for Translation Font Sizes
-       - Adjust these values to change the translation font sizes.
-         --translation-font-size-desktop: Font size for desktop (default).
-         --translation-font-size-mobile: Font size for mobile (set here to 70% of desktop).
-    ----------------------------------------------------- */
-        :root {
-      --translation-font-size-desktop: 3rem;
-      --translation-font-size-mobile: calc(var(--translation-font-size-desktop) * 0.7);
-      
-      /* Color palette */
-      --background: #f5f5f7;
-      --card-bg: #ffffff;
-      --accent: #0066cc;
-      --text: #1d1d1f;
-      --secondary-text: #86868b;
-      --border: rgba(0, 0, 0, 0.1);
-      --success: #34c759;
-      --warning: #ff9500;
-      --danger: #ff3b30;
-      --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-      --button-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <title>学而时习之</title>
+
+  <!-- =====================================================
+       ADDED GoatCounter page‑view tracker (2 lines, async)
+       ===================================================== -->
+  <script data-goatcounter="https://linsnotes.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+
+  <style>
+    /* --- General & Page Layout --- */
+    :root {
+        --char-size: 70px; /* Initial character size, CSS variable */
     }
 
-    /* --------------------------------------------------
-       Global Reset and Base Styles
-       - Removes default margins and paddings.
-       - Sets a base font, background, and text color.
-    ----------------------------------------------------- */
-    * {
-      box-sizing: border-box;
-            margin: 0;
-      padding: 0;
-    }
-    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: var(--background);
-      color: var(--text);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    #visitor-counter {
-      font-size: 1em;
-      margin: 10px 0;
-            text-align: center;
-      color: var(--secondary-text);
-    }
-    
-    #visitor-counter #pageviews {
-            font-weight: 500;
-      color: var(--text);
-    }
-
-    #other-chinese-tools {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7f6;
       text-align: center;
-      margin-top: 15px;
+      color: #333;
     }
     
-    #other-chinese-tools a {
-      color: var(--accent);
-      text-decoration: none;
-            font-weight: 500;
-        }
-
-    #other-chinese-tools a:hover {
-      text-decoration: underline;
-    }
-
-    footer {
-      margin-top: 30px;
-      margin-bottom: 30px;
-    }
-    
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 30px 20px;
-    }
-
-    /* --------------------------------------------------
-       Header Styles
-       - Styles for the page header.
-    ----------------------------------------------------- */
-    @keyframes gradientMove {
-      0% {
-        background-position: 0%;
-      }
-      50% {
-        background-position: 100%;
-      }
-      100% {
-        background-position: 0%;
-      }
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 24px;
-      font-weight: 600;
-      font-style: italic;
-      background: linear-gradient(90deg,
-        #4285F4 0%,
-        #34A853 20%,
-        #60C99A 35%,
-        #A6D96A 50%,
-        #F5A623 65%,
-        #FBBC05 80%,
-        #EA4335 100%
-      );
-      background-size: 200%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: gradientMove 3s ease-in-out infinite;
-    }
-    
-    /* --------------------------------------------------
-       Input Section Styles
-       - Styles for the textarea, dropdown selection, toggle button, and start button.
-    ----------------------------------------------------- */
-    .input-section {
-            display: flex;
-            flex-direction: column;
-      margin-bottom: 24px;
-    }
-    
-    /* Input method tabs */
-    .input-tabs {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    
-    .input-tab {
-      padding: 12px 15px;
-      background-color: rgba(0, 102, 204, 0.1);
-      color: var(--accent);
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      flex: 1;
-      margin: 0 5px;
-      text-align: center;
-    }
-    
-    .input-tab:first-child {
-      margin-left: 0;
-    }
-    
-    .input-tab:last-child {
-      margin-right: 0;
-    }
-    
-    .input-tab.active {
-      background-color: var(--accent);
-      color: white;
-    }
-    
-    .input-tab:hover:not(.active) {
-      background-color: rgba(0, 102, 204, 0.2);
-    }
-    
-    /* Input content sections */
-    .input-content {
-      display: none;
-    }
-    
-    .input-content.active {
-      display: block;
-    }
-    
-    /* Custom input style */
-    textarea {
-            width: 100%;
-      padding: 12px;
-      font-size: 1rem;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      resize: vertical;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    
-    textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
-      outline: none;
-    }
-    
-    /* Input help styles (shared by textarea and sheet inputs) */
-    .textarea-input-help, .sheet-input-help {
-      font-size: 0.85rem;
-      color: #06c;
-      padding: 12px;
-      background-color: var(--card-bg);
-            border-radius: 8px;
-      margin-top: 12px;
-      margin-bottom: 16px;
-    }
-    
-    /* Google Sheet input style */
-    .sheet-input-container {
-      margin-bottom: 16px;
-    }
-    
-    .sheet-input {
-      width: 100%;
-      padding: 12px;
-      font-size: 1rem;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    
-    .sheet-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
-      outline: none;
-    }
-    
-    /* Dropdown styling */
-    #dropdownSection {
-      margin: 0 0 16px 0; /* top, right, bottom, left */
-      padding: 16px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background-color: var(--card-bg);
-      box-shadow: var(--card-shadow);
-    }
-    
-    #dropdownSection p {
-      margin-bottom: 12px;
-      font-size: 1rem;
-      color: var(--text);
-    }
-    
-    .dropdown-container {
-      margin-bottom: 16px;
-    }
-    
-    .dropdown-container label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.95rem;
-      color: var(--secondary-text);
-      font-weight: 500;
-    }
-    
-    .dropdown {
-      width: 100%;
-      padding: 12px;
-      font-size: 1rem;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background-color: #fff;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    
-    .dropdown:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
-      outline: none;
-    }
-
-    /* -----------------------------
-       Spinner CSS
-    ------------------------------ */
-    #spinner-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-top: 24px;
-      margin-bottom: 16px;
-    }
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(0, 102, 204, 0.1);
-      border-top: 3px solid var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    .loading-text {
-      margin-top: 16px;
-      font-size: 1rem;
-      color: var(--secondary-text);
-      font-weight: 500;
-      text-align: center;
-    }
-    
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    
-    #spinner-container.hidden {
-      display: none;
-    }
-
-    /* --------------------------------------------------
-       Flashcard Container and Card Styles
-       - Styles for the flashcard container, the inner card,
-         and the front/back sides of the card.
-    ----------------------------------------------------- */
-    .flashcard {
-        font-size: 3rem; /* Keep original font size as requested */
-        height: 300px; /* Fixed height for larger screens */
-        margin: 24px auto;
-        cursor: pointer; /* Indicates clickable card */
-        perspective: 1000px; /* Set up 3D perspective for flip effect */
-        width: 100%;
-        max-width: 400px;
-        position: relative;
-    }
-    
-    /* Define the flashcard inner container with consistent sizing and GPU optimization */
-    .flashcard-inner {
-        position: relative;
-        width: 100%;
-        height: 100%; /* Ensure inner container fills the flashcard */
-        transition: transform 0.6s; /* Smooth flip transition */
-        transform-style: preserve-3d;
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        will-change: transform;
-    }
-    
-    /* Apply the flip transform without altering height */
-    .flashcard.flipped .flashcard-inner {
-        transform: rotateY(180deg);
-    }
-    
-    /* --------------------------------------------------
-       Common Styles for Front and Back Sides
-       - Both sides will be exactly the same size.
-    ----------------------------------------------------- */
-    .front, .back {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        backface-visibility: hidden; /* Hide back face during flip */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        border-radius: 16px;
-        padding: 24px;
-        text-align: center;
-    }
-    
-    /* --------------------------------------------------
-       Front Side Styles
-    ----------------------------------------------------- */
-    .front {
-        background-color: var(--card-bg);
-        color: var(--text);
-        border: 1px solid var(--border);
-    }
-    
-    /* --------------------------------------------------
-       Back Side Styles
-       - The back is pre-rotated for the flip effect.
-    ----------------------------------------------------- */
-    .back {
-        background-color: var(--card-bg);
-        color: var(--text);
-        flex-direction: column;
-        transform: rotateY(180deg); /* Pre-rotated for flip effect */
-        border: 1px solid var(--border);
-    }
-
-    /* CurrentWord and Pinyin Text Styling on the Back of the Card */
-    .current-word, .pinyin {
-      font-size: var(--translation-font-size-desktop);
-      color: var(--accent);
-    }
-    
-    /* English Translation Container Styling */
-    .english {
-      margin-top: 16px;
-      font-size: var(--translation-font-size-desktop);
-      color: var(--secondary-text);
-    }
-
-    /* --------------------------------------------------
-       Controls (Buttons) Styles
-       - Styles for navigation, flip, return, and shuffle buttons.
-    ----------------------------------------------------- */
-    .controls {
-            display: flex;
-            flex-direction: column; 
-      justify-content: center;
-      margin-top: 24px;
-        }
-
-    .controls .top-row, .controls .bottom-row {
-            display: flex;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-      margin-bottom: 12px;
-    }
-
-    .controls .bottom-row {
-      margin-top: 12px;
-    }
-
-    /* Common Button Styles */
-    button {
-      padding: 12px 20px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-weight: 500;
-      box-shadow: var(--button-shadow);
-    }
-    
-    button:active {
-      transform: translateY(1px);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Button Styles */
-    .start-btn, .prev-btn, .next-btn {
-      background-color: var(--accent);
-      color: white;
-    }
-    
-    .start-btn:hover, .prev-btn:hover, .next-btn:hover {
-      background-color: #0055b3;
-      transform: translateY(-1px);
-    }
-
-    /* Flip Button Specific Styles */
-    .flip-btn {
-      background-color: var(--warning);
-      color: white;
-    }
-    
-    .flip-btn:hover {
-      background-color: #e68600;
-      transform: translateY(-1px);
-    }
-
-    /* Shuffle Button Specific Styles */
-    .shuffle-btn {
-      background-color: var(--success);
-      color: white;
-    }
-    
-    .shuffle-btn:hover {
-      background-color: #28b14d;
-      transform: translateY(-1px);
-    }
-
-    /* Return Button Specific Styles */
-    .return-btn {
-      background-color: rgba(0, 0, 0, 0.05);
-      color: var(--secondary-text);
-    }
-    
-    .return-btn:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
-    
-    /* Utility Class to Hide Elements */
     .hidden {
-      display: none;
+      display: none !important;
     }
 
-    /* --------------------------------------------------
-       Progress Indicator Styles
-       - Displays the current card number out of total.
-    ----------------------------------------------------- */
-    #progress {
-      text-align: center;
-      margin-top: 16px;
-      font-size: 1rem;
-      color: var(--secondary-text);
-      font-weight: 500;
+    /* --- Landing Page Styles --- */
+    #landing-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
     }
 
-    /* --------------------------------------------------
-       Responsive Design Adjustments for Small Screens
-    ----------------------------------------------------- */
-    @media (max-width: 576px) {
-      .container {
-        padding: 20px 16px;
-      }
-      
-      h1 {
-        margin-bottom: 20px;
-      }
-      
-      .flashcard {
-        font-size: 2rem;
-        height: 200px;  /* Override fixed height for smaller screens */
-        margin: 16px auto;
-        max-width: 320px;
-      }
-      
-      .front, .back {
-        padding: 16px;
-      }
-      
-      button {
+    .setup-container {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .setup-container h1 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .setup-container p {
+        color: #7f8c8d;
+        margin-bottom: 2rem;
+    }
+
+    .control-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .control-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #34495e;
+    }
+
+    .control-group select, .control-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 1rem;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .control-group select:focus, .control-group textarea:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    .control-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    /* ---------- Custom‑sheet inline row ---------- */
+    .input-inline{           /* the flex wrapper  */
+        display:flex;
+        gap:10px;
+        align-items:center;
+    }
+
+    /* make the text‑box look like the dropdown but keep it narrower */
+    #customSheetId{
+        flex:1 1 65%;        /* grows but caps around two‑thirds width */
+        padding:0.75rem;
+        border-radius:8px;
+        border:1px solid #ddd;
+        font-size:1rem;
+        box-sizing:border-box;
+    }
+
+    /* remove the old top‑margin and match button height */
+    #loadCustomSheetButton{
+        padding:0.75rem 1.2rem;
+        margin:0;            /* eliminates the previous inline style */
+        border:none;
+        border-radius:8px;
+        background:#27ae60;
+        color:#fff;
+        font-weight:600;
+        cursor:pointer;
+    }
+    #loadCustomSheetButton:hover{background:#229954;}
+
+
+
+
+
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        color: #bdc3c7;
+        margin: 2rem 0;
         font-size: 0.9rem;
-        padding: 10px 16px;
-      }
-      
-      /* On mobile, reduce the pinyin and English translation font size to 50% */
-      .current-word, .pinyin, .english {
-        font-size: var(--translation-font-size-mobile);
-      }
-      
-      .input-tabs {
-            flex-direction: column;
-      }
-      
-      .input-tab {
-        margin: 4px 0;
-        padding: 10px 12px;
-      }
-      
-      .controls .top-row, .controls .bottom-row {
-        gap: 8px;
-        margin-bottom: 8px;
-      }
-      
-      .controls .bottom-row {
-        margin-top: 8px;
-      }
-      
-      textarea, .sheet-input {
-            padding: 10px;
-        margin-bottom: 12px;
-      }
-      
-      .textarea-input-help, .sheet-input-help {
-        padding: 10px;
-        margin-bottom: 12px;
-      }
-      
-      #dropdownSection {
-        padding: 12px;
-        margin: 8px 0;
-      }
-      
-      .dropdown-container {
-        margin-bottom: 12px;
-      }
-      
-      .dropdown {
-        padding: 10px;
-      }
+        text-transform: uppercase;
     }
 
-    /* --------------------------------------------------
-       Stroke Order Overlay Styles
-    ----------------------------------------------------- */
-    .stroke-order-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.8);
-      z-index: 1000;
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #eee;
+    }
+    .divider:not(:empty)::before { margin-right: 1em; }
+    .divider:not(:empty)::after { margin-left: 1em; }
+    
+    #generate-button {
+        background-color: #27ae60;
+        color: white;
+        border: none;
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.2s;
+    }
+    #generate-button:hover { background-color: #229954; }
+
+
+    /* --- Display Page Styles --- */
+    #display-page {
+        padding-bottom: 180px; /* Prevent log from covering last row */
+    }
+
+    #page-title {
+        margin-top: 20px;
+        color: #2c3e50;
+    }
+
+    .sticky-container {
+      position: sticky; 
+      top: 0; 
+      z-index: 9999;
+      background-color: rgba(255, 255, 255, 0.95);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      padding: 15px 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .button-container {
+      display: flex;
       justify-content: center;
-      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
     }
 
-    .stroke-order-container {
-      background-color: var(--card-bg);
-      padding: 20px;
-      border-radius: 16px;
-      text-align: center;
-      max-width: 90%;
-      max-height: 90vh;
-      overflow: auto;
-    }
-
-    .stroke-order-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: none;
+    button {
+      font-size: 1em;
+      padding: 8px 16px;
       border: none;
-      color: white;
-      font-size: 24px;
+      border-radius: 5px;
       cursor: pointer;
-      padding: 10px;
-    }
-
-    #stroke-order-canvas {
-      width: 200px;
-      height: 200px;
-      margin: 20px auto;
-    }
-
-    .stroke-order-btn {
-      background-color: var(--accent);
       color: white;
-      margin: 0 5px;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.85; }
+
+    #start-button, #next-button, #refresh-button { background-color: #4caf50; }
+    #stop-resume-button { background-color: #9c27b0; }
+    #animate-button { background-color: #f0ad4e; }
+    #quiz-button { background-color: #2196f3; }
+    #print-button { background-color: #212121; }
+    #print-dialog-button { background-color: #26a4ad;}
+    #back-button { background-color: #e74c3c; } 
+
+    #settings-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    #settings-container label { font-weight: 500; margin-left: 10px; }
+
+    .character-grid {
+      display: grid;
+      gap: 10px;
+      width: 90%;
+      max-width: 90vw;
+      margin: 20px auto;
+      grid-template-columns: repeat(auto-fill, minmax(var(--char-size), 1fr));
     }
 
-    .stroke-order-btn:hover {
-      background-color: #0055b3;
+    .character-box {
+      position: relative;
+      width: var(--char-size);
+      height: var(--char-size);
+      border: 1px solid #000;
+      margin: 0 auto;
     }
-    </style>
+    
+    #log-messages-wrapper {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 550px;
+        min-height: 48px;
+        z-index: 10000;
+        background: rgba(255, 255, 255, 0.75);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 15px;
+    }
+
+    #log-messages {
+        width: 100%;
+        text-align: center;
+        color: #2c2c2e;
+        font-size: 20px;
+    }
+    .log-error { color: #d32f2f; }
+    .log-success { color: #388e3c; }
+    .log-info { color: #1976d2; }
+
+    /* --- NEW/IMPROVED PRINT STYLES --- */
+
+    /* Container for the 'Exit Preview' button */
+    #print-exit-container {
+        display: none; /* Hidden by default */
+    }
+
+    #exit-print-button {
+        background-color: #c0392b;
+        font-weight: 600;
+    }
+
+    /* Styles applied when the 'print-preview' class is on the body */
+    body.print-preview .button-container,
+    body.print-preview #settings-container,
+    body.print-preview #log-messages-wrapper {
+        display: none !important;
+    }
+
+    body.print-preview #print-exit-container {
+        display: flex !important;
+        justify-content: center;
+    }
+
+    body.print-preview .sticky-container {
+        background: transparent;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        border-bottom: none;
+    }
+
+
+    /* Default: nothing on desktop/tablet */
+    #mobile-footer {
+      height: 0;
+    }
+
+    /* Mobile: create breathing-room and respect iPhone safe area */
+    @media (max-width: 576px) {
+        #mobile-footer {
+           height: 80px; /* tweak to taste */
+           height: calc(80px + env(safe-area-inset-bottom, 0px));
+        }
+    }
+
+
+
+    /* Final styles for the actual printed page */
+    @media print {
+        /* FIX: Ensure body and html can expand to content height */
+        html, body {
+            height: auto !important;
+            overflow: visible !important;
+        }
+        
+        body {
+            background: white !important;
+            padding: 0;
+            margin: 0;
+            color: black;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        /* Hide ALL UI elements when printing */
+        #landing-page, .sticky-container, #page-title, #log-messages-wrapper {
+            display: none !important;
+        }
+
+        /* FIX: Ensure the main content container can flow across pages */
+        #display-page {
+            display: block !important;
+            padding: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        .character-grid {
+            display: grid !important;
+            grid-template-columns: repeat(8, 1fr) !important;
+            page-break-inside: avoid;
+            gap: 15px;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            overflow: visible !important; /* Ensure grid itself doesn't clip */
+        }
+        
+        .character-box {
+            page-break-inside: avoid;
+            border: 1px solid #333;
+        }
+        
+        /* Hide the divs used for line breaks ('k') when printing */
+        .character-box[style*="height: 0"] {
+            display: none !important;
+        }
+    }
+  </style>
 </head>
 <body>
-  <!-- Main container for all content -->
-    <div class="container">
-    <!-- Header: Displays the title -->
-    <h1>My Flashcards</h1>
-    
-    <!-- Input Section: Contains tabbed interface for input selection and start button -->
-    <div class="input-section" id="inputSection">
-      <!-- Input method selection tabs -->
-      <div class="input-tabs">
-        <button type="button" class="input-tab active" data-type="custom">Chinese & Pinyin</button>
-        <button type="button" class="input-tab" data-type="built-in">SG Chinese Textbook Words</button>
-        <button type="button" class="input-tab" data-type="google-sheet">Import from Google Sheet</button>
-                    </div>
-      
-      <!-- Custom word list input (active by default) -->
-      <div id="custom-input" class="input-content active">
-        <textarea id="input-words"
-                  placeholder="Enter Chinese words, separated by commas, e.g. 你好, 世界"
-                  rows="3"></textarea>
-        <div class="textarea-input-help">
-          Please note that the custom word list only shows Pinyin on the back of the flashcard.
-                </div>
-                        </div>
-      
-      <!-- Built-in word list input -->
-      <div id="built-in-input" class="input-content">
-        <div id="dropdownSection">
-          <div class="dropdown-container" id="bandingContainer">
-            <label for="banding" class="input-label">科目 Course</label>
-            <select id="banding" name="banding" class="dropdown">
-              <option value="">选择科目 Select Course</option>
-              <option value="G3">G3</option>
-              <option value="G2">G2</option>
-              <option value="G1">G1</option>
-              <option value="HCL">HCL</option>
+
+  <!-- ======================================================= -->
+  <!--                      LANDING PAGE                       -->
+  <!-- ======================================================= -->
+  <div id="landing-page">
+    <div class="setup-container">
+        <h1>Stroke by Stroke</h1>
+        <p>Start by choosing a built-in text or pasting your own.</p>
+        
+        <div class="control-group">
+            <label for="builtInContentSelect">Select Built-in Sheet:</label>
+            <select id="builtInContentSelect">
+                <option value="" disabled selected>-- Loading List --</option>
             </select>
-                    </div>
-          <div class="dropdown-container" id="levelContainer">
-            <label for="level" class="input-label">年级 Level</label>
-            <select id="level" name="level" class="dropdown">
-              <option value="">选择年级 Select Level</option>
-              <option value="中一">中一</option>
-              <option value="中二">中二</option>
-              <option value="中三">中三</option>
-              <option value="中四">中四</option>
-            </select>
-                        </div>
-          <div class="dropdown-container" id="unitContainer">
-            <label for="unit" class="input-label">单元 Unit</label>
-            <select id="unit" name="unit" class="dropdown">
-              <option value="">选择单元 Select Unit</option>
-              <option value="单元一">单元一</option>
-              <option value="单元二">单元二</option>
-              <option value="单元三">单元三</option>
-              <option value="单元四">单元四</option>
-              <option value="单元五">单元五</option>
-              <option value="单元六">单元六</option>
-            </select>
-                    </div>
-          <div class="dropdown-container" id="passageContainer">
-            <label for="passage" class="input-label">课文 Passage</label>
-            <select id="passage" name="passage" class="dropdown">
-              <option value="">选择课文 Select Passage</option>
-              <option value="生活空间">生活空间</option>
-              <option value="核心">核心</option>
-              <option value="巩固">巩固</option>
-              <option value="进阶">进阶</option>
-            </select>
-                </div>
+        </div>
+
+
+        <div class="control-group">
+            <label for="customSheetId">Import from Custom Sheet ID:</label>
+
+            <!-- NEW flex row -->
+            <div class="input-inline">
+                <input type="text" id="customSheetId"
+                       placeholder="paste Sheet ID here" />
+                <button id="loadCustomSheetButton">Load</button>
             </div>
         </div>
 
-      <!-- Google Sheet import input -->
-      <div id="google-sheet-input" class="input-content">
-        <div class="sheet-input-container">
-          <input type="text" id="sheet-url" class="sheet-input" 
-                 placeholder="Paste your Google Sheet URL here..." />
-          <div class="sheet-input-help">
-            Make sure your Google Sheet is set to "<span>Anyone with the link can view</span>".
-            <a href="https://docs.google.com/spreadsheets/d/1Rc_-NzmUOKOOPgmLkIwW0uKbPAjzgroXqawx4E1CBDM/edit?gid=0#gid=0" target="_blank">View Sample</a><br>
-            Your sheet should have at least 2 columns:<br>
-            - First column: Term/word for front of flashcard<br>
-            - Second column: Definition for back of flashcard
-                        </div>
-                    </div>
-                </div>
 
-      <!-- Start button remains at the bottom of the input section -->
-      <button onclick="initDeck()" class="start-btn">Start</button>
-      
-      <!-- Spinner container (hidden by default) -->
-      <div id="spinner-container" class="hidden">
-        <div class="spinner"></div>
-        <p class="loading-text">Loading... Please wait!</p>
-                            </div>
-                        </div>
 
-    <!-- Flashcard Container: Initially hidden; displays flashcard once deck is initialized -->
-    <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
-      <div class="flashcard-inner">
-        <!-- Front Side of the Flashcard -->
-        <div class="front"></div>
-        <!-- Back Side of the Flashcard -->
-        <div class="back"></div>
-                        </div>
-                    </div>
+        <div class="control-group hidden" id="builtInTextSelectGroup">
+            <label for="builtInTextSelect">Select Text:</label>
+            <select id="builtInTextSelect">
+                <option value="" disabled selected>-- Select Topic First --</option>
+            </select>
+        </div>
 
-    <!-- Progress Indicator: Shows current flashcard progress -->
-    <div id="progress" class="hidden"></div>
+        <div class="divider">OR</div>
 
-    <!-- Controls: Navigation, flip, return, and shuffle buttons; initially hidden -->
-    <div class="controls hidden" id="controls">
-      <div class="top-row">
-        <button onclick="prevCard()" class="prev-btn">← Previous</button>
-        <button onclick="flipCard()" class="flip-btn">Flip</button>   
-        <button onclick="nextCard()" class="next-btn">Next →</button>
-        <button onclick="showStrokeOrder()" class="stroke-order-btn">Stroke Order</button>
-      </div>
-      <div class="bottom-row">
-        <button class="return-btn" onclick="returnToEdit()">Return to Edit</button>
-        <button onclick="shuffleDeck()" class="shuffle-btn">Shuffle Cards</button>
-      </div>
+        <div class="control-group">
+            <label for="character-input">Paste Your Own Text:</label>
+            <textarea id="character-input" placeholder="Enter or paste Chinese text. Use 'k' for a new line and 'b' for an empty box."></textarea>
+        </div>
+        
+        <button id="generate-button">Generate Writing Sheet</button>
+        <button id="download-all-button" style="margin-top: 1rem; background-color: #3498db;">Download All as PDF</button>
+
+    </div>
+  </div>
+<footer id="mobile-footer"></footer>
+
+  <!-- ======================================================= -->
+  <!--                      DISPLAY PAGE                       -->
+  <!-- ======================================================= -->
+  <div id="display-page" class="hidden">
+  
+    <div class="sticky-container">
+        <div class="button-container">
+          <button id="back-button">New Sheet</button>
+          <button id="start-button">Start</button>
+          <button id="next-button">Next</button>
+          <button id="stop-resume-button">Stop</button>
+          <button id="animate-button">Animate All</button>
+          <button id="quiz-button">Quiz Mode</button>
+          <button id="print-button">Full Page View</button>
+          <button id="print-dialog-button">Print</button>
+          <button id="refresh-button">Refresh</button>
+        </div>
+        <div id="settings-container">
+            <label for="charSize">Size:</label>
+            <input type="number" id="charSize" value="70" min="40" max="150" step="1" />
+            <label for="color">Radical Color:</label>
+            <input type="color" id="color" value="#FF00FF" />
+            <label for="strokeColor">Stroke Color:</label>
+            <input type="color" id="strokeColor" value="#000000" />
+
+            <label for="printColumns" style="display:none">Print Cols:</label>
+            <input  type="number"
+                    id="printColumns"
+                    value="8"
+                    min="8"
+                    max="15"
+                    style="display:none" />
+
+          
+            <label for="printColsSelect">Boxes per row (when printing):</label>
+            <select id="printColsSelect">
+              <option value="8">8</option>
+              <option value="10">10</option>
+              <option value="12" selected>12</option>
+              <option value="14">14</option>
+            </select>
+
+        </div>
+        <!-- NEW CONTAINER FOR EXIT PRINT BUTTON -->
+        <div id="print-exit-container">
+            <button id="exit-print-button">Exit Full Page View</button>
+        </div>
     </div>
 
-    <!-- Stroke Order Overlay -->
-    <div id="strokeOrderOverlay" class="stroke-order-overlay">
-      <button class="stroke-order-close" onclick="hideStrokeOrder()">×</button>
-      <div class="stroke-order-container">
-        <h2>Stroke Order</h2>
-        <div id="stroke-order-canvas"></div>
-      </div>
-    </div>
-    
-    </div>
-
-  <footer>
-    <div id="visitor-counter">
-      Welcome! You're visitor #<span id="pageviews">Loading...</span> 
-    </div>
-
-    <div id="other-chinese-tools">
-      <a href="https://linsnotes.com/apps/">Other Chinese Learning Tools</a>
-    </div>
-  </footer>
+    <div class="character-grid" id="character-grid"></div>
+    <div id="log-messages-wrapper"><div id="log-messages"></div></div>
+  </div>
 
 
+  <!-- ======================================================= -->
+  <!--                         SCRIPTS                         -->
+  <!-- ======================================================= -->
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script>
-    // Data source ID constant - replace with your actual data source ID
-    const DATA_SOURCE_ID = '17v5FSgIQbGiMbseAYWbTAncfW-XNnk7iknssc1hGaTs';
+    // --- Page Section Elements ---
+    const landingPage = document.getElementById('landing-page');
+    const displayPage = document.getElementById('display-page');
 
-    // Global variables: current card index, the deck array, and input mode
+    // --- Landing Page Elements ---
+    const MASTER_SHEET_ID = "1mc3uJfaRNAca6v0OD9kETNhXnl6VzWEqAuALeyUHuFc";
+    const builtInContentSelect = document.getElementById("builtInContentSelect");
+    const builtInTextSelectGroup = document.getElementById("builtInTextSelectGroup");
+    const builtInTextSelect = document.getElementById("builtInTextSelect");
+    const characterInput = document.getElementById('character-input');
+    const generateButton = document.getElementById('generate-button');
+    let currentSheetContentData = [];
+
+    // --- Display Page Elements & State ---
+    const characterGrid = document.getElementById('character-grid');
+    let writers = [];
     let currentIndex = 0;
-    let deck = [];
-    let fullWordData = [];
-    let inputMode = 'custom';
-    let writer = null;
+    let isPaused = false;
+    let stopAll = false;
+    let originalText = ""; // Store current text for refresh
+    let lastAnimateAllText = "";
 
-    function initCustomPinyin() {
-      if (window.pinyinPro && window.pinyinPro.addDict) {
-        window.pinyinPro.addDict({
-          '嗯': 'ḿ',
-          '嗄': 'á',
-          '咯': 'lo',
-          '谁': 'shéi',
-          '〇': 'líng'
-        });
-      }
+    // --- Core Functions ---
+    function displayLog(message, type) {
+      const logArea = document.getElementById('log-messages');
+      logArea.innerHTML = ''; // Clear previous
+      const newMessage = document.createElement('div');
+      newMessage.textContent = message;
+      if (type === 'error') newMessage.className = 'log-error';
+      else if (type === 'success') newMessage.className = 'log-success';
+      else newMessage.className = 'log-info';
+      logArea.appendChild(newMessage);
     }
 
-    function setupInputTabs() {
-      const tabs = document.querySelectorAll('.input-tab');
-      tabs.forEach(tab => {
-        tab.addEventListener('click', function () {
-          document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
-          document.querySelectorAll('.input-content').forEach(content => content.classList.remove('active'));
+    function createWritersFromText(text) {
+        characterGrid.innerHTML = '';
+        writers = [];
+        const maxChars = 1000;
+        const finalText = text.slice(0, maxChars);
+        lastAnimateAllText = finalText; 
 
-          this.classList.add('active');
-          inputMode = this.getAttribute('data-type');
-          const contentId = `${inputMode}-input`;
-          document.getElementById(contentId).classList.add('active');
-        });
+        const charSizeValue = document.getElementById('charSize').value;
+        document.documentElement.style.setProperty('--char-size', charSizeValue + 'px');
+        const charSize = parseInt(charSizeValue, 10);
+
+        const isChineseChar = /[\u4e00-\u9fa5]/;
+
+        for (let i = 0; i < finalText.length; i++) {
+            const char = finalText[i];
+            const boxDiv = document.createElement('div');
+            boxDiv.className = 'character-box';
+            boxDiv.id = 'char-box-' + i;
+            
+            if (char === 'k') {
+                boxDiv.style.gridColumn = '1 / -1';
+                boxDiv.style.height = '0';
+                boxDiv.style.border = 'none';
+                characterGrid.appendChild(boxDiv);
+                writers.push(null);
+            } else if (char === 'b') {
+                characterGrid.appendChild(boxDiv);
+                writers.push(null);
+            } else if (isChineseChar.test(char)) {
+                characterGrid.appendChild(boxDiv);
+                const writer = HanziWriter.create(boxDiv.id, char, {
+                    width: charSize, height: charSize, padding: 2,
+                    showOutline: true, strokeAnimationSpeed: 1, delayBetweenStrokes: 200,
+                    radicalColor: document.getElementById('color').value,
+                    strokeColor:  document.getElementById('strokeColor').value
+                });
+                writers.push(writer);
+            } else {
+                boxDiv.style.display = 'flex';
+                boxDiv.style.alignItems = 'center';
+                boxDiv.style.justifyContent = 'center';
+                boxDiv.style.fontSize = `${charSize * 0.6}px`;
+                boxDiv.textContent = char;
+                characterGrid.appendChild(boxDiv);
+                writers.push(null);
+            }
+        }
+        currentIndex = 0;
+        isPaused = false;
+        document.getElementById('start-button').textContent = 'Start';
+        document.getElementById('stop-resume-button').textContent = 'Stop';
+        document.getElementById('animate-button').textContent = 'Animate All';
+    }
+    
+    function animateCurrent() {
+      if (!writers[currentIndex]) return;
+      writers[currentIndex].animateCharacter({
+        onComplete: function() {
+          displayLog(`Character #${currentIndex + 1} animation done.`, 'info');
+        }
       });
     }
 
-    function extractSheetId(url) {
-      const regex = /https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/;
-      const match = url.match(regex);
-      return match && match[1] ? match[1] : null;
-    }
-
-    async function fetchVocabularyData() {
-      try {
-        document.getElementById('spinner-container').classList.remove('hidden');
-        const exportUrl = `https://docs.google.com/spreadsheets/d/${DATA_SOURCE_ID}/export?format=xlsx`;
-        const response = await fetch(exportUrl);
-        if (!response.ok) throw new Error(`Failed to fetch vocabulary data: ${response.status} ${response.statusText}`);
-        const data = await response.arrayBuffer();
-        const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        document.getElementById('spinner-container').classList.add('hidden');
-        return jsonData;
-      } catch (error) {
-        document.getElementById('spinner-container').classList.add('hidden');
-        console.error('Error fetching vocabulary data:', error);
-        alert(`Failed to fetch word data: ${error.message}`);
-        return [];
-      }
-    }
-
-    async function fetchGoogleSheetData(sheetId) {
-      try {
-        document.getElementById('spinner-container').classList.remove('hidden');
-        const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
-        const response = await fetch(exportUrl);
-        if (!response.ok) throw new Error(`Failed to fetch Google Sheet data: ${response.status} ${response.statusText}`);
-        const data = await response.arrayBuffer();
-        const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        const processedData = rawData
-          .filter(row => row.length >= 2 && row[0] && row[1])
-          .map(row => ({
-            chinese: String(row[0]),
-            english: String(row[1]),
-            pinyin: ""
-          }));
-        document.getElementById('spinner-container').classList.add('hidden');
-        return processedData;
-      } catch (error) {
-        document.getElementById('spinner-container').classList.add('hidden');
-        console.error('Error fetching Google Sheet data:', error);
-        alert(`Failed to fetch data from Google Sheet: ${error.message}`);
-        return [];
-      }
-    }
-
-    function filterWordsBySelections(allWords, banding, level, unit, passage) {
-      return allWords.filter(word =>
-        word.banding === banding &&
-        word.level === level &&
-        word.unit === unit &&
-        word.passage === passage
-      );
-    }
-
-    async function initDeck() {
-      if (inputMode === 'custom') {
-        const input = document.getElementById('input-words').value;
-        const manualWords = input.split(/[,，]/).map(word => word.trim()).filter(word => word);
-        if (manualWords.length === 0) {
-          alert("Please enter valid Chinese vocabulary or select an existing vocabulary list.");
-          return;
-        }
-        fullWordData = manualWords.map(word => ({ chinese: word, english: "", pinyin: "" }));
-        deck = manualWords;
-        showFlashcards();
-      } else if (inputMode === 'built-in') {
-        if (!isDropdownSelectionComplete()) {
-          alert("Please select all dropdown options to retrieve the vocabulary.");
-          return;
-        }
+    // --- Landing Page Logic ---
+    async function fetchAndParseContentSheet(sheetId) {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0&tqx=out:csv×tamp=${new Date().getTime()}`;
         try {
-          const allWords = await fetchVocabularyData();
-          if (allWords.length === 0) {
-            alert("No data was retrieved from the database. Please try again later.");
-            return;
-          }
-          const banding = document.getElementById('banding').value;
-          const level = document.getElementById('level').value;
-          const unit = document.getElementById('unit').value;
-          const passage = document.getElementById('passage').value;
-          const filteredWords = filterWordsBySelections(allWords, banding, level, unit, passage);
-          if (filteredWords.length === 0) {
-            alert("No vocabulary found matching your selection criteria. Please try different selections.");
-            return;
-          }
-          fullWordData = filteredWords;
-          deck = filteredWords.map(word => word.chinese);
-          showFlashcards();
+            const response = await fetch(url, { cache: "no-store" });
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const csv = await response.text();
+            const workbook = XLSX.read(csv, { type: "string", raw: true });
+            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
+            return jsonData.slice(1).map(row => ({ title: String(row[0] || '').trim(), text: String(row[1] || '').trim() }));
         } catch (error) {
-          alert("An error occurred while retrieving the vocabulary: " + error.message);
+            alert(`Error loading sheet content: ${error.message}`);
+            return null;
         }
-      } else if (inputMode === 'google-sheet') {
-        const sheetUrl = document.getElementById('sheet-url').value.trim();
-        if (!sheetUrl) {
-          alert("Please enter a Google Sheet URL.");
+    }
+
+    function populateTextDropdown(data) {
+        builtInTextSelect.innerHTML = '<option value="" disabled selected>-- Select Text --</option>';
+        if (data && data.length > 0) {
+            data.forEach((item, index) => {
+                if(item.title) {
+                    const option = document.createElement("option");
+                    option.value = index;
+                    option.textContent = item.title.substring(0, 80);
+                    builtInTextSelect.appendChild(option);
+                }
+            });
+            builtInTextSelectGroup.classList.remove("hidden");
+            builtInTextSelect.disabled = false;
+        }
+    }
+
+    async function loadBuiltInList() {
+        const listUrl = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/export?format=csv&gid=0&tqx=out:csv×tamp=${new Date().getTime()}`;
+        try {
+            const response = await fetch(listUrl, { cache: "no-store" });
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const csv = await response.text();
+            const workbook = XLSX.read(csv, { type: "string" });
+            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
+            
+            builtInContentSelect.innerHTML = '<option value="" disabled selected>-- Select Topic/Sheet --</option>';
+            jsonData.slice(1).forEach(row => {
+                if (row && row[0] && row[1]) {
+                    const option = document.createElement("option");
+                    option.value = String(row[1]).trim();
+                    option.textContent = String(row[0]).trim();
+                    builtInContentSelect.appendChild(option);
+                }
+            });
+        } catch (error) {
+            alert(`Error loading master list: ${error.message}`);
+        }
+    }
+
+    // --- Event Listeners for Page Switching & Setup ---
+    generateButton.addEventListener('click', () => {
+        originalText = characterInput.value.trim();
+        if (!originalText) {
+            alert("Please select a built-in text or enter your own before generating.");
+            return;
+        }
+        createWritersFromText(originalText);
+        displayLog('Sheet generated. Ready to start!', 'success');
+        
+        landingPage.classList.add('hidden');
+        displayPage.classList.remove('hidden');
+    });
+    
+    document.getElementById('back-button').addEventListener('click', () => {
+        displayPage.classList.add('hidden');
+        landingPage.classList.remove('hidden');
+        characterGrid.innerHTML = '';
+        writers = [];
+    });
+
+    builtInContentSelect.addEventListener("change", async (event) => {
+        const selectedSheetId = event.target.value;
+        if (!selectedSheetId) return;
+        builtInTextSelect.innerHTML = '<option value="" disabled selected>-- Loading Texts... --</option>';
+        characterInput.value = "";
+        const contentData = await fetchAndParseContentSheet(selectedSheetId);
+        currentSheetContentData = contentData || [];
+        populateTextDropdown(currentSheetContentData);
+    });
+
+
+        /*  ------  Custom Sheet loader  ------  */
+    document.getElementById('loadCustomSheetButton')
+      .addEventListener('click', async () => {
+        const sheetId = document.getElementById('customSheetId').value.trim();
+        if (!sheetId) { alert('Please paste a Sheet ID.'); return; }
+
+        // hide the (old) dropdown immediately
+        builtInTextSelectGroup.classList.add('hidden');
+
+        // show a loading option
+        builtInTextSelect.innerHTML =
+          '<option value="" disabled selected>-- Loading Texts... --</option>';
+        characterInput.value = '';
+
+        const data = await fetchAndParseContentSheet(sheetId);
+        if (!data || data.length === 0) {
+          alert('Could not read that sheet. Please ensure your sheet ID is correct.');
           return;
         }
-        const sheetId = extractSheetId(sheetUrl);
-        if (!sheetId) {
-          alert("Invalid Google Sheet URL. Please check the URL and try again.");
-                return;
+
+        currentSheetContentData = data;
+        populateTextDropdown(data);
+        displayLog('Custom sheet loaded!', 'success');
+
+        // (optional) clear built‑in selector
+        builtInContentSelect.selectedIndex = 0;
+      });
+
+
+
+
+
+
+
+
+
+
+
+    
+    builtInTextSelect.addEventListener("change", (event) => {
+        const selectedIndex = parseInt(event.target.value, 10);
+        if (!isNaN(selectedIndex) && currentSheetContentData[selectedIndex]) {
+            characterInput.value = currentSheetContentData[selectedIndex].text;
+        }
+    });
+
+    // --- Event Listeners for Display Page Controls ---
+    document.getElementById('refresh-button').addEventListener('click', () => {
+        if (originalText) {
+            displayLog("Refreshing with new settings...", 'info');
+            createWritersFromText(originalText);
+        }
+    });
+
+    document.getElementById('charSize').addEventListener('input', () => {
+        if (writers.length > 0) createWritersFromText(originalText);
+    });
+    document.getElementById('color').addEventListener('input', () => {
+        if (writers.length > 0) createWritersFromText(originalText);
+    });
+
+    document.getElementById('strokeColor').addEventListener('input', () => {
+        if (writers.length > 0) createWritersFromText(originalText);
+    });
+
+    /* ---------- DYNAMIC PRINT‑COLUMN HELPER & LISTENERS ---------- */
+
+    // Map charSize → preferred column count (same logic GitHub version used)
+    function getPrintColumnsFromSize(charSize) {
+        if (charSize >= 66 && charSize <= 70) return 8;
+        if (charSize >= 64 && charSize <= 65) return 9;
+        if (charSize >= 56 && charSize <= 60) return 10;
+        if (charSize >= 51 && charSize <= 55) return 11;
+        if (charSize >= 43 && charSize <= 50) return 12;
+        if (charSize >= 41 && charSize <= 42) return 13;
+        if (charSize >= 34 && charSize <= 40) return 14;
+        if (charSize === 35)               return 15;
+        return 8; // fallback
+    }
+
+    // utility: writes/updates a single <style id="dynamic-print-style">
+    function updatePrintStyle(columns) {
+        let style = document.getElementById('dynamic-print-style');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'dynamic-print-style';
+            document.head.appendChild(style);
+        }
+        style.textContent = `
+            @media print {
+                .character-grid {
+                    grid-template-columns: repeat(${columns}, 1fr) !important;
+                }
             }
-        try {
-          const sheetData = await fetchGoogleSheetData(sheetId);
-          if (sheetData.length === 0) {
-            alert("No data found in the Google Sheet, or the sheet may be empty.");
+        `;
+    }
+
+
+    const defaultCols = parseInt(document.getElementById('printColsSelect').value, 10);
+    updatePrintStyle(defaultCols);
+
+    // Also sync char size based on dropdown
+    const sizeMap = { 8: 70, 10: 57, 12: 45, 14: 35 };
+    const newSize = sizeMap[defaultCols] || 70;
+    const sizeInput = document.getElementById('charSize');
+    sizeInput.value = newSize;
+    sizeInput.dispatchEvent(new Event('input'));
+
+    
+    /* 3‑A  – respond when the user changes “Size” */
+    document.getElementById('charSize').addEventListener('input', function () {
+        const size = parseInt(this.value, 10);
+        const cols = getPrintColumnsFromSize(size);
+        updatePrintStyle(cols);
+    });
+
+    /* 3‑B  – respond when the user types into “Print Columns” */
+    document.getElementById('printColumns').addEventListener('input', function () {
+        const cols = Math.min(15, Math.max(8, parseInt(this.value, 10) || 8));
+        updatePrintStyle(cols);
+    });
+
+    /* 3‑C – dropdown sets print columns **and** adjusts char size */
+    document.getElementById('printColsSelect').addEventListener('change', function () {
+      const cols = parseInt(this.value, 10);
+
+      // 1) update the @media print rule
+      updatePrintStyle(cols);
+
+      // 2) map preferred char‑size for each option
+      const sizeMap = { 8: 70, 10: 57, 12: 45, 14: 35 };
+      const newSize  = sizeMap[cols] || 70;                 // fallback = 70px
+
+      const sizeInput = document.getElementById('charSize');
+      if (parseInt(sizeInput.value, 10) !== newSize) {
+        sizeInput.value = newSize;                          // set field visibly
+        sizeInput.dispatchEvent(new Event('input'));        // reuse existing logic
+      }
+    });
+
+
+
+
+    
+    // --- UPDATED PRINT LOGIC ------------------------------------------------
+    //  We now call window.print() automatically *only* when the script is not
+    //  running inside an <iframe> sandbox (i.e., GitHub Pages or any top‑level
+    //  page). In a Google Sites embed, the call is blocked, so we keep the
+    //  original “Ctrl+P” hint instead.
+    // -----------------------------------------------------------------------
+    document.getElementById('print-button').addEventListener('click', () => {
+      document.body.classList.add('print-preview');
+    });
+
+    document.getElementById('print-dialog-button').addEventListener('click', () => {
+      const inTopWindow = window.top === window.self;     // true = not inside Sites iframe
+      if (inTopWindow) {
+        window.print();                                   // GitHub Pages etc.
+      } else {
+        displayLog("Use browser menu or Ctrl+P to print.", "info");  // Google Sites
+      }
+    });
+
+
+    document.getElementById('exit-print-button').addEventListener('click', () => {
+        document.body.classList.remove('print-preview');
+        displayLog("Exited full page view.", "info");
+    });
+
+    // Reset preview if user closes print dialog manually
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('print-preview');
+        displayLog("Exited full page view.", "info");
+    });
+    // --- END OF MODIFIED PRINT LOGIC ---------------------------------------
+    
+    document.getElementById('animate-button').addEventListener('click', function() {
+      if (this.textContent === 'Animate All') {
+        if (writers.length === 0) return displayLog("No characters to animate.", 'error');
+        stopAll = false;
+        displayLog("Starting sequential animation!", 'info');
+        let currentIndexForAll = 0;
+        function animateNext() {
+          if (stopAll) return displayLog("All animations stopped!", 'info');
+          if (currentIndexForAll >= writers.length) return displayLog("All characters animated!", 'success');
+          const writer = writers[currentIndexForAll];
+          if (!writer) {
+            currentIndexForAll++;
+            animateNext();
             return;
           }
-          fullWordData = sheetData;
-          deck = sheetData.map(word => word.chinese);
-          initCustomPinyin();
-          showFlashcards();
-                } catch (error) {
-          alert("An error occurred while processing the Google Sheet: " + error.message);
-        }
-      }
-    }
-
-    function showFlashcards() {
-      document.getElementById('inputSection').classList.add('hidden');
-      document.getElementById('controls').classList.remove('hidden');
-      document.getElementById('flashcard').classList.remove('hidden');
-      document.getElementById('progress').classList.remove('hidden');
-      currentIndex = 0;
-      updateCard();
-    }
-
-    function isDropdownSelectionComplete() {
-      return document.getElementById('banding').value !== "" &&
-        document.getElementById('level').value !== "" &&
-        document.getElementById('unit').value !== "" &&
-        document.getElementById('passage').value !== "";
-    }
-
-    function returnToEdit() {
-      document.getElementById('inputSection').classList.remove('hidden');
-      document.getElementById('controls').classList.add('hidden');
-      document.getElementById('flashcard').classList.add('hidden');
-      document.getElementById('progress').classList.add('hidden');
-    }
-
-    function calculateEnglishFontSize(text) {
-      const baseSize = window.innerWidth <= 576 ? 1.5 : 3;
-      if (text.length > 80) return '1rem';
-      if (text.length > 50) return (baseSize * 0.5) + 'rem';
-      if (text.length > 30) return (baseSize * 0.7) + 'rem';
-      return baseSize + 'rem';
-    }
-
-    function updateCard() {
-      const front = document.querySelector('.front');
-      const back = document.querySelector('.back');
-      const progress = document.getElementById('progress');
-      if (deck[currentIndex]) {
-        const currentWord = deck[currentIndex];
-        const wordData = fullWordData[currentIndex];
-        front.textContent = currentWord;
-        let pinyinText = wordData.pinyin || getPinyin(currentWord);
-        if (inputMode === 'built-in') {
-          let englishText = wordData.english || currentWord;
-          const englishFontSize = calculateEnglishFontSize(englishText);
-          back.innerHTML = `<div>
-                              <div class="pinyin">${pinyinText}</div>
-                              <div class="english" style="font-size: ${englishFontSize};">${englishText}</div>
-                            </div>`;
-        } else if (inputMode === 'custom') {
-          back.innerHTML = `<div><div class="pinyin">${pinyinText}</div></div>`;
-        } else if (inputMode === 'google-sheet') {
-          let definition = wordData.english || '';
-          const definitionFontSize = calculateEnglishFontSize(definition);
-          const currentWordFontSize = definition.length > 80 ? '1.2rem' :
-            definition.length > 50 ? '2rem' :
-              definition.length > 30 ? '2.5rem' : 'var(--translation-font-size-desktop)';
-          back.innerHTML = `<div>
-                              <div class="current-word" style="font-size: ${currentWordFontSize};">${currentWord}</div>
-                              <div class="english" style="font-size: ${definitionFontSize};">${definition}</div>
-                            </div>`;
-        }
-        progress.textContent = `Card ${currentIndex + 1} of ${deck.length}`;
-        progress.classList.remove('hidden');
-      }
-    }
-
-    function getPinyin(word) {
-      if (window.pinyinPro && window.pinyinPro.pinyin) {
-        return window.pinyinPro.pinyin(word, {
-          toneType: 'symbol',
-          type: 'array',
-          multiple: true,
-          mode: 'surname'
-        }).join(' ');
-      }
-      return word;
-    }
-
-    function flipCard() {
-      document.getElementById('flashcard').classList.toggle('flipped');
-    }
-
-    function prevCard() {
-      currentIndex = Math.max(0, currentIndex - 1);
-      document.getElementById('flashcard').classList.remove('flipped');
-      updateCard();
-    }
-
-    function nextCard() {
-      if (currentIndex >= deck.length - 1) {
-        if (confirm("You've reached the end of the flashcards! Restart from the beginning?")) {
-          currentIndex = 0;
-        } else {
-                return;
-            }
-                } else {
-        currentIndex++;
-      }
-      document.getElementById('flashcard').classList.remove('flipped');
-      updateCard();
-    }
-
-    function shuffleDeck() {
-      const indices = Array.from({ length: deck.length }, (_, i) => i);
-      for (let i = indices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [indices[i], indices[j]] = [indices[j], indices[i]];
-      }
-      deck = indices.map(i => deck[i]);
-      fullWordData = indices.map(i => fullWordData[i]);
-      currentIndex = 0;
-      document.getElementById('flashcard').classList.remove('flipped');
-      updateCard();
-    }
-
-    function showStrokeOrder() {
-      const overlay = document.getElementById('strokeOrderOverlay');
-      const canvas = document.getElementById('stroke-order-canvas');
-      overlay.style.display = 'flex';
-      
-      if (writer) {
-        writer.setCharacter(deck[currentIndex]);
-      } else {
-        writer = HanziWriter.create('stroke-order-canvas', deck[currentIndex], {
-          width: 200,
-          height: 200,
-          padding: 5,
-          showOutline: true,
-          strokeAnimationSpeed: 1,
-          delayBetweenStrokes: 500,
-          delayBetweenLoops: 2000,
-          strokeFadeDuration: 400,
-          strokeHighlightSpeed: 200,
-          strokeHighlightDuration: 800,
-        });
-      }
-      writer.animateCharacter();
-    }
-
-    function hideStrokeOrder() {
-      const overlay = document.getElementById('strokeOrderOverlay');
-      overlay.style.display = 'none';
-      if (writer) {
-        writer.cancelAnimation();
-      }
-    }
-
-    // Close overlay when clicking outside the container
-    document.getElementById('strokeOrderOverlay').addEventListener('click', function(e) {
-      if (e.target === this) {
-        hideStrokeOrder();
-      }
-    });
-
-    // Close overlay with Escape key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && document.getElementById('strokeOrderOverlay').style.display === 'flex') {
-        hideStrokeOrder();
-      }
-    });
-
-    window.addEventListener('load', () => {
-      setupInputTabs();
-      if (!window.pinyinPro) {
-        alert("An error occurred while loading the pinyin-pro library. Please refresh the page.");
-      }
-      initCustomPinyin();
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') prevCard();
-      if (e.key === 'ArrowRight') nextCard();
-      if (e.key === ' ' || e.key === 'Enter') flipCard();
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const pv = document.getElementById('pageviews');
-      if (pv !== null) {
-        let uri = location.pathname;
-        if (uri !== "/" && uri.endsWith("/")) uri = uri.slice(0, -1);
-        if (!uri) uri = "/";
-        const url = `https://linsnotes.goatcounter.com/counter/${encodeURIComponent(uri)}.json`;
-        fetch(url)
-          .then(response => response.ok ? response.json() : { count: "0" })
-          .then(data => {
-            const count = data.count.replace(/\s/g, '');
-            pv.innerText = new Intl.NumberFormat().format(count);
-            pv.classList.remove('loading');
-          })
-          .catch(() => {
-            pv.innerText = '0';
-            pv.classList.remove('loading');
+          writer.animateCharacter({
+            onComplete: function() {
+              currentIndexForAll++;
+              animateNext();
+            },
           });
+        }
+        animateNext();
+        this.textContent = 'Stop All';
+      } else {
+        stopAll = true;
+        displayLog("Stopping all animations and reverting to initial state.", 'info');
+        createWritersFromText(lastAnimateAllText);
+        this.textContent = 'Animate All';
       }
     });
-    </script>
 
+    document.getElementById('quiz-button').addEventListener('click', function() {
+      if (writers.length === 0) return displayLog("No characters to quiz.", 'error');
+      displayLog("Starting quiz mode for all characters. Good luck!", 'info');
+      writers.forEach((writer, idx) => {
+        if (!writer) return;
+        writer.quiz({
+          onMistake: (strokeData) => displayLog(`Char #${idx + 1}: Mistake on stroke ${strokeData.strokeNum + 1}`, 'error'),
+          onCorrectStroke: (strokeData) => displayLog(`Char #${idx + 1}: Correct stroke ${strokeData.strokeNum + 1}`, 'success'),
+          onComplete: (summaryData) => displayLog(`Char #${idx + 1} completed with ${summaryData.totalMistakes} mistakes.`, 'info')
+        });
+      });
+    });
+
+    document.getElementById('start-button').addEventListener('click', function() {
+      if (writers.length === 0) return displayLog("No characters to animate.", 'error');
+      if (this.textContent === 'Start') {
+        currentIndex = -1;
+        do { currentIndex++; } while (writers[currentIndex] === null && currentIndex < writers.length);
+        if (currentIndex < writers.length) {
+          displayLog("Starting from character #1", 'info');
+          animateCurrent();
+          this.textContent = 'Previous';
+        }
+      } else { // 'Previous'
+        do { currentIndex--; } while (writers[currentIndex] === null && currentIndex > -1);
+        if (currentIndex > -1) {
+          displayLog(`Moving to character #${currentIndex + 1}`, 'info');
+          animateCurrent();
+        } else {
+            currentIndex = 0;
+        }
+      }
+    });
+
+    document.getElementById('next-button').addEventListener('click', function() {
+      if (writers.length === 0) return displayLog("No characters to animate.", 'error');
+      if (currentIndex < writers.length - 1) {
+          do { currentIndex++; } while (writers[currentIndex] === null && currentIndex < writers.length -1);
+          if (writers[currentIndex]){
+              displayLog(`Moving to character #${currentIndex + 1}`, 'info');
+              animateCurrent();
+          }
+      }
+    });
+
+    document.getElementById('stop-resume-button').addEventListener('click', function() {
+      const writer = writers[currentIndex];
+      if (!writer) return displayLog("No character selected to stop/resume.", 'error');
+      if (!isPaused) {
+        writer.pauseAnimation();
+        displayLog("Paused animation.", 'info');
+        isPaused = true;
+        this.textContent = "Resume";
+      } else {
+        writer.resumeAnimation();
+        displayLog("Resumed animation.", 'info');
+        isPaused = false;
+        this.textContent = "Stop";
+      }
+    });
+
+    // --- Initial Load ---
+    document.addEventListener('DOMContentLoaded', loadBuiltInList);
+
+    document.getElementById('download-all-button').addEventListener('click', async () => {
+  if (!currentSheetContentData || currentSheetContentData.length === 0) {
+    alert("Please load a sheet first.");
+    return;
+  }
+
+  const originalDisplay = displayPage.classList.contains('hidden');
+  const loadingMsg = "Preparing downloads…";
+
+  displayLog(loadingMsg, 'info');
+  landingPage.classList.add('hidden');
+  displayPage.classList.remove('hidden');
+
+  for (let i = 0; i < currentSheetContentData.length; i++) {
+    const { title, text } = currentSheetContentData[i];
+    if (!text.trim()) continue;
+
+    // Render characters into the grid
+    await new Promise(resolve => {
+      createWritersFromText(text);
+      setTimeout(resolve, 800); // wait for DOM to update
+    });
+
+    // Save the current grid as PDF
+    const element = document.getElementById("character-grid");
+    const opt = {
+      margin: 0.25,
+      filename: `${title || 'sheet'}_${i + 1}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    await html2pdf().set(opt).from(element).save();
+    await new Promise(r => setTimeout(r, 500)); // short delay between downloads
+  }
+
+  displayLog("All PDFs downloaded!", "success");
+
+  // Return to landing if it was originally there
+  if (originalDisplay) {
+    displayPage.classList.add('hidden');
+    landingPage.classList.remove('hidden');
+  }
+});
+
+
+  </script>
+</body>
 </html>
