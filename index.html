@@ -147,7 +147,7 @@
             <label for="masterSelect" style="margin-top:8px; display:block;">Built‑in sheets</label>
             <select id="masterSelect"></select>
             <div class="row" style="margin-top:8px;">
-              <button class="btn" id="openMasterBtn">Open Selected</button>
+              <button class="btn" id="openMasterBtn" disabled>Open Selected</button>
             </div>
             
           </div>
@@ -424,7 +424,8 @@
   function normalizeHeader(h){ return h.trim().toLowerCase().replace(/\s+/g,' '); }
 
   function getCsvUrl(spreadsheetId){
-    return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:csv`;
+    return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/export?format=csv`;
+  }/gviz/tq?tqx=out:csv`;
   }
 
   async function fetchSheetCsv(spreadsheetId){
@@ -543,26 +544,6 @@
       if(openBtn){ openBtn.disabled = true; }
       return;
     }
-    rows.forEach(r=>{
-      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
-    });
-    if(openBtn){ openBtn.disabled = false; }
-  }
-    if(!rows.length){ 
-      list.innerHTML = '<div class="muted">No items found.</div>'; 
-      if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
-      return; 
-    }
-    rows.forEach(r=>{
-      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
-      const div = document.createElement('div'); div.className='item';
-      div.innerHTML = `<div class="title">${r.title}</div>`;
-      const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Open';
-      btn.onclick = ()=> loadExerciseSheet(r.id, r.title);
-      div.appendChild(btn);
-      list.appendChild(div);
-    });
-  }
 
   function tryAgain(){
     $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent='';
@@ -694,6 +675,8 @@
   function bindEvents(){
     // Master reload (auto-load also runs on init)
     const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
+
+    const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
 
     const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
       const sel = $('#masterSelect');
