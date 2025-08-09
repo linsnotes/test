@@ -3,990 +3,804 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <title>学而时习之</title>
-
-  <!-- =====================================================
-       ADDED GoatCounter page‑view tracker (2 lines, async)
-       ===================================================== -->
-  <script data-goatcounter="https://linsnotes.goatcounter.com/count"
-          async src="https://gc.zgo.at/count.js"></script>
-
+  <title>听写 · Tingxie App</title>
+  <meta name="theme-color" content="#6c5ce7" />
   <style>
-    /* --- General & Page Layout --- */
-    :root {
-        --char-size: 70px; /* Initial character size, CSS variable */
+    :root{
+      --bg: #0f1226; /* deep indigo */
+      --panel: rgba(255,255,255,0.08);
+      --panel-2: rgba(255,255,255,0.14);
+      --text: #f5f7ff;
+      --muted: #c8cff7;
+      --brand: #6c5ce7; /* purple */
+      --brand-2: #00d4ff; /* aqua */
+      --ok: #2ecc71;
+      --warn: #f1c40f;
+      --err: #ff7675;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f7f6;
-      text-align: center;
-      color: #333;
-    }
-    
-    .hidden {
-      display: none !important;
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text); background:
+        radial-gradient(1200px 600px at -10% -10%, #1b1644 0%, transparent 50%),
+        radial-gradient(1200px 600px at 110% 10%, #12233f 0%, transparent 50%),
+        radial-gradient(1200px 600px at 50% 120%, #1a2a6c 0%, transparent 50%),
+        var(--bg);
     }
 
-    /* --- Landing Page Styles --- */
-    #landing-page {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        padding: 20px;
-        box-sizing: border-box;
+    .container{ max-width: 1100px; margin: 0 auto; padding: 16px; }
+
+    header{
+      position: sticky; top:0; z-index: 5; backdrop-filter: saturate(1.2) blur(8px);
+      background: linear-gradient(180deg, rgba(10,12,30,0.8), rgba(10,12,30,0.2));
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-
-    .setup-container {
-        background: white;
-        padding: 2.5rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 600px;
+    .nav{ display:flex; gap:12px; align-items:center; justify-content:space-between; padding: 14px 0; }
+    .brand{ display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:0.2px; }
+    .logo{
+      width: 34px; height: 34px; border-radius: 12px; background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      box-shadow: var(--shadow);
     }
+    .nav-actions{ display:flex; gap:10px; align-items:center; }
 
-    .setup-container h1 {
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
+    .btn{
+      appearance:none; border:none; cursor:pointer; color: var(--text); font-weight: 700;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow); transition: transform .06s ease, filter .2s;
     }
+    .btn.secondary{ background: var(--panel-2); font-weight:600; box-shadow: none; border:1px solid rgba(255,255,255,0.1); }
+    .btn.ghost{ background: transparent; border:1px solid rgba(255,255,255,0.18); box-shadow:none; }
+    .btn:active{ transform: translateY(1px) scale(0.99); }
+    .btn[disabled]{ opacity: .5; cursor:not-allowed; }
 
-    .setup-container p {
-        color: #7f8c8d;
-        margin-bottom: 2rem;
-    }
+    .tag{ font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); }
 
-    .control-group {
-        margin-bottom: 1.5rem;
-        text-align: left;
-    }
+    .grid{ display:grid; gap:16px; }
+    @media (min-width: 900px){ .grid.cols-2{ grid-template-columns: 1fr 1fr; } }
 
-    .control-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        color: #34495e;
-    }
+    .card{ background: var(--panel); border:1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); }
+    .card h3{ margin:6px 0 8px; }
+    .muted{ color: var(--muted); opacity:.9; }
 
-    .control-group select, .control-group textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border-radius: 8px;
-        border: 1px solid #ddd;
-        font-size: 1rem;
-        box-sizing: border-box;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
+    input, select{ width: 100%; padding: 12px 12px; border-radius: 12px; border:1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.2); color: var(--text); outline: none; }
+    input::placeholder{ color: #b8c0ff; opacity:.7; }
+    label{ font-size: 13px; opacity:.9; }
 
-    .control-group select:focus, .control-group textarea:focus {
-        outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-    }
-    
-    .control-group textarea {
-        min-height: 120px;
-        resize: vertical;
-    }
+    .row{ display:flex; gap:12px; align-items:center; flex-wrap: wrap; }
 
-    /* ---------- Custom‑sheet inline row ---------- */
-    .input-inline{           /* the flex wrapper  */
-        display:flex;
-        gap:10px;
-        align-items:center;
-    }
+    .list{ display:flex; flex-direction:column; gap:12px; }
+    .item{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); }
+    .item .title{ font-weight:700; }
 
-    /* make the text‑box look like the dropdown but keep it narrower */
-    #customSheetId{
-        flex:1 1 65%;        /* grows but caps around two‑thirds width */
-        padding:0.75rem;
-        border-radius:8px;
-        border:1px solid #ddd;
-        font-size:1rem;
-        box-sizing:border-box;
-    }
+    .hidden{ display:none !important; }
 
-    /* remove the old top‑margin and match button height */
-    #loadCustomSheetButton{
-        padding:0.75rem 1.2rem;
-        margin:0;            /* eliminates the previous inline style */
-        border:none;
-        border-radius:8px;
-        background:#27ae60;
-        color:#fff;
-        font-weight:600;
-        cursor:pointer;
-    }
-    #loadCustomSheetButton:hover{background:#229954;}
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); }
 
+    .switch{ position:relative; display:inline-block; width: 48px; height: 26px; }
+    .switch input{ display:none; }
+    .slider{ position:absolute; cursor:pointer; inset:0; background: rgba(255,255,255,0.2); transition:.2s; border-radius: 999px; }
+    .slider:before{ content:""; position:absolute; height: 22px; width: 22px; left: 2px; top: 2px; background: white; border-radius: 50%; transition:.2s; }
+    .switch input:checked + .slider{ background: linear-gradient(135deg, var(--brand), var(--brand-2)); }
+    .switch input:checked + .slider:before{ transform: translateX(22px); }
 
+    .progress{ height: 10px; border-radius: 999px; background: rgba(255,255,255,0.12); overflow: hidden; }
+    .progress > span{ display:block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); width:0%; transition: width .25s ease; }
 
+    .toast{ position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color:#fff; padding: 10px 14px; border-radius: 12px; z-index: 20; box-shadow: var(--shadow); }
 
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-weight:700; letter-spacing: .2px; background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 6px; }
 
-    
-    .divider {
-        display: flex;
-        align-items: center;
-        color: #bdc3c7;
-        margin: 2rem 0;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-    }
+    .blink{ animation: blink 1s step-start 3; }
+    @keyframes blink { 50% { opacity: 0.5; } }
 
-    .divider::before, .divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid #eee;
-    }
-    .divider:not(:empty)::before { margin-right: 1em; }
-    .divider:not(:empty)::after { margin-left: 1em; }
-    
-    #generate-button {
-        background-color: #27ae60;
-        color: white;
-        border: none;
-        padding: 1rem 1.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        border-radius: 8px;
-        cursor: pointer;
-        width: 100%;
-        transition: background-color 0.2s;
-    }
-    #generate-button:hover { background-color: #229954; }
+    .result-badge{ padding:4px 8px; border-radius:8px; font-size:12px; font-weight:800; }
+    .ok{ background: rgba(46, 204, 113, .18); border:1px solid rgba(46, 204, 113, .35); }
+    .err{ background: rgba(231, 76, 60, .18); border:1px solid rgba(231, 76, 60, .35); }
+    .skip{ background: rgba(241, 196, 15, .18); border:1px solid rgba(241, 196, 15, .35); }
 
-
-    /* --- Display Page Styles --- */
-    #display-page {
-        padding-bottom: 180px; /* Prevent log from covering last row */
-    }
-
-    #page-title {
-        margin-top: 20px;
-        color: #2c3e50;
-    }
-
-    .sticky-container {
-      position: sticky; 
-      top: 0; 
-      z-index: 9999;
-      background-color: rgba(255, 255, 255, 0.95);
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
-      padding: 15px 10px;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .button-container {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      font-size: 1em;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      color: white;
-      transition: opacity 0.2s;
-    }
-    button:hover { opacity: 0.85; }
-
-    #start-button, #next-button, #refresh-button { background-color: #4caf50; }
-    #stop-resume-button { background-color: #9c27b0; }
-    #animate-button { background-color: #f0ad4e; }
-    #quiz-button { background-color: #2196f3; }
-    #print-button { background-color: #212121; }
-    #print-dialog-button { background-color: #26a4ad;}
-    #back-button { background-color: #e74c3c; } 
-
-    #settings-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    #settings-container label { font-weight: 500; margin-left: 10px; }
-
-    .character-grid {
-      display: grid;
-      gap: 10px;
-      width: 90%;
-      max-width: 90vw;
-      margin: 20px auto;
-      grid-template-columns: repeat(auto-fill, minmax(var(--char-size), 1fr));
-    }
-
-    .character-box {
-      position: relative;
-      width: var(--char-size);
-      height: var(--char-size);
-      border: 1px solid #000;
-      margin: 0 auto;
-    }
-    
-    #log-messages-wrapper {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        max-width: 550px;
-        min-height: 48px;
-        z-index: 10000;
-        background: rgba(255, 255, 255, 0.75);
-        -webkit-backdrop-filter: blur(16px);
-        backdrop-filter: blur(16px);
-        border-radius: 12px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 5px 15px;
-    }
-
-    #log-messages {
-        width: 100%;
-        text-align: center;
-        color: #2c2c2e;
-        font-size: 20px;
-    }
-    .log-error { color: #d32f2f; }
-    .log-success { color: #388e3c; }
-    .log-info { color: #1976d2; }
-
-    /* --- NEW/IMPROVED PRINT STYLES --- */
-
-    /* Container for the 'Exit Preview' button */
-    #print-exit-container {
-        display: none; /* Hidden by default */
-    }
-
-    #exit-print-button {
-        background-color: #c0392b;
-        font-weight: 600;
-    }
-
-    /* Styles applied when the 'print-preview' class is on the body */
-    body.print-preview .button-container,
-    body.print-preview #settings-container,
-    body.print-preview #log-messages-wrapper {
-        display: none !important;
-    }
-
-    body.print-preview #print-exit-container {
-        display: flex !important;
-        justify-content: center;
-    }
-
-    body.print-preview .sticky-container {
-        background: transparent;
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-        border-bottom: none;
-    }
-
-
-    /* Default: nothing on desktop/tablet */
-    #mobile-footer {
-      height: 0;
-    }
-
-    /* Mobile: create breathing-room and respect iPhone safe area */
-    @media (max-width: 576px) {
-        #mobile-footer {
-           height: 80px; /* tweak to taste */
-           height: calc(80px + env(safe-area-inset-bottom, 0px));
-        }
-    }
-
-
-
-    /* Final styles for the actual printed page */
-    @media print {
-        /* FIX: Ensure body and html can expand to content height */
-        html, body {
-            height: auto !important;
-            overflow: visible !important;
-        }
-        
-        body {
-            background: white !important;
-            padding: 0;
-            margin: 0;
-            color: black;
-        }
-
-        @page {
-            size: A4;
-            margin: 15mm;
-        }
-
-        /* Hide ALL UI elements when printing */
-        #landing-page, .sticky-container, #page-title, #log-messages-wrapper {
-            display: none !important;
-        }
-
-        /* FIX: Ensure the main content container can flow across pages */
-        #display-page {
-            display: block !important;
-            padding: 0 !important;
-            height: auto !important;
-            overflow: visible !important;
-        }
-
-        .character-grid {
-            display: grid !important;
-            grid-template-columns: repeat(8, 1fr) !important;
-            page-break-inside: avoid;
-            gap: 15px;
-            width: 100%;
-            max-width: 100%;
-            margin: 0;
-            overflow: visible !important; /* Ensure grid itself doesn't clip */
-        }
-        
-        .character-box {
-            page-break-inside: avoid;
-            border: 1px solid #333;
-        }
-        
-        /* Hide the divs used for line breaks ('k') when printing */
-        .character-box[style*="height: 0"] {
-            display: none !important;
-        }
-    }
+    .footer{ text-align:center; opacity:.8; font-size:12px; padding: 24px 0 40px; }
   </style>
 </head>
 <body>
-
-  <!-- ======================================================= -->
-  <!--                      LANDING PAGE                       -->
-  <!-- ======================================================= -->
-  <div id="landing-page">
-    <div class="setup-container">
-        <h1>Stroke by Stroke</h1>
-        <p>Start by choosing a built-in text or pasting your own.</p>
-        
-        <div class="control-group">
-            <label for="builtInContentSelect">Select Built-in Sheet:</label>
-            <select id="builtInContentSelect">
-                <option value="" disabled selected>-- Loading List --</option>
-            </select>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div style="font-size:18px; line-height:1;">听写 · Tingxie</div>
+          <div style="font-size:12px; opacity:.8;">Kids-friendly dictation app</div>
         </div>
+      </div>
+      <div class="nav-actions">
+        <span class="tag" id="ttsStatus">TTS: checking…</span>
+        <button class="btn secondary" id="openSettingsBtn" title="Speech & options">Settings</button>
+      </div>
+    </div>
+  </header>
 
+  <main class="container">
 
-        <div class="control-group">
-            <label for="customSheetId">Import from Custom Sheet ID:</label>
-
-            <!-- NEW flex row -->
-            <div class="input-inline">
-                <input type="text" id="customSheetId"
-                       placeholder="paste Sheet ID here" />
-                <button id="loadCustomSheetButton">Load</button>
+    <!-- SCREEN: HOME / SOURCES -->
+    <section id="screen-home" class="grid cols-2">
+      <div class="card">
+        <h2>Choose where to load your exercises</h2>
+        <p class="muted">You can browse a <b>Master Library</b> (from a Google Sheet you control) or paste a <b>Custom Exercise</b> sheet ID.</p>
+        <div class="grid cols-2">
+          <div class="card" style="min-height:220px;">
+            <h3>Master Library</h3>
+            <p class="muted">Loads from a master sheet (columns: <b>title</b>, <b>sheet id</b>). Replace the placeholder ID in code later.</p>
+            <div class="row">
+              <button class="btn" id="loadMasterBtn">Load Master</button>
+              <button class="btn ghost" id="reloadMasterBtn" title="Refresh" aria-label="Refresh">↻</button>
             </div>
+            <div id="masterWarn" class="muted" style="margin-top:8px; display:none;">Master Spreadsheet ID is not set. Edit the code to set it.</div>
+            <div id="masterList" class="list" style="margin-top:10px; max-height:260px; overflow:auto;"></div>
+          </div>
+
+          <div class="card" style="min-height:220px;">
+            <h3>Custom Exercise</h3>
+            <p class="muted">Paste a <b>Spreadsheet ID</b> that contains one sheet with columns: <b>title</b>, <b>words</b> (comma-separated; English or Chinese).</p>
+            <label for="customId">Google Spreadsheet ID</label>
+            <input id="customId" type="text" placeholder="e.g. 1A2bC3dE4F..." autocomplete="off"/>
+            <div class="row" style="margin-top:8px;">
+              <button class="btn" id="loadCustomBtn">Load Exercise Sheet</button>
+              <button class="btn secondary" id="demoBtn" title="Try a minimal demo with local sample">Quick Demo</button>
+            </div>
+            <div id="customList" class="list" style="margin-top:10px; max-height:260px; overflow:auto;"></div>
+          </div>
         </div>
+      </div>
 
+      <div class="card">
+        <h2>How it works</h2>
+        <ul class="muted" style="line-height:1.7; padding-left: 18px;">
+          <li>App uses <b>browser Text‑to‑Speech</b> (Chrome & Edge work best).</li>
+          <li>Pick an exercise, then the app will <b>play each word</b>. Type what you hear.</li>
+          <li>Wrong? You’ll see feedback and can <b>Try again</b>, <b>Skip</b>, or <b>Show answer</b>.</li>
+          <li>At the end, view a <b>summary</b> of your accuracy and time.</li>
+        </ul>
+        <div class="pill" style="margin-top:10px;">Tip: Press <span class="kbd">Enter</span> to submit</div>
+      </div>
+    </section>
 
-
-        <div class="control-group hidden" id="builtInTextSelectGroup">
-            <label for="builtInTextSelect">Select Text:</label>
-            <select id="builtInTextSelect">
-                <option value="" disabled selected>-- Select Topic First --</option>
-            </select>
+    <!-- SCREEN: EXERCISE PICKER -->
+    <section id="screen-picker" class="card hidden">
+      <div class="row" style="justify-content:space-between;">
+        <h2 id="pickerTitle">Exercises</h2>
+        <div class="row">
+          <label class="pill" title="Randomize order when starting">
+            <span>Randomize</span>
+            <label class="switch" style="margin-left:8px;">
+              <input type="checkbox" id="randomizeToggle" />
+              <span class="slider"></span>
+            </label>
+          </label>
+          <button class="btn secondary" id="backHomeBtn">Back</button>
         </div>
+      </div>
+      <div id="exerciseList" class="list" style="margin-top:10px;"></div>
+    </section>
 
-        <div class="divider">OR</div>
-
-        <div class="control-group">
-            <label for="character-input">Paste Your Own Text:</label>
-            <textarea id="character-input" placeholder="Enter or paste Chinese text. Use 'k' for a new line and 'b' for an empty box."></textarea>
+    <!-- SCREEN: RUN -->
+    <section id="screen-run" class="card hidden">
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div>
+          <h2 id="runTitle">Exercise</h2>
+          <div class="muted" id="runMeta"></div>
         </div>
-        
-        <button id="generate-button">Generate Writing Sheet</button>
-        <button id="download-all-button" style="margin-top: 1rem; background-color: #3498db;">Download All as PDF</button>
-
-    </div>
-  </div>
-<footer id="mobile-footer"></footer>
-
-  <!-- ======================================================= -->
-  <!--                      DISPLAY PAGE                       -->
-  <!-- ======================================================= -->
-  <div id="display-page" class="hidden">
-  
-    <div class="sticky-container">
-        <div class="button-container">
-          <button id="back-button">New Sheet</button>
-          <button id="start-button">Start</button>
-          <button id="next-button">Next</button>
-          <button id="stop-resume-button">Stop</button>
-          <button id="animate-button">Animate All</button>
-          <button id="quiz-button">Quiz Mode</button>
-          <button id="print-button">Full Page View</button>
-          <button id="print-dialog-button">Print</button>
-          <button id="refresh-button">Refresh</button>
+        <div class="row">
+          <button class="btn secondary" id="revealSettingsBtn">Settings</button>
+          <button class="btn secondary" id="stopBtn">Stop</button>
         </div>
-        <div id="settings-container">
-            <label for="charSize">Size:</label>
-            <input type="number" id="charSize" value="70" min="40" max="150" step="1" />
-            <label for="color">Radical Color:</label>
-            <input type="color" id="color" value="#FF00FF" />
-            <label for="strokeColor">Stroke Color:</label>
-            <input type="color" id="strokeColor" value="#000000" />
+      </div>
 
-            <label for="printColumns" style="display:none">Print Cols:</label>
-            <input  type="number"
-                    id="printColumns"
-                    value="8"
-                    min="8"
-                    max="15"
-                    style="display:none" />
+      <div style="margin:12px 0;" class="progress" aria-label="Progress">
+        <span id="progressBar" style="width:0%"></span>
+      </div>
 
-          
-            <label for="printColsSelect">Boxes per row (when printing):</label>
-            <select id="printColsSelect">
-              <option value="8">8</option>
-              <option value="10">10</option>
-              <option value="12" selected>12</option>
-              <option value="14">14</option>
-            </select>
-
+      <div class="card" style="margin-top:10px;">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div>
+            <div class="muted" style="font-size:13px;">Word <span id="idxNow">1</span> / <span id="idxTotal">1</span></div>
+            <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
+          </div>
+          <div class="row">
+            <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
+          </div>
         </div>
-        <!-- NEW CONTAINER FOR EXIT PRINT BUTTON -->
-        <div id="print-exit-container">
-            <button id="exit-print-button">Exit Full Page View</button>
+        <div style="margin-top:10px;" class="row">
+          <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" />
+          <button class="btn" id="submitBtn">Submit</button>
         </div>
-    </div>
+        <div class="row" style="margin-top:8px;">
+          <button class="btn secondary" id="tryAgainBtn">Try again</button>
+          <button class="btn secondary" id="skipBtn">Skip</button>
+          <button class="btn secondary" id="showBtn">Show answer</button>
+        </div>
+        <div id="feedback" class="muted" style="margin-top:8px;"></div>
+      </div>
 
-    <div class="character-grid" id="character-grid"></div>
-    <div id="log-messages-wrapper"><div id="log-messages"></div></div>
-  </div>
+      <details id="settingsPanel" style="margin-top:12px;">
+        <summary class="pill">Speech & Input Settings</summary>
+        <div class="grid cols-2" style="margin-top:8px;">
+          <div class="card">
+            <h3>Voices</h3>
+            <p class="muted">Auto-detect language. Pick preferred voices for English and Chinese.</p>
+            <label>English Voice
+              <select id="enVoice"></select>
+            </label>
+            <div class="row" style="margin-top:6px;">
+              <button class="btn secondary" id="testEN">Test EN</button>
+            </div>
+            <div style="height:12px;"></div>
+            <label>中文语音
+              <select id="zhVoice"></select>
+            </label>
+            <div class="row" style="margin-top:6px;">
+              <button class="btn secondary" id="testZH">测试中文</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Speech Options</h3>
+            <label>Rate (0.5–1.5)
+              <input id="rate" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+            </label>
+            <div style="height:8px;"></div>
+            <label>Pitch (0.5–1.5)
+              <input id="pitch" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+            </label>
+            <div style="height:8px;"></div>
+            <label>
+              <span>Auto-play next word</span>
+              <label class="switch" style="margin-left:8px;">
+                <input type="checkbox" id="autoplayToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </label>
+          </div>
+        </div>
+      </details>
+    </section>
 
+    <!-- SCREEN: SUMMARY -->
+    <section id="screen-summary" class="card hidden">
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div>
+          <h2>Summary</h2>
+          <div class="muted" id="summaryTitle"></div>
+        </div>
+        <button class="btn secondary" id="backToPicker">Back to exercises</button>
+      </div>
+      <div class="grid cols-2" style="margin-top:10px;">
+        <div class="card">
+          <h3>Stats</h3>
+          <div class="row" style="gap:16px; flex-wrap:wrap;">
+            <div class="pill">Words: <b id="sumTotal">0</b></div>
+            <div class="pill">Correct: <b id="sumCorrect">0</b></div>
+            <div class="pill">Skipped: <b id="sumSkipped">0</b></div>
+            <div class="pill">Accuracy: <b id="sumAcc">0%</b></div>
+            <div class="pill">Time: <b id="sumTime">0s</b></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>What needs practice</h3>
+          <div id="reviewList" class="list"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:10px;">
+        <h3>All results</h3>
+        <div id="resultsTable" class="list"></div>
+      </div>
+    </section>
 
-  <!-- ======================================================= -->
-  <!--                         SCRIPTS                         -->
-  <!-- ======================================================= -->
-  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- SETTINGS MODAL (simple) -->
+    <dialog id="settingsModal" style="border:none; border-radius:16px; background: rgba(20,22,45,0.95); color:var(--text); width:min(720px, 92vw);">
+      <form method="dialog" style="margin:0;">
+        <div class="card" style="box-shadow:none; background:transparent; border:none;">
+          <div class="row" style="justify-content:space-between;">
+            <h2>App Settings</h2>
+            <button class="btn secondary" value="close">Close</button>
+          </div>
+          <div class="grid cols-2" style="margin-top:8px;">
+            <div class="card">
+              <h3>Voices</h3>
+              <label>English Voice
+                <select id="enVoice2"></select>
+              </label>
+              <div style="height:6px;"></div>
+              <label>中文语音
+                <select id="zhVoice2"></select>
+              </label>
+              <div class="row" style="margin-top:6px;">
+                <button class="btn secondary" id="testEN2">Test EN</button>
+                <button class="btn secondary" id="testZH2">测试中文</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Speech</h3>
+              <label>Rate
+                <input id="rate2" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+              </label>
+              <div style="height:8px;"></div>
+              <label>Pitch
+                <input id="pitch2" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="footer">Made for students (10–15). Works on desktop & mobile.</div>
+  </main>
+
   <script>
-    // --- Page Section Elements ---
-    const landingPage = document.getElementById('landing-page');
-    const displayPage = document.getElementById('display-page');
+  // ======= CONFIG =======
+  const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
 
-    // --- Landing Page Elements ---
-    const MASTER_SHEET_ID = "1mc3uJfaRNAca6v0OD9kETNhXnl6VzWEqAuALeyUHuFc";
-    const builtInContentSelect = document.getElementById("builtInContentSelect");
-    const builtInTextSelectGroup = document.getElementById("builtInTextSelectGroup");
-    const builtInTextSelect = document.getElementById("builtInTextSelect");
-    const characterInput = document.getElementById('character-input');
-    const generateButton = document.getElementById('generate-button');
-    let currentSheetContentData = [];
-
-    // --- Display Page Elements & State ---
-    const characterGrid = document.getElementById('character-grid');
-    let writers = [];
-    let currentIndex = 0;
-    let isPaused = false;
-    let stopAll = false;
-    let originalText = ""; // Store current text for refresh
-    let lastAnimateAllText = "";
-
-    // --- Core Functions ---
-    function displayLog(message, type) {
-      const logArea = document.getElementById('log-messages');
-      logArea.innerHTML = ''; // Clear previous
-      const newMessage = document.createElement('div');
-      newMessage.textContent = message;
-      if (type === 'error') newMessage.className = 'log-error';
-      else if (type === 'success') newMessage.className = 'log-success';
-      else newMessage.className = 'log-info';
-      logArea.appendChild(newMessage);
+  // ======= STATE =======
+  const state = {
+    ttsReady: false,
+    voices: [],
+    selected: { en: null, zh: null, rate: 1, pitch: 1 },
+    source: null, // {type:'master'|'custom', id}
+    picker: [], // list of {label, id} for master OR list of exercises for custom
+    exerciseSheet: null, // current sheet object
+    exerciseRows: [], // [{title, words:[...]}]
+    current: {
+      title: '',
+      words: [],
+      order: [],
+      i: 0,
+      startedAt: 0,
+      perWordStart: 0,
+      results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
     }
+  };
 
-    function createWritersFromText(text) {
-        characterGrid.innerHTML = '';
-        writers = [];
-        const maxChars = 1000;
-        const finalText = text.slice(0, maxChars);
-        lastAnimateAllText = finalText; 
+  // ======= HELPERS =======
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-        const charSizeValue = document.getElementById('charSize').value;
-        document.documentElement.style.setProperty('--char-size', charSizeValue + 'px');
-        const charSize = parseInt(charSizeValue, 10);
-
-        const isChineseChar = /[\u4e00-\u9fa5]/;
-
-        for (let i = 0; i < finalText.length; i++) {
-            const char = finalText[i];
-            const boxDiv = document.createElement('div');
-            boxDiv.className = 'character-box';
-            boxDiv.id = 'char-box-' + i;
-            
-            if (char === 'k') {
-                boxDiv.style.gridColumn = '1 / -1';
-                boxDiv.style.height = '0';
-                boxDiv.style.border = 'none';
-                characterGrid.appendChild(boxDiv);
-                writers.push(null);
-            } else if (char === 'b') {
-                characterGrid.appendChild(boxDiv);
-                writers.push(null);
-            } else if (isChineseChar.test(char)) {
-                characterGrid.appendChild(boxDiv);
-                const writer = HanziWriter.create(boxDiv.id, char, {
-                    width: charSize, height: charSize, padding: 2,
-                    showOutline: true, strokeAnimationSpeed: 1, delayBetweenStrokes: 200,
-                    radicalColor: document.getElementById('color').value,
-                    strokeColor:  document.getElementById('strokeColor').value
-                });
-                writers.push(writer);
-            } else {
-                boxDiv.style.display = 'flex';
-                boxDiv.style.alignItems = 'center';
-                boxDiv.style.justifyContent = 'center';
-                boxDiv.style.fontSize = `${charSize * 0.6}px`;
-                boxDiv.textContent = char;
-                characterGrid.appendChild(boxDiv);
-                writers.push(null);
-            }
-        }
-        currentIndex = 0;
-        isPaused = false;
-        document.getElementById('start-button').textContent = 'Start';
-        document.getElementById('stop-resume-button').textContent = 'Stop';
-        document.getElementById('animate-button').textContent = 'Animate All';
-    }
-    
-    function animateCurrent() {
-      if (!writers[currentIndex]) return;
-      writers[currentIndex].animateCharacter({
-        onComplete: function() {
-          displayLog(`Character #${currentIndex + 1} animation done.`, 'info');
-        }
-      });
-    }
-
-    // --- Landing Page Logic ---
-    async function fetchAndParseContentSheet(sheetId) {
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0&tqx=out:csv×tamp=${new Date().getTime()}`;
-        try {
-            const response = await fetch(url, { cache: "no-store" });
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            const csv = await response.text();
-            const workbook = XLSX.read(csv, { type: "string", raw: true });
-            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
-            return jsonData.slice(1).map(row => ({ title: String(row[0] || '').trim(), text: String(row[1] || '').trim() }));
-        } catch (error) {
-            alert(`Error loading sheet content: ${error.message}`);
-            return null;
-        }
-    }
-
-    function populateTextDropdown(data) {
-        builtInTextSelect.innerHTML = '<option value="" disabled selected>-- Select Text --</option>';
-        if (data && data.length > 0) {
-            data.forEach((item, index) => {
-                if(item.title) {
-                    const option = document.createElement("option");
-                    option.value = index;
-                    option.textContent = item.title.substring(0, 80);
-                    builtInTextSelect.appendChild(option);
-                }
-            });
-            builtInTextSelectGroup.classList.remove("hidden");
-            builtInTextSelect.disabled = false;
-        }
-    }
-
-    async function loadBuiltInList() {
-        const listUrl = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/export?format=csv&gid=0&tqx=out:csv×tamp=${new Date().getTime()}`;
-        try {
-            const response = await fetch(listUrl, { cache: "no-store" });
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            const csv = await response.text();
-            const workbook = XLSX.read(csv, { type: "string" });
-            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
-            
-            builtInContentSelect.innerHTML = '<option value="" disabled selected>-- Select Topic/Sheet --</option>';
-            jsonData.slice(1).forEach(row => {
-                if (row && row[0] && row[1]) {
-                    const option = document.createElement("option");
-                    option.value = String(row[1]).trim();
-                    option.textContent = String(row[0]).trim();
-                    builtInContentSelect.appendChild(option);
-                }
-            });
-        } catch (error) {
-            alert(`Error loading master list: ${error.message}`);
-        }
-    }
-
-    // --- Event Listeners for Page Switching & Setup ---
-    generateButton.addEventListener('click', () => {
-        originalText = characterInput.value.trim();
-        if (!originalText) {
-            alert("Please select a built-in text or enter your own before generating.");
-            return;
-        }
-        createWritersFromText(originalText);
-        displayLog('Sheet generated. Ready to start!', 'success');
-        
-        landingPage.classList.add('hidden');
-        displayPage.classList.remove('hidden');
-    });
-    
-    document.getElementById('back-button').addEventListener('click', () => {
-        displayPage.classList.add('hidden');
-        landingPage.classList.remove('hidden');
-        characterGrid.innerHTML = '';
-        writers = [];
-    });
-
-    builtInContentSelect.addEventListener("change", async (event) => {
-        const selectedSheetId = event.target.value;
-        if (!selectedSheetId) return;
-        builtInTextSelect.innerHTML = '<option value="" disabled selected>-- Loading Texts... --</option>';
-        characterInput.value = "";
-        const contentData = await fetchAndParseContentSheet(selectedSheetId);
-        currentSheetContentData = contentData || [];
-        populateTextDropdown(currentSheetContentData);
-    });
-
-
-        /*  ------  Custom Sheet loader  ------  */
-    document.getElementById('loadCustomSheetButton')
-      .addEventListener('click', async () => {
-        const sheetId = document.getElementById('customSheetId').value.trim();
-        if (!sheetId) { alert('Please paste a Sheet ID.'); return; }
-
-        // hide the (old) dropdown immediately
-        builtInTextSelectGroup.classList.add('hidden');
-
-        // show a loading option
-        builtInTextSelect.innerHTML =
-          '<option value="" disabled selected>-- Loading Texts... --</option>';
-        characterInput.value = '';
-
-        const data = await fetchAndParseContentSheet(sheetId);
-        if (!data || data.length === 0) {
-          alert('Could not read that sheet. Please ensure your sheet ID is correct.');
-          return;
-        }
-
-        currentSheetContentData = data;
-        populateTextDropdown(data);
-        displayLog('Custom sheet loaded!', 'success');
-
-        // (optional) clear built‑in selector
-        builtInContentSelect.selectedIndex = 0;
-      });
-
-
-
-
-
-
-
-
-
-
-
-    
-    builtInTextSelect.addEventListener("change", (event) => {
-        const selectedIndex = parseInt(event.target.value, 10);
-        if (!isNaN(selectedIndex) && currentSheetContentData[selectedIndex]) {
-            characterInput.value = currentSheetContentData[selectedIndex].text;
-        }
-    });
-
-    // --- Event Listeners for Display Page Controls ---
-    document.getElementById('refresh-button').addEventListener('click', () => {
-        if (originalText) {
-            displayLog("Refreshing with new settings...", 'info');
-            createWritersFromText(originalText);
-        }
-    });
-
-    document.getElementById('charSize').addEventListener('input', () => {
-        if (writers.length > 0) createWritersFromText(originalText);
-    });
-    document.getElementById('color').addEventListener('input', () => {
-        if (writers.length > 0) createWritersFromText(originalText);
-    });
-
-    document.getElementById('strokeColor').addEventListener('input', () => {
-        if (writers.length > 0) createWritersFromText(originalText);
-    });
-
-    /* ---------- DYNAMIC PRINT‑COLUMN HELPER & LISTENERS ---------- */
-
-    // Map charSize → preferred column count (same logic GitHub version used)
-    function getPrintColumnsFromSize(charSize) {
-        if (charSize >= 66 && charSize <= 70) return 8;
-        if (charSize >= 64 && charSize <= 65) return 9;
-        if (charSize >= 56 && charSize <= 60) return 10;
-        if (charSize >= 51 && charSize <= 55) return 11;
-        if (charSize >= 43 && charSize <= 50) return 12;
-        if (charSize >= 41 && charSize <= 42) return 13;
-        if (charSize >= 34 && charSize <= 40) return 14;
-        if (charSize === 35)               return 15;
-        return 8; // fallback
-    }
-
-    // utility: writes/updates a single <style id="dynamic-print-style">
-    function updatePrintStyle(columns) {
-        let style = document.getElementById('dynamic-print-style');
-        if (!style) {
-            style = document.createElement('style');
-            style.id = 'dynamic-print-style';
-            document.head.appendChild(style);
-        }
-        style.textContent = `
-            @media print {
-                .character-grid {
-                    grid-template-columns: repeat(${columns}, 1fr) !important;
-                }
-            }
-        `;
-    }
-
-
-    const defaultCols = parseInt(document.getElementById('printColsSelect').value, 10);
-    updatePrintStyle(defaultCols);
-
-    // Also sync char size based on dropdown
-    const sizeMap = { 8: 70, 10: 57, 12: 45, 14: 35 };
-    const newSize = sizeMap[defaultCols] || 70;
-    const sizeInput = document.getElementById('charSize');
-    sizeInput.value = newSize;
-    sizeInput.dispatchEvent(new Event('input'));
-
-    
-    /* 3‑A  – respond when the user changes “Size” */
-    document.getElementById('charSize').addEventListener('input', function () {
-        const size = parseInt(this.value, 10);
-        const cols = getPrintColumnsFromSize(size);
-        updatePrintStyle(cols);
-    });
-
-    /* 3‑B  – respond when the user types into “Print Columns” */
-    document.getElementById('printColumns').addEventListener('input', function () {
-        const cols = Math.min(15, Math.max(8, parseInt(this.value, 10) || 8));
-        updatePrintStyle(cols);
-    });
-
-    /* 3‑C – dropdown sets print columns **and** adjusts char size */
-    document.getElementById('printColsSelect').addEventListener('change', function () {
-      const cols = parseInt(this.value, 10);
-
-      // 1) update the @media print rule
-      updatePrintStyle(cols);
-
-      // 2) map preferred char‑size for each option
-      const sizeMap = { 8: 70, 10: 57, 12: 45, 14: 35 };
-      const newSize  = sizeMap[cols] || 70;                 // fallback = 70px
-
-      const sizeInput = document.getElementById('charSize');
-      if (parseInt(sizeInput.value, 10) !== newSize) {
-        sizeInput.value = newSize;                          // set field visibly
-        sizeInput.dispatchEvent(new Event('input'));        // reuse existing logic
-      }
-    });
-
-
-
-
-    
-    // --- UPDATED PRINT LOGIC ------------------------------------------------
-    //  We now call window.print() automatically *only* when the script is not
-    //  running inside an <iframe> sandbox (i.e., GitHub Pages or any top‑level
-    //  page). In a Google Sites embed, the call is blocked, so we keep the
-    //  original “Ctrl+P” hint instead.
-    // -----------------------------------------------------------------------
-    document.getElementById('print-button').addEventListener('click', () => {
-      document.body.classList.add('print-preview');
-    });
-
-    document.getElementById('print-dialog-button').addEventListener('click', () => {
-      const inTopWindow = window.top === window.self;     // true = not inside Sites iframe
-      if (inTopWindow) {
-        window.print();                                   // GitHub Pages etc.
-      } else {
-        displayLog("Use browser menu or Ctrl+P to print.", "info");  // Google Sites
-      }
-    });
-
-
-    document.getElementById('exit-print-button').addEventListener('click', () => {
-        document.body.classList.remove('print-preview');
-        displayLog("Exited full page view.", "info");
-    });
-
-    // Reset preview if user closes print dialog manually
-    window.addEventListener('afterprint', () => {
-        document.body.classList.remove('print-preview');
-        displayLog("Exited full page view.", "info");
-    });
-    // --- END OF MODIFIED PRINT LOGIC ---------------------------------------
-    
-    document.getElementById('animate-button').addEventListener('click', function() {
-      if (this.textContent === 'Animate All') {
-        if (writers.length === 0) return displayLog("No characters to animate.", 'error');
-        stopAll = false;
-        displayLog("Starting sequential animation!", 'info');
-        let currentIndexForAll = 0;
-        function animateNext() {
-          if (stopAll) return displayLog("All animations stopped!", 'info');
-          if (currentIndexForAll >= writers.length) return displayLog("All characters animated!", 'success');
-          const writer = writers[currentIndexForAll];
-          if (!writer) {
-            currentIndexForAll++;
-            animateNext();
-            return;
-          }
-          writer.animateCharacter({
-            onComplete: function() {
-              currentIndexForAll++;
-              animateNext();
-            },
-          });
-        }
-        animateNext();
-        this.textContent = 'Stop All';
-      } else {
-        stopAll = true;
-        displayLog("Stopping all animations and reverting to initial state.", 'info');
-        createWritersFromText(lastAnimateAllText);
-        this.textContent = 'Animate All';
-      }
-    });
-
-    document.getElementById('quiz-button').addEventListener('click', function() {
-      if (writers.length === 0) return displayLog("No characters to quiz.", 'error');
-      displayLog("Starting quiz mode for all characters. Good luck!", 'info');
-      writers.forEach((writer, idx) => {
-        if (!writer) return;
-        writer.quiz({
-          onMistake: (strokeData) => displayLog(`Char #${idx + 1}: Mistake on stroke ${strokeData.strokeNum + 1}`, 'error'),
-          onCorrectStroke: (strokeData) => displayLog(`Char #${idx + 1}: Correct stroke ${strokeData.strokeNum + 1}`, 'success'),
-          onComplete: (summaryData) => displayLog(`Char #${idx + 1} completed with ${summaryData.totalMistakes} mistakes.`, 'info')
-        });
-      });
-    });
-
-    document.getElementById('start-button').addEventListener('click', function() {
-      if (writers.length === 0) return displayLog("No characters to animate.", 'error');
-      if (this.textContent === 'Start') {
-        currentIndex = -1;
-        do { currentIndex++; } while (writers[currentIndex] === null && currentIndex < writers.length);
-        if (currentIndex < writers.length) {
-          displayLog("Starting from character #1", 'info');
-          animateCurrent();
-          this.textContent = 'Previous';
-        }
-      } else { // 'Previous'
-        do { currentIndex--; } while (writers[currentIndex] === null && currentIndex > -1);
-        if (currentIndex > -1) {
-          displayLog(`Moving to character #${currentIndex + 1}`, 'info');
-          animateCurrent();
-        } else {
-            currentIndex = 0;
-        }
-      }
-    });
-
-    document.getElementById('next-button').addEventListener('click', function() {
-      if (writers.length === 0) return displayLog("No characters to animate.", 'error');
-      if (currentIndex < writers.length - 1) {
-          do { currentIndex++; } while (writers[currentIndex] === null && currentIndex < writers.length -1);
-          if (writers[currentIndex]){
-              displayLog(`Moving to character #${currentIndex + 1}`, 'info');
-              animateCurrent();
-          }
-      }
-    });
-
-    document.getElementById('stop-resume-button').addEventListener('click', function() {
-      const writer = writers[currentIndex];
-      if (!writer) return displayLog("No character selected to stop/resume.", 'error');
-      if (!isPaused) {
-        writer.pauseAnimation();
-        displayLog("Paused animation.", 'info');
-        isPaused = true;
-        this.textContent = "Resume";
-      } else {
-        writer.resumeAnimation();
-        displayLog("Resumed animation.", 'info');
-        isPaused = false;
-        this.textContent = "Stop";
-      }
-    });
-
-    // --- Initial Load ---
-    document.addEventListener('DOMContentLoaded', loadBuiltInList);
-
-    document.getElementById('download-all-button').addEventListener('click', async () => {
-  if (!currentSheetContentData || currentSheetContentData.length === 0) {
-    alert("Please load a sheet first.");
-    return;
+  function toast(msg, ms=1800){
+    const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
+    setTimeout(()=> t.classList.add('hidden'), ms);
   }
 
-  const originalDisplay = displayPage.classList.contains('hidden');
-  const loadingMsg = "Preparing downloads…";
+  function savePrefs(){
+    localStorage.setItem('tingxie_prefs', JSON.stringify({
+      en: state.selected.en?.name || null,
+      zh: state.selected.zh?.name || null,
+      rate: state.selected.rate,
+      pitch: state.selected.pitch,
+      randomize: $('#randomizeToggle').checked,
+      autoplay: $('#autoplayToggle').checked,
+      lastCustom: $('#customId').value || ''
+    }));
+  }
+  function loadPrefs(){
+    try{
+      const p = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+      if(p.rate) state.selected.rate = p.rate;
+      if(p.pitch) state.selected.pitch = p.pitch;
+      if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
+      if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
+      if(p.lastCustom) $('#customId').value = p.lastCustom;
+      // voice names resolved after voices load
+    }catch{}
+  }
 
-  displayLog(loadingMsg, 'info');
-  landingPage.classList.add('hidden');
-  displayPage.classList.remove('hidden');
+  function csvParse(text){
+    const lines = text.replace(/\r\n?/g, "\n").split("\n").filter(l=>l.trim().length>0);
+    const rows = lines.map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(cell => {
+      let c = cell.trim();
+      if(c.startsWith('"') && c.endsWith('"')) c = c.slice(1,-1).replace(/""/g,'"');
+      return c;
+    }));
+    return rows;
+  }
 
-  for (let i = 0; i < currentSheetContentData.length; i++) {
-    const { title, text } = currentSheetContentData[i];
-    if (!text.trim()) continue;
+  function normalizeHeader(h){ return h.trim().toLowerCase().replace(/\s+/g,' '); }
 
-    // Render characters into the grid
-    await new Promise(resolve => {
-      createWritersFromText(text);
-      setTimeout(resolve, 800); // wait for DOM to update
+  function getCsvUrl(spreadsheetId){
+    return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:csv`;
+  }
+
+  async function fetchSheetCsv(spreadsheetId){
+    const url = getCsvUrl(spreadsheetId);
+    const res = await fetch(url);
+    if(!res.ok) throw new Error(`Failed to load CSV (${res.status})`);
+    return await res.text();
+  }
+
+  function isChinese(str){ return /[\p{Script=Han}]/u.test(str); }
+
+  function splitWords(raw){
+    if(!raw) return [];
+    return raw
+      .split(/[，,]/g)
+      .map(s=>s.replace(/\s+/g,' ').trim())
+      .filter(Boolean);
+  }
+
+  function normEnglish(s){
+    return (s||'').toLocaleLowerCase().normalize('NFC').replace(/[^\p{Letter}\p{Number}]+/gu,'');
+  }
+  function normChinese(s){
+    return (s||'').normalize('NFC').replace(/\s+/g,'');
+  }
+  function isCorrect(expected, input){
+    if(isChinese(expected)){
+      return normChinese(expected) === normChinese(input);
+    } else {
+      return normEnglish(expected) === normEnglish(input);
+    }
+  }
+
+  function fmtMs(ms){
+    const s = Math.round(ms/1000);
+    if(s < 60) return s+"s";
+    const mm = Math.floor(s/60), ss = s%60;
+    return `${mm}m ${ss}s`;
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+
+  // ======= TTS =======
+  function setTtsStatus(text){ $('#ttsStatus').textContent = text; }
+
+  function loadVoices(){
+    let list = speechSynthesis.getVoices();
+    if(list.length){ onVoices(list); }
+  }
+
+  function onVoices(list){
+    state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+    setTtsStatus(`TTS ready (${state.voices.length} voices)`);
+
+    // Populate selects (two places: inline settings & modal)
+    const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
+    const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
+
+    function fill(select, voices){
+      select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
+    }
+
+    [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
+    [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
+
+    // Restore previous voice by name
+    const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+    if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+    if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+
+    // Defaults if none chosen
+    if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(en[0].name)); }
+    if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(zh[0].name)); }
+  }
+
+  function getVoiceForWord(word){
+    const zh = isChinese(word);
+    const preferred = zh ? state.selected.zh : state.selected.en;
+    if(preferred) return preferred;
+    // fallback
+    const list = zh ? state.voices.filter(v=>/^zh/i.test(v.lang)) : state.voices.filter(v=>/^en/i.test(v.lang));
+    return list[0] || state.voices[0] || null;
+  }
+
+  function speak(text){
+    if(!('speechSynthesis' in window)) { toast('Speech Synthesis not supported in this browser.'); return; }
+    const voice = getVoiceForWord(text);
+    const u = new SpeechSynthesisUtterance(text);
+    if(voice){ u.voice = voice; u.lang = voice.lang; }
+    u.rate = state.selected.rate; u.pitch = state.selected.pitch;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }
+
+  // ======= UI FLOW =======
+  function show(id){
+    ['#screen-home', '#screen-picker', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden'));
+    $(id).classList.remove('hidden');
+  }
+
+  function buildMasterList(rows){
+    const list = $('#masterList'); list.innerHTML = '';
+    if(!rows.length){ list.innerHTML = '<div class="muted">No rows found in master.</div>'; return; }
+    rows.forEach(r=>{
+      const div = document.createElement('div'); div.className='item';
+      div.innerHTML = `<div class="title">${r.title}</div><div class="muted">${r.id}</div>`;
+      const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Open';
+      btn.onclick = ()=> loadExerciseSheet(r.id, r.title);
+      div.appendChild(btn);
+      list.appendChild(div);
     });
+  }
 
-    // Save the current grid as PDF
-    const element = document.getElementById("character-grid");
-    const opt = {
-      margin: 0.25,
-      filename: `${title || 'sheet'}_${i + 1}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+  function buildExercisePicker(rows, fromLabel){
+    state.exerciseRows = rows;
+    $('#pickerTitle').textContent = `Exercises · ${fromLabel}`;
+    const list = $('#exerciseList'); list.innerHTML='';
+    rows.forEach((row, idx)=>{
+      const div = document.createElement('div'); div.className='item';
+      const wcount = row.words.length;
+      div.innerHTML = `<div><div class="title">${row.title || 'Untitled'}</div><div class="muted">${wcount} word${wcount!==1?'s':''}</div></div>`;
+      const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
+      btn.onclick = ()=> startExercise(idx);
+      div.appendChild(btn);
+      list.appendChild(div);
+    });
+    show('#screen-picker');
+  }
+
+  function startExercise(rowIndex){
+    const row = state.exerciseRows[rowIndex];
+    const words = row.words.slice();
+    const order = $('#randomizeToggle').checked ? shuffle([...Array(words.length).keys()]) : [...Array(words.length).keys()];
+
+    state.current = {
+      title: row.title || 'Untitled',
+      words, order, i: 0,
+      startedAt: performance.now(),
+      perWordStart: performance.now(),
+      results: []
     };
 
-    await html2pdf().set(opt).from(element).save();
-    await new Promise(r => setTimeout(r, 500)); // short delay between downloads
+    $('#runTitle').textContent = state.current.title;
+    $('#runMeta').textContent = `${words.length} words`;
+    $('#idxTotal').textContent = String(words.length);
+    $('#idxNow').textContent = '1';
+    $('#feedback').textContent='';
+    $('#answerInput').value='';
+
+    show('#screen-run');
+    setTimeout(()=> playCurrent(), 100);
   }
 
-  displayLog("All PDFs downloaded!", "success");
-
-  // Return to landing if it was originally there
-  if (originalDisplay) {
-    displayPage.classList.add('hidden');
-    landingPage.classList.remove('hidden');
+  function currentWord(){
+    const {words, order, i} = state.current; const idx = order[i]; return words[idx];
   }
-});
 
+  function playCurrent(){
+    const word = currentWord();
+    $('#promptWord').textContent = '🔊 Listen…';
+    $('#promptWord').classList.add('blink');
+    speak(word);
+    setTimeout(()=> $('#promptWord').classList.remove('blink'), 800);
+    state.current.perWordStart = performance.now();
+    $('#answerInput').focus();
+  }
 
+  function updateProgress(){
+    const {i, words} = state.current; $('#progressBar').style.width = `${(i/words.length)*100}%`;
+    $('#idxNow').textContent = String(Math.min(i+1, words.length));
+  }
+
+  function submitAnswer(){
+    const expected = currentWord();
+    const input = $('#answerInput').value;
+    if(!input){ toast('Type your answer or use Skip/Show'); return; }
+
+    const ok = isCorrect(expected, input);
+    const timeMs = performance.now() - state.current.perWordStart;
+
+    if(ok){
+      $('#feedback').innerHTML = `<span class="result-badge ok">Correct!</span>`;
+      state.current.results.push({word: expected, correct: true, attempts: 1, skipped: false, shownAnswer: false, timeMs});
+      nextWord();
+    } else {
+      $('#feedback').innerHTML = `<span class="result-badge err">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
+      // keep trying — attempts counted when they finally get it or skip/show
+    }
+  }
+
+  function tryAgain(){
+    $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent='';
+  }
+
+  function skipWord(){
+    const expected = currentWord();
+    const timeMs = performance.now() - state.current.perWordStart;
+    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
+    $('#feedback').innerHTML = `<span class="result-badge skip">Skipped</span> It was: <b>${expected}</b>`;
+    nextWord();
+  }
+
+  function showAnswer(){
+    const expected = currentWord();
+    const timeMs = performance.now() - state.current.perWordStart;
+    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs});
+    $('#feedback').innerHTML = `Answer: <b>${expected}</b>`;
+    nextWord();
+  }
+
+  function nextWord(){
+    const {words, order} = state.current;
+    $('#answerInput').value='';
+    state.current.i++;
+    updateProgress();
+    if(state.current.i >= words.length){
+      finishExercise();
+    } else {
+      if($('#autoplayToggle').checked){ setTimeout(playCurrent, 350); }
+      else { $('#promptWord').textContent = '(ready)'; }
+    }
+  }
+
+  function finishExercise(){
+    $('#progressBar').style.width = '100%';
+    const totalMs = performance.now() - state.current.startedAt;
+
+    // Aggregate
+    const total = state.current.words.length;
+    const correct = state.current.results.filter(r=>r.correct).length;
+    const skipped = state.current.results.filter(r=>r.skipped).length;
+    const accuracy = total ? Math.round((correct/total)*100) : 0;
+
+    $('#summaryTitle').textContent = state.current.title;
+    $('#sumTotal').textContent = total;
+    $('#sumCorrect').textContent = correct;
+    $('#sumSkipped').textContent = skipped;
+    $('#sumAcc').textContent = accuracy + '%';
+    $('#sumTime').textContent = fmtMs(totalMs);
+
+    const review = $('#reviewList'); review.innerHTML='';
+    state.current.results.filter(r=>!r.correct).forEach(r=>{
+      const d = document.createElement('div'); d.className='item';
+      d.innerHTML = `<div><div class="title">${r.word}</div><div class="muted">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`;
+      const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice';
+      btn.onclick = ()=> speak(r.word);
+      d.appendChild(btn); review.appendChild(d);
+    });
+
+    const table = $('#resultsTable'); table.innerHTML='';
+    state.current.results.forEach((r,idx)=>{
+      const d = document.createElement('div'); d.className='item';
+      const badge = r.correct? '<span class="result-badge ok">✓</span>' : (r.skipped? '<span class="result-badge skip">⏭</span>' : '<span class="result-badge err">✗</span>');
+      d.innerHTML = `<div><div class="title">${idx+1}. ${r.word}</div><div class="muted">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`;
+      table.appendChild(d);
+    });
+
+    show('#screen-summary');
+  }
+
+  // ======= LOADERS =======
+  async function loadMaster(){
+    if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
+      $('#masterWarn').style.display='block';
+    } else { $('#masterWarn').style.display='none'; }
+
+    try{
+      if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx') throw new Error('Master ID not set');
+      $('#masterList').innerHTML = '<div class="muted">Loading…</div>';
+      const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
+      const rows = csvParse(csv);
+      if(!rows.length) throw new Error('Empty sheet');
+      const headers = rows[0].map(normalizeHeader);
+      const iTitle = headers.indexOf('title');
+      const iId = headers.indexOf('sheet id');
+      if(iTitle < 0 || iId < 0) throw new Error('Master sheet must have headers: title, sheet id');
+      const data = rows.slice(1).filter(r=>r.length>=2).map(r=>({ title: r[iTitle], id: r[iId] }));
+      buildMasterList(data);
+      toast('Master loaded');
+    }catch(err){
+      console.error(err); toast('Failed to load master: ' + err.message, 2400);
+      $('#masterList').innerHTML = '';
+    }
+  }
+
+  async function loadExerciseSheet(sheetId, sourceLabel='Custom'){
+    try{
+      show('#screen-home');
+      $('#customList').innerHTML = '';
+      $('#exerciseList').innerHTML = '';
+      toast('Loading exercises…');
+      const csv = await fetchSheetCsv(sheetId);
+      const rows = csvParse(csv);
+      if(!rows.length) throw new Error('Empty sheet');
+      const headers = rows[0].map(normalizeHeader);
+      const iTitle = headers.indexOf('title');
+      const iWords = headers.indexOf('words');
+      if(iTitle < 0 || iWords < 0) throw new Error('Exercise sheet must have headers: title, words');
+      const items = rows.slice(1).filter(r=>r[iTitle] || r[iWords]).map(r=>({
+        title: (r[iTitle]||'').trim(),
+        words: splitWords(r[iWords])
+      })).filter(x=>x.words.length>0);
+      if(!items.length) throw new Error('No exercises found');
+      buildExercisePicker(items, sourceLabel);
+      state.source = {type:'custom', id: sheetId};
+      savePrefs();
+    }catch(err){
+      console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600);
+    }
+  }
+
+  // ======= EVENTS =======
+  function bindEvents(){
+    $('#loadMasterBtn').addEventListener('click', loadMaster);
+    $('#reloadMasterBtn').addEventListener('click', loadMaster);
+
+    $('#loadCustomBtn').addEventListener('click', ()=>{
+      const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
+      loadExerciseSheet(id, 'Custom');
+    });
+
+    // Small local demo (no network) for quick try — not persistent
+    $('#demoBtn').addEventListener('click', ()=>{
+      const rows = [
+        {title:'Unit 1', words:['usage','united','must','animal']},
+        {title:'动物 (Animals)', words:['猫','狗','老虎','大象']},
+      ];
+      buildExercisePicker(rows, 'Demo');
+      toast('Loaded demo data');
+    });
+
+    $('#backHomeBtn').addEventListener('click', ()=> show('#screen-home'));
+
+    $('#playBtn').addEventListener('click', ()=> speak(currentWord()));
+    $('#submitBtn').addEventListener('click', submitAnswer);
+    $('#tryAgainBtn').addEventListener('click', tryAgain);
+    $('#skipBtn').addEventListener('click', skipWord);
+    $('#showBtn').addEventListener('click', showAnswer);
+    $('#stopBtn').addEventListener('click', ()=> { show('#screen-picker'); });
+    $('#revealSettingsBtn').addEventListener('click', ()=> $('#settingsPanel').open = !$('#settingsPanel').open);
+
+    $('#answerInput').addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
+    });
+
+    // voice selects
+    function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
+    $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+    $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
+    $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+    $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
+
+    $('#rate').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate2').value=e.target.value; savePrefs(); });
+    $('#pitch').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch2').value=e.target.value; savePrefs(); });
+    $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
+    $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
+
+    $('#autoplayToggle').addEventListener('change', savePrefs);
+    $('#randomizeToggle').addEventListener('change', savePrefs);
+
+    // settings modal
+    const modal = $('#settingsModal');
+    $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
+
+    // test buttons
+    function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
+    function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
+    $('#testEN').addEventListener('click', testSpeakEn);
+    $('#testZH').addEventListener('click', testSpeakZh);
+    $('#testEN2').addEventListener('click', testSpeakEn);
+    $('#testZH2').addEventListener('click', testSpeakZh);
+  }
+
+  // ======= INIT =======
+  (function init(){
+    loadPrefs();
+    bindEvents();
+
+    if(!('speechSynthesis' in window)){
+      setTtsStatus('TTS unsupported'); toast('This browser does not support Speech Synthesis.');
+    } else {
+      setTtsStatus('TTS: loading voices…');
+      window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
+      loadVoices();
+      // Nudge some browsers to populate voices
+      const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
+    }
+  })();
   </script>
 </body>
 </html>
