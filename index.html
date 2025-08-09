@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-t" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>听写 · Tingxie App</title>
   <meta name="theme-color" content="#6c5ce7" />
@@ -208,13 +208,14 @@
             <span class="slider"></span>
           </label>
         </label>
-        <!-- NEW: Input method -->
-        <label class="pill" title="Choose how to input your answer">
-          <span>Input Method:</span>
-          <select id="inputModeSelect" style="width:auto; margin-left:8px;">
-            <option value="typing">Typing</option>
-            <option value="handwriting">Handwriting (中文)</option>
-          </select>
+        <!-- UPDATED: Input method from dropdown to toggle -->
+        <label class="pill" title="Toggle between Typing and Handwriting (手写)">
+          <span>Typing</span>
+          <label class="switch" style="margin: 0 8px;">
+            <input type="checkbox" id="inputModeToggle" />
+            <span class="slider"></span>
+          </label>
+          <span style="font-weight:700;">手写</span>
         </label>
       </div>
       <div class="row" style="justify-content:space-between;">
@@ -245,7 +246,6 @@
             <div class="muted" style="font-size:13px;">Word <span id="idxNow">1</span> / <span id="idxTotal">1</span></div>
             <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
           </div>
-          <!-- NEW: quick switch on RUN -->
           <label class="pill" title="Switch input method">
             <span>Input:</span>
             <select id="inputModeRun" style="width:auto; margin-left:8px;">
@@ -257,7 +257,6 @@
 
         <div style="margin-top:10px;" class="row">
           <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
-          <!-- NEW: handwriting open button -->
           <button class="btn secondary hidden" id="handwriteBtn" title="Handwriting">✍️ 手写</button>
           <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
           <button class="btn" id="submitBtn">Submit</button>
@@ -385,7 +384,7 @@
       </form>
     </dialog>
 
-    <!-- NEW: Handwriting Modal -->
+    <!-- Handwriting Modal -->
     <dialog id="handwriteModal">
       <form method="dialog" style="margin:0;">
         <div class="card" style="box-shadow:none; background:transparent; border:none;">
@@ -396,7 +395,7 @@
             </div>
           </div>
 
-          <canvas id="hwCanvas" width="1000" height="600" style="margin-top:8px;"></canvas>
+          <canvas id="hwCanvas" style="margin-top:8px;"></canvas>
 
           <div class="row" style="margin-top:10px; justify-content:space-between;">
             <div class="row">
@@ -683,7 +682,7 @@
     if(!ex) return;
     state.current.selectedIndex = idx;
     $('#confirmTitle').textContent = ex.title || 'Exercise';
-    if($('#inputModeSelect')) $('#inputModeSelect').value = state.inputMode || 'typing';
+    $('#inputModeToggle').checked = state.inputMode === 'handwriting';
     show('#screen-confirm');
   }
 
@@ -696,8 +695,7 @@
     state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now();
     state.current.perWordStart = 0; state.current.attemptsForWord = 0;
 
-    // input mode from confirm
-    state.inputMode = ($('#inputModeSelect')?.value) || state.inputMode || 'typing';
+    state.inputMode = $('#inputModeToggle').checked ? 'handwriting' : 'typing';
     savePrefs();
 
     $('#runTitle').textContent = state.current.title;
@@ -708,7 +706,6 @@
     show('#screen-run');
     updateProgress();
 
-    // reflect into RUN selector + UI
     const runSel = $('#inputModeRun'); if(runSel) runSel.value = state.inputMode;
     updateRunInputModeUI();
   }
@@ -753,20 +750,25 @@
     }
   }
 
-  // ======= HANDWRITING (Google IME via handwriting.canvas.js) =======
+  // ======= HANDWRITING (SMOOTHER CANVAS) =======
   function ensureHwReady(){
     if(state.hw.obj) return;
     const c = document.getElementById('hwCanvas');
     if(!c || !window.handwriting || !handwriting.Canvas){ toast('Handwriting module not available'); return; }
+
+    // UPDATED: Match canvas bitmap resolution to its CSS display size for a smooth, crisp drawing line.
+    c.width = c.clientWidth;
+    c.height = c.clientHeight;
+
     state.hw.obj = new handwriting.Canvas(c);
     state.hw.obj.setOptions({
-      language: state.hw.lang, // 'zh_CN' or 'zh_TW'
+      language: state.hw.lang,
       numOfReturn: 8,
       width: c.width,
       height: c.height
     });
-    state.hw.obj.setLineWidth(5);
-    // enable undo/redo
+    // UPDATED: Use a finer line for a smoother feel.
+    state.hw.obj.setLineWidth(3);
     if(state.hw.obj.set_Undo_Redo) state.hw.obj.set_Undo_Redo(true, true);
 
     state.hw.obj.setCallBack((result, err)=>{
@@ -910,7 +912,11 @@
       }
     });
     $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
-    $('#inputModeSelect').addEventListener('change', (e)=>{ state.inputMode = e.target.value; savePrefs(); });
+    // UPDATED: Event listener for the new toggle
+    $('#inputModeToggle').addEventListener('change', (e)=>{
+      state.inputMode = e.target.checked ? 'handwriting' : 'typing';
+      savePrefs();
+    });
 
     // Run screen
     $('#playBtn').addEventListener('click', playCurrent);
@@ -951,28 +957,6 @@
 
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
-
-
-    function sizeHwCanvas(){
-  const c = document.getElementById('hwCanvas');
-  if(!c) return;
-  // Match internal bitmap to current CSS size (use CSS pixels for correct coordinates)
-  const w = Math.max(1, Math.round(c.clientWidth));
-  const h = Math.max(1, Math.round(c.clientHeight));
-  if (c.width !== w || c.height !== h) {
-    c.width = w;
-    c.height = h;
-    // If handwriting object exists, update its notion of writing area too
-    if (state.hw.obj && state.hw.obj.setOptions) {
-      state.hw.obj.setOptions({ width: w, height: h });
-    }
-  }
-}
-
-
-
-
-
     
     // settings modal
     const modal = $('#settingsModal');
@@ -998,12 +982,11 @@
       const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
     }
 
-    // Set selectors to saved mode
-    const selC = $('#inputModeSelect'); if(selC) selC.value = state.inputMode;
+    // UPDATED: Set initial state for the new toggle and the run screen dropdown
+    $('#inputModeToggle').checked = state.inputMode === 'handwriting';
     const selR = $('#inputModeRun'); if(selR) selR.value = state.inputMode;
     updateRunInputModeUI();
 
-    // Load master on page load
     loadMaster();
   })();
   </script>
