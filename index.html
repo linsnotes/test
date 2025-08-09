@@ -100,6 +100,10 @@
     .ok{ background: rgba(46, 204, 113, .18); border:1px solid rgba(46, 204, 113, .35); }
     .err{ background: rgba(231, 76, 60, .18); border:1px solid rgba(231, 76, 60, .35); }
     .skip{ background: rgba(241, 196, 15, .18); border:1px solid rgba(241, 196, 15, .35); }
+    
+    #handwriting-canvas { border: 1px solid var(--panel-2); border-radius: 8px; cursor: crosshair; }
+    #handwriting-container .row { justify-content: space-between; }
+
 
     @media (max-width: 420px){
       .nav{ padding: 10px 0; }
@@ -192,24 +196,31 @@
 
     <!-- SCREEN: CONFIRM START -->
     <section id="screen-confirm" class="card hidden">
-      <h2>Confirm Start</h2>
-      <p class="muted" style="margin-top:8px;">You have selected the following exercise. Ready to begin?</p>
-      <div class="card" style="margin: 12px 0;">
-        <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
-      </div>
-      <div class="row" style="justify-content:center; margin-bottom: 16px;">
-         <label class="pill" title="Randomize order when starting">
-            <span>Randomize:</span>
-            <label class="switch" style="margin-left:8px;">
-              <input type="checkbox" id="randomizeToggle" />
-              <span class="slider"></span>
+        <h2>Confirm Start</h2>
+        <p class="muted" style="margin-top:8px;">You have selected the following exercise. Ready to begin?</p>
+        <div class="card" style="margin: 12px 0;">
+            <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
+        </div>
+        <div class="row" style="justify-content:center; margin-bottom: 16px; gap: 24px;">
+            <label class="pill" title="Randomize order when starting">
+                <span>Randomize:</span>
+                <label class="switch" style="margin-left:8px;">
+                    <input type="checkbox" id="randomizeToggle" />
+                    <span class="slider"></span>
+                </label>
             </label>
-          </label>
-      </div>
-      <div class="row" style="justify-content:space-between;">
-        <button class="btn secondary" id="confirmBackBtn">Back to List</button>
-        <button class="btn" id="confirmStartBtn">Start Now</button>
-      </div>
+            <label class="pill" title="Choose input method">
+                <span>Handwriting:</span>
+                <label class="switch" style="margin-left:8px;">
+                    <input type="checkbox" id="handwritingToggle" />
+                    <span class="slider"></span>
+                </label>
+            </label>
+        </div>
+        <div class="row" style="justify-content:space-between;">
+            <button class="btn secondary" id="confirmBackBtn">Back to List</button>
+            <button class="btn" id="confirmStartBtn">Start Now</button>
+        </div>
     </section>
 
     <!-- SCREEN: RUN -->
@@ -235,11 +246,20 @@
             <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
           </div>
         </div>
-        <div style="margin-top:10px;" class="row">
-          <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
-          <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
-          <button class="btn" id="submitBtn">Submit</button>
+        <div id="typing-container" style="margin-top:10px;" class="row">
+            <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
+            <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
+            <button class="btn" id="submitBtn">Submit</button>
         </div>
+        <div id="handwriting-container" class="hidden" style="margin-top: 10px;">
+            <canvas id="handwriting-canvas" width="400" height="150"></canvas>
+            <div class="row" style="margin-top: 8px;">
+                <button class="btn secondary" id="undoBtn">Undo</button>
+                <button class="btn secondary" id="clearBtn">Clear</button>
+                <button class="btn" id="submitHwBtn">Submit</button>
+            </div>
+        </div>
+
         <div class="row" style="margin-top:8px;">
           <button class="btn secondary" id="tryAgainBtn">Try again</button>
           <button class="btn secondary" id="skipBtn">Skip</button>
@@ -364,6 +384,7 @@
     </dialog>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/handwriting-canvas@1.2.1/dist/handwriting-canvas.min.js"></script>
   <script>
   // ======= CONFIG =======
   const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
@@ -385,7 +406,16 @@
       startedAt: 0,
       perWordStart: 0,
       selectedIndex: -1,
-      results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
+      results: [], // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
+      inputMethod: 'typing'
+    },
+    handwriting: {
+        canvas: null,
+        ctx: null,
+        drawing: false,
+        lastX: 0,
+        lastY: 0,
+        strokes: []
     }
   };
 
@@ -406,6 +436,7 @@
       pitch: state.selected.pitch,
       randomize: $('#randomizeToggle').checked,
       autoplay: $('#autoplayToggle').checked,
+      handwriting: $('#handwritingToggle').checked,
       lastCustom: $('#customId').value || ''
     }));
   }
@@ -416,6 +447,7 @@
       if(p.pitch) state.selected.pitch = p.pitch;
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
       if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
+      if(p.handwriting!=null) $('#handwritingToggle').checked = p.handwriting;
       if(p.lastCustom) $('#customId').value = p.lastCustom;
       // voice names resolved after voices load
     }catch{}
@@ -557,7 +589,13 @@
   }
 
   function tryAgain(){
-    $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent='';
+      if (state.current.inputMethod === 'handwriting') {
+        state.handwriting.canvas.clear();
+    } else {
+        $('#answerInput').value=''; 
+        $('#answerInput').focus();
+    }
+    $('#feedback').textContent='';
   }
 
   function skipWord(){
@@ -578,7 +616,11 @@
 
   function nextWord(){
     const {words, order} = state.current;
-    $('#answerInput').value='';
+     if (state.current.inputMethod === 'handwriting') {
+        state.handwriting.canvas.clear();
+    } else {
+        $('#answerInput').value = '';
+    }
     state.current.i++;
     state.current.perWordStart = 0;
     updateProgress();
@@ -657,6 +699,21 @@
     if($('#randomizeToggle').checked) state.current.order = shuffle(state.current.order);
     state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now();
     state.current.perWordStart = 0; state.current.attemptsForWord = 0;
+    
+    state.current.inputMethod = $('#handwritingToggle').checked ? 'handwriting' : 'typing';
+
+    if (state.current.inputMethod === 'handwriting') {
+        $('#typing-container').classList.add('hidden');
+        $('#handwriting-container').classList.remove('hidden');
+        if (!state.handwriting.canvas) {
+            initHandwritingCanvas();
+        }
+        state.handwriting.canvas.clear();
+    } else {
+        $('#typing-container').classList.remove('hidden');
+        $('#handwriting-container').classList.add('hidden');
+    }
+
     $('#runTitle').textContent = state.current.title;
     $('#runMeta').textContent = `${state.current.words.length} words`;
     $('#promptWord').textContent = '(Press Play to begin)';
@@ -678,7 +735,9 @@
     const w = currentWord();
     $('#promptWord').textContent = '(playing…)';
     if(w) speak(w);
-    $('#answerInput').focus();
+    if (state.current.inputMethod === 'typing') {
+      $('#answerInput').focus();
+    }
   }
 
   function updateProgress(){
@@ -689,8 +748,7 @@
     $('#progressBar').style.width = pct + '%';
   }
 
-  function submitAnswer(){
-    const input = $('#answerInput').value.trim();
+  function submitAnswer(input){
     const expected = currentWord();
     if(!expected) return;
     const timeMs = performance.now() - state.current.perWordStart;
@@ -701,8 +759,11 @@
       nextWord();
     } else {
       $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
-      $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
-      $('#answerInput').focus();
+       if (state.current.inputMethod === 'typing') {
+          $('#answerInput').classList.add('blink'); 
+          setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
+          $('#answerInput').focus();
+       }
     }
   }
 
@@ -761,6 +822,31 @@
       console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600);
     }
   }
+  
+    // ======= HANDWRITING =======
+    function initHandwritingCanvas() {
+        state.handwriting.canvas = new HandwritingCanvas($('#handwriting-canvas'), {
+            maxWidth: 2,
+            minWidth: 1,
+            penColor: 'white'
+        });
+
+        $('#undoBtn').addEventListener('click', () => state.handwriting.canvas.undo());
+        $('#clearBtn').addEventListener('click', () => state.handwriting.canvas.clear());
+        $('#submitHwBtn').addEventListener('click', () => {
+             if (state.handwriting.canvas.isEmpty()) {
+                toast('Please write something first.');
+                return;
+            }
+            state.handwriting.canvas.recognize(null, (result) => {
+                 if (result && result.length > 0) {
+                    submitAnswer(result[0]);
+                } else {
+                    toast('Could not recognize handwriting.');
+                }
+            });
+        });
+    }
 
   // ======= EVENTS =======
   function bindEvents(){
@@ -800,7 +886,7 @@
     $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
 
     $('#playBtn').addEventListener('click', playCurrent);
-    $('#submitBtn').addEventListener('click', submitAnswer);
+    $('#submitBtn').addEventListener('click', () => submitAnswer($('#answerInput').value.trim()));
     $('#tryAgainBtn').addEventListener('click', tryAgain);
     $('#skipBtn').addEventListener('click', skipWord);
     $('#showBtn').addEventListener('click', showAnswer);
@@ -808,7 +894,7 @@
     const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
 
     $('#answerInput').addEventListener('keydown', (e)=>{
-      if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
+      if(e.key==='Enter'){ e.preventDefault(); submitAnswer($('#answerInput').value.trim()); }
     });
 
     // voice selects
@@ -825,6 +911,7 @@
 
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
+    $('#handwritingToggle').addEventListener('change', savePrefs);
 
     // settings modal
     const modal = $('#settingsModal');
