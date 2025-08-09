@@ -124,6 +124,31 @@
     .hw-display{ flex:1; min-height:44px; padding:10px 12px; border-radius:12px;
       border:1px dashed rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); overflow:auto; }
     .hw-disabled{ opacity:.5; pointer-events:none; }
+
+/* === HOME layout tweaks (desktop) === */
+/* Stack the two big HOME cards so "How to start" sits below the first card */
+@media (min-width: 900px){
+  #screen-home.grid.cols-2 { 
+    grid-template-columns: 1fr; 
+  }
+  /* Inside the first card, stack Built-in + Custom for a wider view */
+  #screen-home > .card:first-child > .grid.cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === Handwriting canvas look === */
+/* Make the handwriting canvas background white */
+#hwCanvas{
+  background: #fff;
+  /* (optional) darken the dashed border so it shows on white */
+  border-color: rgba(0,0,0,0.25);
+}
+
+
+
+
+    
   </style>
 </head>
 <body>
