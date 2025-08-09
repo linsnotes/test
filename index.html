@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-t" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>听写 · Tingxie App</title>
   <meta name="theme-color" content="#6c5ce7" />
+  
+  <!-- Added Handwriting Scripts from CDN -->
+  <script src="https://cdn.jsdelivr.net/gh/ChenYuHo/handwriting.js/handwriting.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/ChenYuHo/handwriting.js/handwriting.canvas.js"></script>
+
   <style>
     :root{
       --bg: #0f1226; /* deep indigo */
@@ -89,7 +94,7 @@
     .progress{ height: 10px; border-radius: 999px; background: rgba(255,255,255,0.12); overflow: hidden; }
     .progress > span{ display:block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); width:0%; transition: width .25s ease; }
 
-    .toast{ position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color:#fff; padding: 10px 14px; border-radius: 12px; z-index: 20; box-shadow: var(--shadow); }
+    .toast{ position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color:#fff; padding: 10px 14px; border-radius: 12px; z-index: 110; box-shadow: var(--shadow); }
 
     .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-weight:700; letter-spacing: .2px; background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 6px; }
 
@@ -100,6 +105,33 @@
     .ok{ background: rgba(46, 204, 113, .18); border:1px solid rgba(46, 204, 113, .35); }
     .err{ background: rgba(231, 76, 60, .18); border:1px solid rgba(231, 76, 60, .35); }
     .skip{ background: rgba(241, 196, 15, .18); border:1px solid rgba(241, 196, 15, .35); }
+
+    /* ADDED: Handwriting CSS */
+    #handwritingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #handwritingCanvas {
+      background: #fff;
+      border-radius: 16px;
+      cursor: crosshair;
+      touch-action: none; /* Prevent scrolling on touch devices while drawing */
+      width: 90vw;
+      height: 60vh;
+      max-width: 800px;
+    }
+    #handwritingCloseBtn {
+      margin-top: 16px;
+    }
 
     @media (max-width: 420px){
       .nav{ padding: 10px 0; }
@@ -149,7 +181,6 @@
             <div class="row" style="margin-top:8px;">
               <button class="btn" id="openMasterBtn" disabled>Open Selected</button>
             </div>
-            
           </div>
 
           <div class="card" style="min-height:220px;">
@@ -197,11 +228,19 @@
       <div class="card" style="margin: 12px 0;">
         <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
       </div>
+      <!-- UPDATED: Added Handwriting Toggle -->
       <div class="row" style="justify-content:center; margin-bottom: 16px;">
          <label class="pill" title="Randomize order when starting">
             <span>Randomize:</span>
             <label class="switch" style="margin-left:8px;">
               <input type="checkbox" id="randomizeToggle" />
+              <span class="slider"></span>
+            </label>
+          </label>
+          <label class="pill" id="handwritingToggleLabel" title="Use handwriting input instead of typing">
+            <span>Handwriting:</span>
+            <label class="switch" style="margin-left:8px;">
+              <input type="checkbox" id="handwritingToggle" />
               <span class="slider"></span>
             </label>
           </label>
@@ -235,9 +274,11 @@
             <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
           </div>
         </div>
+        <!-- UPDATED: Added Write button, hidden by default -->
         <div style="margin-top:10px;" class="row">
           <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
           <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
+          <button class="btn hidden" id="writeBtn">✍️ Write</button>
           <button class="btn" id="submitBtn">Submit</button>
         </div>
         <div class="row" style="margin-top:8px;">
@@ -362,21 +403,28 @@
         </div>
       </form>
     </dialog>
+
+    <!-- ADDED: Handwriting Overlay -->
+    <div id="handwritingOverlay" class="hidden">
+      <canvas id="handwritingCanvas"></canvas>
+      <button id="handwritingCloseBtn" class="btn secondary">Close</button>
+    </div>
+
   </main>
 
   <script>
   // ======= CONFIG =======
-  const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
+  const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8";
 
   // ======= STATE =======
   const state = {
     ttsReady: false,
     voices: [],
     selected: { en: null, zh: null, rate: 1, pitch: 1 },
-    source: null, // {type:'master'|'custom', id}
-    picker: [], // list of {label, id} for master OR list of exercises for custom
-    exerciseSheet: null, // current sheet object
-    exerciseRows: [], // [{title, words:[...]}]
+    source: null,
+    picker: [],
+    exerciseSheet: null,
+    exerciseRows: [],
     current: {
       title: '',
       words: [],
@@ -385,9 +433,15 @@
       startedAt: 0,
       perWordStart: 0,
       selectedIndex: -1,
-      results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
+      results: []
+    },
+    // ADDED: Handwriting state
+    handwriting: {
+      enabled: false,
+      instance: null,
     }
   };
+  let recognitionTimeout = null;
 
   // ======= HELPERS =======
   const $ = (sel) => document.querySelector(sel);
@@ -406,6 +460,7 @@
       pitch: state.selected.pitch,
       randomize: $('#randomizeToggle').checked,
       autoplay: $('#autoplayToggle').checked,
+      handwriting: $('#handwritingToggle').checked, // ADDED
       lastCustom: $('#customId').value || ''
     }));
   }
@@ -417,18 +472,21 @@
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
       if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
       if(p.lastCustom) $('#customId').value = p.lastCustom;
-      // voice names resolved after voices load
+      // ADDED: load handwriting preference
+      if(p.handwriting != null) {
+          $('#handwritingToggle').checked = p.handwriting;
+          state.handwriting.enabled = p.handwriting;
+      }
     }catch{}
   }
 
   function csvParse(text){
     const lines = text.replace(/\r\n?/g, "\n").split("\n").filter(l=>l.trim().length>0);
-    const rows = lines.map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(cell => {
+    return lines.map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(cell => {
       let c = cell.trim();
       if(c.startsWith('"') && c.endsWith('"')) c = c.slice(1,-1).replace(/""/g,'"');
       return c;
     }));
-    return rows;
   }
 
   function normalizeHeader(h){ return h.trim().toLowerCase().replace(/\s+/g,' '); }
@@ -448,24 +506,15 @@
 
   function splitWords(raw){
     if(!raw) return [];
-    return raw
-      .split(/[，,]/g)
-      .map(s=>s.replace(/\s+/g,' ').trim())
-      .filter(Boolean);
+    return raw.split(/[，,]/g).map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean);
   }
 
-  function normEnglish(s){
-    return (s||'').toLocaleLowerCase().normalize('NFC').replace(/[^\p{Letter}\p{Number}]+/gu,'');
-  }
-  function normChinese(s){
-    return (s||'').normalize('NFC').replace(/\s+/g,'');
-  }
+  function normEnglish(s){ return (s||'').toLocaleLowerCase().normalize('NFC').replace(/[^\p{Letter}\p{Number}]+/gu,''); }
+  function normChinese(s){ return (s||'').normalize('NFC').replace(/\s+/g,''); }
+  
   function isCorrect(expected, input){
-    if(isChinese(expected)){
-      return normChinese(expected) === normChinese(input);
-    } else {
-      return normEnglish(expected) === normEnglish(input);
-    }
+    if(isChinese(expected)){ return normChinese(expected) === normChinese(input); } 
+    else { return normEnglish(expected) === normEnglish(input); }
   }
 
   function fmtMs(ms){
@@ -489,24 +538,14 @@
 
   function onVoices(list){
     state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
-    
-    // Populate selects (two places: inline settings & modal)
     const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
     const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
-
-    function fill(select, voices){
-      select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
-    }
-
+    function fill(select, voices){ select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join(''); }
     [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
     [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
-
-    // Restore previous voice by name
     const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
     if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
     if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
-
-    // Defaults if none chosen
     if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(en[0].name)); }
     if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(zh[0].name)); }
   }
@@ -515,7 +554,6 @@
     const zh = isChinese(word);
     const preferred = zh ? state.selected.zh : state.selected.en;
     if(preferred) return preferred;
-    // fallback
     const list = zh ? state.voices.filter(v=>/^zh/i.test(v.lang)) : state.voices.filter(v=>/^en/i.test(v.lang));
     return list[0] || state.voices[0] || null;
   }
@@ -537,54 +575,35 @@
   }
 
   function buildMasterList(rows){
-    const sel = $('#masterSelect');
-    const openBtn = $('#openMasterBtn');
-    if(sel){
-      sel.innerHTML = '';
-      const ph = document.createElement('option');
-      ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true;
-      sel.appendChild(ph);
-    }
-    if(!rows.length){
-      if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
-      if(openBtn){ openBtn.disabled = true; }
-      return;
-    }
-    rows.forEach(r=>{
-      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
-    });
+    const sel = $('#masterSelect'), openBtn = $('#openMasterBtn');
+    if(sel){ sel.innerHTML = ''; const ph = document.createElement('option'); ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true; sel.appendChild(ph); }
+    if(!rows.length){ if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; } if(openBtn){ openBtn.disabled = true; } return; }
+    rows.forEach(r=>{ if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); } });
     if(openBtn){ openBtn.disabled = false; }
   }
 
-  function tryAgain(){
-    $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent='';
-  }
+  function tryAgain(){ $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent=''; }
 
   function skipWord(){
-    const expected = currentWord();
-    const timeMs = performance.now() - state.current.perWordStart;
+    const expected = currentWord(), timeMs = performance.now() - state.current.perWordStart;
     state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
-    $('#feedback').innerHTML = `<span class=\"result-badge skip\">Skipped</span> It was: <b>${expected}</b>`;
+    $('#feedback').innerHTML = `<span class="result-badge skip">Skipped</span> It was: <b>${expected}</b>`;
     nextWord();
   }
 
   function showAnswer(){
-    const expected = currentWord();
-    const timeMs = performance.now() - state.current.perWordStart;
+    const expected = currentWord(), timeMs = performance.now() - state.current.perWordStart;
     state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs});
     $('#feedback').innerHTML = `Answer: <b>${expected}</b>`;
     nextWord();
   }
 
   function nextWord(){
-    const {words, order} = state.current;
     $('#answerInput').value='';
-    state.current.i++;
-    state.current.perWordStart = 0;
+    state.current.i++; state.current.perWordStart = 0;
     updateProgress();
-    if(state.current.i >= words.length){
-      finishExercise();
-    } else {
+    if(state.current.i >= state.current.words.length){ finishExercise(); } 
+    else {
       if($('#autoplayToggle').checked){ setTimeout(playCurrent, 350); }
       else { $('#promptWord').textContent = '(ready)'; }
     }
@@ -593,37 +612,25 @@
   function finishExercise(){
     $('#progressBar').style.width = '100%';
     const totalMs = performance.now() - state.current.startedAt;
-
-    // Aggregate
-    const total = state.current.words.length;
-    const correct = state.current.results.filter(r=>r.correct).length;
-    const skipped = state.current.results.filter(r=>r.skipped).length;
+    const total = state.current.words.length, correct = state.current.results.filter(r=>r.correct).length, skipped = state.current.results.filter(r=>r.skipped).length;
     const accuracy = total ? Math.round((correct/total)*100) : 0;
-
     $('#summaryTitle').textContent = state.current.title;
-    $('#sumTotal').textContent = total;
-    $('#sumCorrect').textContent = correct;
-    $('#sumSkipped').textContent = skipped;
-    $('#sumAcc').textContent = accuracy + '%';
-    $('#sumTime').textContent = fmtMs(totalMs);
-
+    $('#sumTotal').textContent = total; $('#sumCorrect').textContent = correct; $('#sumSkipped').textContent = skipped; $('#sumAcc').textContent = accuracy + '%'; $('#sumTime').textContent = fmtMs(totalMs);
     const review = $('#reviewList'); review.innerHTML='';
     state.current.results.filter(r=>!r.correct).forEach(r=>{
       const d = document.createElement('div'); d.className='item';
-      d.innerHTML = `<div><div class=\"title\">${r.word}</div><div class=\"muted\">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`;
+      d.innerHTML = `<div><div class="title">${r.word}</div><div class="muted">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`;
       const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice';
       btn.onclick = ()=> speak(r.word);
       d.appendChild(btn); review.appendChild(d);
     });
-
     const table = $('#resultsTable'); table.innerHTML='';
     state.current.results.forEach((r,idx)=>{
       const d = document.createElement('div'); d.className='item';
-      const badge = r.correct? '<span class=\"result-badge ok\">✓</span>' : (r.skipped? '<span class=\"result-badge skip\">⏭</span>' : '<span class=\"result-badge err\">✗</span>');
-      d.innerHTML = `<div><div class=\"title\">${idx+1}. ${r.word}</div><div class=\"muted\">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`;
+      const badge = r.correct? '<span class="result-badge ok">✓</span>' : (r.skipped? '<span class="result-badge skip">⏭</span>' : '<span class="result-badge err">✗</span>');
+      d.innerHTML = `<div><div class="title">${idx+1}. ${r.word}</div><div class="muted">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`;
       table.appendChild(d);
     });
-
     show('#screen-summary');
   }
 
@@ -642,8 +649,7 @@
   }
 
   function showConfirmScreen(idx){
-    const ex = state.exerciseRows[idx];
-    if(!ex) return;
+    const ex = state.exerciseRows[idx]; if(!ex) return;
     state.current.selectedIndex = idx;
     $('#confirmTitle').textContent = ex.title || 'Exercise';
     show('#screen-confirm');
@@ -651,6 +657,14 @@
 
   function startExercise(idx){
     const ex = state.exerciseRows[idx]; if(!ex) return;
+    
+    // MODIFIED: Show/hide UI based on handwriting mode
+    const isHandwriting = state.handwriting.enabled;
+    $('#answerInput').classList.toggle('hidden', isHandwriting);
+    $('#submitBtn').classList.toggle('hidden', isHandwriting);
+    $('#writeBtn').classList.toggle('hidden', !isHandwriting);
+    if(isHandwriting) { $('#answerInput').readOnly = true; setTimeout(() => { $('#answerInput').readOnly = false; }, 100); }
+
     state.current.title = ex.title || 'Exercise';
     state.current.words = ex.words.slice();
     state.current.order = state.current.words.map((_,i)=>i);
@@ -671,18 +685,15 @@
   }
 
   function playCurrent(){
-    if (state.current.perWordStart === 0) {
-      state.current.perWordStart = performance.now();
-      state.current.attemptsForWord = 0;
-    }
+    if (state.current.perWordStart === 0) { state.current.perWordStart = performance.now(); state.current.attemptsForWord = 0; }
     const w = currentWord();
     $('#promptWord').textContent = '(playing…)';
     if(w) speak(w);
-    $('#answerInput').focus();
+    if (!state.handwriting.enabled) $('#answerInput').focus();
   }
 
   function updateProgress(){
-    const i = state.current.i; const total = state.current.words.length;
+    const i = state.current.i, total = state.current.words.length;
     $('#idxNow').textContent = Math.min(i+1, total);
     $('#idxTotal').textContent = total;
     const pct = total ? Math.round((i/total)*100) : 0;
@@ -690,8 +701,7 @@
   }
 
   function submitAnswer(){
-    const input = $('#answerInput').value.trim();
-    const expected = currentWord();
+    const input = $('#answerInput').value.trim(), expected = currentWord();
     if(!expected) return;
     const timeMs = performance.now() - state.current.perWordStart;
     state.current.attemptsForWord = (state.current.attemptsForWord||0) + 1;
@@ -700,7 +710,7 @@
       $('#feedback').innerHTML = '<span class="result-badge ok">Correct</span>';
       nextWord();
     } else {
-      $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
+      $('#feedback').innerHTML = `<span class="result-badge err">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
       $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
       $('#answerInput').focus();
     }
@@ -710,150 +720,155 @@
   async function loadMaster(){
     const card = document.querySelector('#masterSelect')?.closest('.card');
     try{
-      if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
-        if(card) card.style.display='none';
-        return; // silently hide if not set
-      }
+      if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){ if(card) card.style.display='none'; return; }
       if(card) card.style.display='';
-      
       const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
-      // trim empty lines/rows
       const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
       if(!rows.length) throw new Error('Empty sheet');
-
-      // Always skip the first row so users can use any header/note text
       const data = rows.slice(1).map(r=>{
         const title = (r[0]||'').toString().trim();
         let id = (r[1]||'').toString().trim();
-        // Accept full Google Sheets URLs or bare IDs
         const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
         return { title, id };
       }).filter(x=> x.title && x.id);
-
       buildMasterList(data);
-    }catch(err){
-      console.warn('Master load failed:', err.message);
-      if(card) card.style.display='none';
-    }
+    }catch(err){ console.warn('Master load failed:', err.message); if(card) card.style.display='none'; }
   }
 
   async function loadExerciseSheet(sheetId, sourceLabel='Custom'){
     try{
       show('#screen-home');
-      $('#customList').innerHTML = '';
-      $('#exerciseList').innerHTML = '';
+      $('#customList').innerHTML = ''; $('#exerciseList').innerHTML = '';
       const csv = await fetchSheetCsv(sheetId);
       const rows = csvParse(csv);
       if(!rows.length) throw new Error('Empty sheet');
       const headers = rows[0].map(normalizeHeader);
-      const iTitle = headers.indexOf('title');
-      const iWords = headers.indexOf('words');
+      const iTitle = headers.indexOf('title'), iWords = headers.indexOf('words');
       if(iTitle < 0 || iWords < 0) throw new Error('Exercise sheet must have headers: title, words');
       const items = rows.slice(1).filter(r=>r[iTitle] || r[iWords]).map(r=>({
-        title: (r[iTitle]||'').trim(),
-        words: splitWords(r[iWords])
+        title: (r[iTitle]||'').trim(), words: splitWords(r[iWords])
       })).filter(x=>x.words.length>0);
       if(!items.length) throw new Error('No exercises found');
       buildExercisePicker(items, sourceLabel);
       state.source = {type:'custom', id: sheetId};
       savePrefs();
-    }catch(err){
-      console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600);
-    }
+    }catch(err){ console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600); }
   }
 
   // ======= EVENTS =======
   function bindEvents(){
-    const stopAndReset = (screen) => {
-      if('speechSynthesis' in window) speechSynthesis.cancel();
-      state.current.selectedIndex = -1;
-      show(screen);
-    };
-
-    // Master reload (auto-load also runs on init)
-    const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
-
-    const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
-
-    const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
-      const sel = $('#masterSelect');
-      const id = sel?.value;
-      const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
+    const stopAndReset = (screen) => { if('speechSynthesis' in window) speechSynthesis.cancel(); state.current.selectedIndex = -1; show(screen); };
+    $('#reloadMasterBtn')?.addEventListener('click', loadMaster);
+    $('#masterSelect')?.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !$('#masterSelect').value; });
+    $('#openMasterBtn')?.addEventListener('click', ()=>{ 
+      const sel = $('#masterSelect'), id = sel?.value, title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
       if(!id){ toast('Choose from the Built‑in list'); return; }
       loadExerciseSheet(id, title);
     });
-
-    $('#loadCustomBtn').addEventListener('click', ()=>{
-      const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
-      loadExerciseSheet(id, 'Custom');
-    });
-
+    $('#loadCustomBtn').addEventListener('click', ()=>{ const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID'); loadExerciseSheet(id, 'Custom'); });
     $('#homeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
     $('#backHomeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
-
-    // Confirm screen buttons
-    $('#confirmStartBtn').addEventListener('click', () => {
-      if (state.current.selectedIndex > -1) {
-        startExercise(state.current.selectedIndex);
-      }
-    });
+    $('#confirmStartBtn').addEventListener('click', () => { if (state.current.selectedIndex > -1) startExercise(state.current.selectedIndex); });
     $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
-
     $('#playBtn').addEventListener('click', playCurrent);
     $('#submitBtn').addEventListener('click', submitAnswer);
     $('#tryAgainBtn').addEventListener('click', tryAgain);
     $('#skipBtn').addEventListener('click', skipWord);
     $('#showBtn').addEventListener('click', showAnswer);
     $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
-    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
-
-    $('#answerInput').addEventListener('keydown', (e)=>{
-      if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
-    });
-
-    // voice selects
+    $('#backToPicker')?.addEventListener('click', ()=> stopAndReset('#screen-picker'));
+    $('#answerInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); } });
     function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
     $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
     $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
     $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
     $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
-
     $('#rate').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate2').value=e.target.value; savePrefs(); });
     $('#pitch').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch2').value=e.target.value; savePrefs(); });
     $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
     $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
-
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
-
-    // settings modal
-    const modal = $('#settingsModal');
-    $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
-
-    // test buttons
+    $('#openSettingsBtn').addEventListener('click', ()=> $('#settingsModal').showModal());
     function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
     function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
     $('#testEN').addEventListener('click', testSpeakEn);
     $('#testZH').addEventListener('click', testSpeakZh);
     $('#testEN2').addEventListener('click', testSpeakEn);
     $('#testZH2').addEventListener('click', testSpeakZh);
+
+    // ADDED: Handwriting events
+    $('#handwritingToggle').addEventListener('change', (e) => { state.handwriting.enabled = e.target.checked; savePrefs(); });
+    $('#writeBtn').addEventListener('click', showHandwritingOverlay);
+    $('#handwritingOverlay').addEventListener('click', (e) => { if(e.target.id === 'handwritingOverlay' || e.target.id === 'handwritingCloseBtn') hideHandwritingOverlay(); });
+  }
+  
+  // =========== NEW HANDWRITING FUNCTIONS =============
+  function initHandwriting() {
+    try {
+      if (typeof handwriting === 'undefined' || typeof handwriting.Canvas === 'undefined') throw new Error("Handwriting scripts not available.");
+    } catch (e) {
+      console.warn(e.message, "Disabling handwriting feature.");
+      const toggleLabel = $('#handwritingToggleLabel');
+      if (toggleLabel) toggleLabel.style.display = 'none';
+      $('#handwritingToggle').disabled = true;
+      state.handwriting.enabled = false;
+    }
+  }
+
+  function showHandwritingOverlay() {
+    const overlay = $('#handwritingOverlay'), canvas = $('#handwritingCanvas');
+    overlay.classList.remove('hidden');
+    canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+    const currentLang = isChinese(currentWord()) ? 'zh_TW' : 'en';
+    if (!state.handwriting.instance) {
+      state.handwriting.instance = new handwriting.Canvas(canvas);
+      state.handwriting.instance.setCallBack(handleRecognition);
+    }
+    state.handwriting.instance.setOptions({ language: currentLang, numOfReturn: 5 });
+    state.handwriting.instance.erase();
+    canvas.addEventListener('mouseup', startRecognitionTimer);
+    canvas.addEventListener('touchend', startRecognitionTimer);
+    canvas.addEventListener('mousedown', clearRecognitionTimer);
+    canvas.addEventListener('touchstart', clearRecognitionTimer);
+  }
+
+  function hideHandwritingOverlay() {
+    clearRecognitionTimer();
+    $('#handwritingOverlay').classList.add('hidden');
+  }
+
+  function startRecognitionTimer() {
+    clearRecognitionTimer();
+    recognitionTimeout = setTimeout(() => { if (state.handwriting.instance) state.handwriting.instance.recognize(); }, 1000);
+  }
+
+  function clearRecognitionTimer() {
+    if (recognitionTimeout) { clearTimeout(recognitionTimeout); recognitionTimeout = null; }
+  }
+
+  function handleRecognition(result, error) {
+    hideHandwritingOverlay();
+    if (error) { console.error('Handwriting recognition error:', error); toast('Recognition failed. Please try again.'); } 
+    else if (result && result.length > 0) {
+      $('#answerInput').value = result[0]; // Use the top result
+      submitAnswer(); // Feed the result into the existing app logic
+    } else { toast('Could not recognize handwriting.'); }
+    if (state.handwriting.instance) state.handwriting.instance.erase();
   }
 
   // ======= INIT =======
   (function init(){
     loadPrefs();
     bindEvents();
+    initHandwriting(); // ADDED
 
-    if(!('speechSynthesis' in window)){
-      toast('This browser does not support Speech Synthesis.');
-    } else {
+    if(!('speechSynthesis' in window)){ toast('This browser does not support Speech Synthesis.'); } 
+    else {
       window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
       loadVoices();
-      // Nudge some browsers to populate voices
       const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
     }
-
-    // Auto-load master on page load (silently hide if not available)
     loadMaster();
   })();
   </script>
