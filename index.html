@@ -635,13 +635,19 @@
       if(card) card.style.display='';
       $('#masterList').innerHTML = '<div class="muted">Loading…</div>';
       const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
-      const rows = csvParse(csv);
+      // trim empty lines/rows
+      const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
       if(!rows.length) throw new Error('Empty sheet');
-      const headers = rows[0].map(normalizeHeader);
-      const iTitle = headers.indexOf('title');
-      const iId = headers.indexOf('sheet id');
-      if(iTitle < 0 || iId < 0) throw new Error('Master sheet must have headers: title, sheet id');
-      const data = rows.slice(1).filter(r=>r.length>=2).map(r=>({ title: r[iTitle], id: r[iId] }));
+
+      // Always skip the first row so users can use any header/note text
+      const data = rows.slice(1).map(r=>{
+        const title = (r[0]||'').toString().trim();
+        let id = (r[1]||'').toString().trim();
+        // Accept full Google Sheets URLs or bare IDs
+        const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
+        return { title, id };
+      }).filter(x=> x.title && x.id);
+
       buildMasterList(data);
     }catch(err){
       console.warn('Master load failed:', err.message);
