@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-t" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>听写 · Tingxie App</title>
   <meta name="theme-color" content="#6c5ce7" />
@@ -124,7 +124,7 @@
         </div>
       </div>
       <div class="nav-actions">
-        <span class="tag" id="ttsStatus">TTS: checking…</span>
+        <button class="btn secondary" id="homeBtn">Home</button>
         <button class="btn secondary" id="openSettingsBtn" title="Speech & options">Settings</button>
       </div>
     </div>
@@ -154,8 +154,8 @@
 
           <div class="card" style="min-height:220px;">
             <h3>Custom Exercise</h3>
-            <p class="muted">Paste a <b>Spreadsheet ID</b> that contains one sheet with columns: <b>title</b>, <b>words</b> (comma-separated; English or Chinese).</p>
-            <label for="customId">Google Spreadsheet ID</label>
+            <p class="muted">Paste a <b>Custom Sheet ID</b>.</p>
+            <label for="customId">Custom Sheet ID</label>
             <input id="customId" type="text" placeholder="e.g. 1A2bC3dE4F..." autocomplete="off"/>
             <div class="row" style="margin-top:8px;">
               <button class="btn" id="loadCustomBtn">Load Exercise Sheet</button>
@@ -174,8 +174,7 @@
           <li>View your <b>summary</b> at the end.</li>
         </ul>
         <div class="row" style="margin-top:10px;">
-          <button class="btn secondary" id="demoBtn" title="Try a minimal demo with local sample">Quick Demo</button>
-          <span class="pill" style="margin-left:8px;">Tip: Press <span class="kbd">Enter</span> to submit</span>
+          <span class="pill">Tip: Press <span class="kbd">Enter</span> to submit</span>
         </div>
       </div>
     </section>
@@ -185,17 +184,32 @@
       <div class="row" style="justify-content:space-between;">
         <h2 id="pickerTitle">Exercises</h2>
         <div class="row">
-          <label class="pill" title="Randomize order when starting">
-            <span>Randomize</span>
+          <button class="btn secondary" id="backHomeBtn">Back</button>
+        </div>
+      </div>
+      <div id="exerciseList" class="list" style="margin-top:10px;"></div>
+    </section>
+
+    <!-- SCREEN: CONFIRM START -->
+    <section id="screen-confirm" class="card hidden">
+      <h2>Confirm Start</h2>
+      <p class="muted" style="margin-top:8px;">You have selected the following exercise. Ready to begin?</p>
+      <div class="card" style="margin: 12px 0;">
+        <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
+      </div>
+      <div class="row" style="justify-content:center; margin-bottom: 16px;">
+         <label class="pill" title="Randomize order when starting">
+            <span>Randomize:</span>
             <label class="switch" style="margin-left:8px;">
               <input type="checkbox" id="randomizeToggle" />
               <span class="slider"></span>
             </label>
           </label>
-          <button class="btn secondary" id="backHomeBtn">Back</button>
-        </div>
       </div>
-      <div id="exerciseList" class="list" style="margin-top:10px;"></div>
+      <div class="row" style="justify-content:space-between;">
+        <button class="btn secondary" id="confirmBackBtn">Back to List</button>
+        <button class="btn" id="confirmStartBtn">Start Now</button>
+      </div>
     </section>
 
     <!-- SCREEN: RUN -->
@@ -206,9 +220,7 @@
           <div class="muted" id="runMeta"></div>
         </div>
         <div class="row">
-          <button class="btn secondary" id="revealSettingsBtn">Settings</button>
           <button class="btn secondary" id="stopBtn">Stop</button>
-          <button class="btn secondary" id="homeBtnRun">Home</button>
         </div>
       </div>
 
@@ -222,12 +234,10 @@
             <div class="muted" style="font-size:13px;">Word <span id="idxNow">1</span> / <span id="idxTotal">1</span></div>
             <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
           </div>
-          <div class="row">
-            <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
-          </div>
         </div>
         <div style="margin-top:10px;" class="row">
-          <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" />
+          <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
+          <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
           <button class="btn" id="submitBtn">Submit</button>
         </div>
         <div class="row" style="margin-top:8px;">
@@ -289,7 +299,6 @@
         </div>
         <div class="row">
           <button class="btn secondary" id="backToPicker">Back to exercises</button>
-          <button class="btn secondary" id="homeBtnSummary">Home</button>
         </div>
       </div>
       <div class="grid cols-2" style="margin-top:10px;">
@@ -375,6 +384,7 @@
       i: 0,
       startedAt: 0,
       perWordStart: 0,
+      selectedIndex: -1,
       results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
     }
   };
@@ -472,8 +482,6 @@
   }
 
   // ======= TTS =======
-  function setTtsStatus(text){ $('#ttsStatus').textContent = text; }
-
   function loadVoices(){
     let list = speechSynthesis.getVoices();
     if(list.length){ onVoices(list); }
@@ -481,8 +489,7 @@
 
   function onVoices(list){
     state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
-    setTtsStatus(`TTS ready (${state.voices.length} voices)`);
-
+    
     // Populate selects (two places: inline settings & modal)
     const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
     const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
@@ -525,7 +532,7 @@
 
   // ======= UI FLOW =======
   function show(id){
-    ['#screen-home', '#screen-picker', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden'));
+    ['#screen-home', '#screen-picker', '#screen-confirm', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden'));
     $(id).classList.remove('hidden');
   }
 
@@ -573,6 +580,7 @@
     const {words, order} = state.current;
     $('#answerInput').value='';
     state.current.i++;
+    state.current.perWordStart = 0;
     updateProgress();
     if(state.current.i >= words.length){
       finishExercise();
@@ -619,7 +627,6 @@
     show('#screen-summary');
   }
 
-  // Helper functions for exercises (added)
   function buildExercisePicker(items, sourceLabel='Built-in'){
     state.exerciseRows = items;
     $('#pickerTitle').textContent = `${sourceLabel} — Exercises`;
@@ -628,10 +635,18 @@
       const d = document.createElement('div'); d.className='item';
       d.innerHTML = `<div><div class="title">${it.title||('Exercise '+(idx+1))}</div><div class="muted">${it.words.length} words</div></div>`;
       const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
-      btn.onclick = ()=> startExercise(idx);
+      btn.onclick = ()=> showConfirmScreen(idx);
       d.appendChild(btn); list.appendChild(d);
     });
     show('#screen-picker');
+  }
+
+  function showConfirmScreen(idx){
+    const ex = state.exerciseRows[idx];
+    if(!ex) return;
+    state.current.selectedIndex = idx;
+    $('#confirmTitle').textContent = ex.title || 'Exercise';
+    show('#screen-confirm');
   }
 
   function startExercise(idx){
@@ -644,12 +659,11 @@
     state.current.perWordStart = 0; state.current.attemptsForWord = 0;
     $('#runTitle').textContent = state.current.title;
     $('#runMeta').textContent = `${state.current.words.length} words`;
-    $('#promptWord').textContent = '(playing…)';
+    $('#promptWord').textContent = '(Press Play to begin)';
     $('#idxTotal').textContent = state.current.words.length;
     $('#answerInput').value=''; $('#feedback').textContent='';
     show('#screen-run');
     updateProgress();
-    playCurrent();
   }
 
   function currentWord(){
@@ -657,8 +671,11 @@
   }
 
   function playCurrent(){
+    if (state.current.perWordStart === 0) {
+      state.current.perWordStart = performance.now();
+      state.current.attemptsForWord = 0;
+    }
     const w = currentWord();
-    state.current.perWordStart = performance.now();
     $('#promptWord').textContent = '(playing…)';
     if(w) speak(w);
     $('#answerInput').focus();
@@ -747,6 +764,12 @@
 
   // ======= EVENTS =======
   function bindEvents(){
+    const stopAndReset = (screen) => {
+      if('speechSynthesis' in window) speechSynthesis.cancel();
+      state.current.selectedIndex = -1;
+      show(screen);
+    };
+
     // Master reload (auto-load also runs on init)
     const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
 
@@ -765,26 +788,24 @@
       loadExerciseSheet(id, 'Custom');
     });
 
-    // Small local demo
-    $('#demoBtn').addEventListener('click', ()=>{
-      const rows = [
-        {title:'Unit 1', words:['usage','united','must','animal']},
-        {title:'动物 (Animals)', words:['猫','狗','老虎','大象']},
-      ];
-      buildExercisePicker(rows, 'Demo');
-      toast('Loaded demo data');
+    $('#homeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
+    $('#backHomeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
+
+    // Confirm screen buttons
+    $('#confirmStartBtn').addEventListener('click', () => {
+      if (state.current.selectedIndex > -1) {
+        startExercise(state.current.selectedIndex);
+      }
     });
+    $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
 
-    $('#backHomeBtn').addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
-
-    $('#playBtn').addEventListener('click', ()=> speak(currentWord()));
+    $('#playBtn').addEventListener('click', playCurrent);
     $('#submitBtn').addEventListener('click', submitAnswer);
     $('#tryAgainBtn').addEventListener('click', tryAgain);
     $('#skipBtn').addEventListener('click', skipWord);
     $('#showBtn').addEventListener('click', showAnswer);
-    $('#stopBtn').addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); });
-    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); });
-    const _homeRun = $('#homeBtnRun'); if(_homeRun) _homeRun.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
+    $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
+    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
 
     $('#answerInput').addEventListener('keydown', (e)=>{
       if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
@@ -805,8 +826,6 @@
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
 
-    const _homeSummary = $('#homeBtnSummary'); if(_homeSummary) _homeSummary.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
-
     // settings modal
     const modal = $('#settingsModal');
     $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
@@ -826,9 +845,8 @@
     bindEvents();
 
     if(!('speechSynthesis' in window)){
-      setTtsStatus('TTS unsupported'); toast('This browser does not support Speech Synthesis.');
+      toast('This browser does not support Speech Synthesis.');
     } else {
-      setTtsStatus('TTS: loading voices…');
       window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
       loadVoices();
       // Nudge some browsers to populate voices
