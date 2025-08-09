@@ -144,6 +144,11 @@
             <div class="row">
               <button class="btn ghost" id="reloadMasterBtn" title="Refresh" aria-label="Refresh">↻</button>
             </div>
+            <label for="masterSelect" style="margin-top:8px; display:block;">Built‑in sheets</label>
+            <select id="masterSelect"></select>
+            <div class="row" style="margin-top:8px;">
+              <button class="btn" id="openMasterBtn">Open Selected</button>
+            </div>
             <div id="masterList" class="list" style="margin-top:10px; max-height:260px; overflow:auto;"></div>
           </div>
 
@@ -526,8 +531,20 @@
 
   function buildMasterList(rows){
     const list = $('#masterList'); list.innerHTML = '';
-    if(!rows.length){ list.innerHTML = '<div class="muted">No items found.</div>'; return; }
+    const sel = $('#masterSelect');
+    if(sel){
+      sel.innerHTML = '';
+      const ph = document.createElement('option');
+      ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true;
+      sel.appendChild(ph);
+    }
+    if(!rows.length){ 
+      list.innerHTML = '<div class="muted">No items found.</div>'; 
+      if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
+      return; 
+    }
     rows.forEach(r=>{
+      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
       const div = document.createElement('div'); div.className='item';
       div.innerHTML = `<div class="title">${r.title}</div>`;
       const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Open';
@@ -535,83 +552,6 @@
       div.appendChild(btn);
       list.appendChild(div);
     });
-  }
-
-  function buildExercisePicker(rows, fromLabel){
-    state.exerciseRows = rows;
-    $('#pickerTitle').textContent = `Exercises · ${fromLabel}`;
-    const list = $('#exerciseList'); list.innerHTML='';
-    rows.forEach((row, idx)=>{
-      const div = document.createElement('div'); div.className='item';
-      const wcount = row.words.length;
-      div.innerHTML = `<div><div class=\"title\">${row.title || 'Untitled'}</div><div class=\"muted\">${wcount} word${wcount!==1?'s':''}</div></div>`;
-      const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
-      btn.onclick = ()=> startExercise(idx);
-      div.appendChild(btn);
-      list.appendChild(div);
-    });
-    show('#screen-picker');
-  }
-
-  function startExercise(rowIndex){
-    const row = state.exerciseRows[rowIndex];
-    const words = row.words.slice();
-    const order = $('#randomizeToggle').checked ? shuffle([...Array(words.length).keys()]) : [...Array(words.length).keys()];
-
-    state.current = {
-      title: row.title || 'Untitled',
-      words, order, i: 0,
-      startedAt: performance.now(),
-      perWordStart: performance.now(),
-      results: []
-    };
-
-    $('#runTitle').textContent = state.current.title;
-    $('#runMeta').textContent = `${words.length} words`;
-    $('#idxTotal').textContent = String(words.length);
-    $('#idxNow').textContent = '1';
-    $('#feedback').textContent='';
-    $('#answerInput').value='';
-
-    show('#screen-run');
-    setTimeout(()=> playCurrent(), 100);
-  }
-
-  function currentWord(){
-    const {words, order, i} = state.current; const idx = order[i]; return words[idx];
-  }
-
-  function playCurrent(){
-    const word = currentWord();
-    $('#promptWord').textContent = '🔊 Listen…';
-    $('#promptWord').classList.add('blink');
-    speak(word);
-    setTimeout(()=> $('#promptWord').classList.remove('blink'), 800);
-    state.current.perWordStart = performance.now();
-    $('#answerInput').focus();
-  }
-
-  function updateProgress(){
-    const {i, words} = state.current; $('#progressBar').style.width = `${(i/words.length)*100}%`;
-    $('#idxNow').textContent = String(Math.min(i+1, words.length));
-  }
-
-  function submitAnswer(){
-    const expected = currentWord();
-    const input = $('#answerInput').value;
-    if(!input){ toast('Type your answer or use Skip/Show'); return; }
-
-    const ok = isCorrect(expected, input);
-    const timeMs = performance.now() - state.current.perWordStart;
-
-    if(ok){
-      $('#feedback').innerHTML = `<span class=\"result-badge ok\">Correct!</span>`;
-      state.current.results.push({word: expected, correct: true, attempts: 1, skipped: false, shownAnswer: false, timeMs});
-      nextWord();
-    } else {
-      $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
-      // keep trying — attempts counted when they finally get it or skip/show
-    }
   }
 
   function tryAgain(){
@@ -739,6 +679,14 @@
     // Master reload (auto-load also runs on init)
     const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
 
+    const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
+      const sel = $('#masterSelect');
+      const id = sel?.value;
+      const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
+      if(!id){ toast('Choose from the Built‑in list'); return; }
+      loadExerciseSheet(id, title);
+    });
+
     $('#loadCustomBtn').addEventListener('click', ()=>{
       const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
       loadExerciseSheet(id, 'Custom');
@@ -762,7 +710,7 @@
     $('#skipBtn').addEventListener('click', skipWord);
     $('#showBtn').addEventListener('click', showAnswer);
     $('#stopBtn').addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); });
-    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); }); });
+    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); });
     const _homeRun = $('#homeBtnRun'); if(_homeRun) _homeRun.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
 
     $('#answerInput').addEventListener('keydown', (e)=>{
