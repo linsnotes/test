@@ -174,7 +174,7 @@
           <li>View your <b>summary</b> at the end.</li>
         </ul>
         <div class="row" style="margin-top:10px;">
-          <span class="pill" style="margin-left:8px;">Tip: Press <span class="kbd">Enter</span> to submit</span>
+          <span class="pill">Tip: Press <span class="kbd">Enter</span> to submit</span>
         </div>
       </div>
     </section>
@@ -193,15 +193,15 @@
     <!-- SCREEN: CONFIRM -->
     <section id="screen-confirm" class="card hidden">
       <div class="row" style="justify-content:space-between;">
-        <h2 id="confirmTitle">Ready to Start</h2>
+        <h2 id="confirmTitle">Ready to start?</h2>
         <div class="row">
           <button class="btn secondary" id="backToPickerBtn">Back</button>
         </div>
       </div>
-      <div class="card" style="margin-top:12px;">
+      <div class="card" style="margin-top:10px;">
         <h3 id="confirmExerciseTitle">Exercise Title</h3>
-        <p class="muted" id="confirmExerciseInfo">Number of words</p>
-        <div class="row" style="margin-top:12px;">
+        <div class="muted" id="confirmExerciseInfo">Exercise info</div>
+        <div class="row" style="margin-top:12px; justify-content:space-between; align-items:center;">
           <label class="pill" title="Randomize order when starting">
             <span>Randomize</span>
             <label class="switch" style="margin-left:8px;">
@@ -209,9 +209,7 @@
               <span class="slider"></span>
             </label>
           </label>
-        </div>
-        <div class="row" style="margin-top:16px;">
-          <button class="btn" id="startExerciseBtn">Start Exercise</button>
+          <button class="btn" id="confirmStartBtn">Start Exercise</button>
         </div>
       </div>
     </section>
@@ -385,7 +383,7 @@
     picker: [], // list of {label, id} for master OR list of exercises for custom
     exerciseSheet: null, // current sheet object
     exerciseRows: [], // [{title, words:[...]}]
-    selectedExerciseIndex: null, // currently selected exercise index for confirmation
+    selectedExercise: null, // index of selected exercise
     current: {
       title: '',
       words: [],
@@ -407,7 +405,7 @@
   }
 
   function savePrefs(){
-    const preferences = JSON.stringify({
+    localStorage.setItem('tingxie_prefs', JSON.stringify({
       en: state.selected.en?.name || null,
       zh: state.selected.zh?.name || null,
       rate: state.selected.rate,
@@ -415,15 +413,11 @@
       randomize: $('#randomizeToggle').checked,
       autoplay: $('#autoplayToggle').checked,
       lastCustom: $('#customId').value || ''
-    });
-    // Using in-memory storage instead of localStorage for Claude.ai compatibility
-    window.tingxiePrefs = preferences;
+    }));
   }
-  
   function loadPrefs(){
     try{
-      // Using in-memory storage instead of localStorage for Claude.ai compatibility
-      const p = JSON.parse(window.tingxiePrefs || '{}');
+      const p = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
       if(p.rate) state.selected.rate = p.rate;
       if(p.pitch) state.selected.pitch = p.pitch;
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
@@ -517,7 +511,7 @@
     [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
 
     // Restore previous voice by name
-    const prefs = JSON.parse(window.tingxiePrefs || '{}');
+    const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
     if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
     if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
 
@@ -547,4 +541,4 @@
 
   // ======= UI FLOW =======
   function show(id){
-    ['
+    ['#screen-home', '#screen-picker', '#screen-confirm', '#screen-run', '#screen-summary'].forEach
