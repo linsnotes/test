@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-t" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>听写 · Tingxie App</title>
   <meta name="theme-color" content="#6c5ce7" />
-  <!-- Tesseract.js OCR Library -->
-  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
   <style>
     :root{
       --bg: #0f1226; /* deep indigo */
@@ -103,9 +101,6 @@
     .err{ background: rgba(231, 76, 60, .18); border:1px solid rgba(231, 76, 60, .35); }
     .skip{ background: rgba(241, 196, 15, .18); border:1px solid rgba(241, 196, 15, .35); }
 
-    #handwriting-canvas { touch-action: none; background: rgba(255,255,255,0.05); border:1px solid var(--panel-2); border-radius: 8px; cursor: crosshair; }
-    #handwriting-container .row { justify-content: center; gap: 16px; }
-
     @media (max-width: 420px){
       .nav{ padding: 10px 0; }
       .brand div:first-child{ font-size:16px; }
@@ -154,6 +149,7 @@
             <div class="row" style="margin-top:8px;">
               <button class="btn" id="openMasterBtn" disabled>Open Selected</button>
             </div>
+            
           </div>
 
           <div class="card" style="min-height:220px;">
@@ -196,31 +192,24 @@
 
     <!-- SCREEN: CONFIRM START -->
     <section id="screen-confirm" class="card hidden">
-        <h2>Confirm Start</h2>
-        <p class="muted" style="margin-top:8px;">You have selected the following exercise. Ready to begin?</p>
-        <div class="card" style="margin: 12px 0;">
-            <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
-        </div>
-        <div class="row" style="justify-content:center; margin-bottom: 16px; gap: 24px;">
-            <label class="pill" title="Randomize order when starting">
-                <span>Randomize:</span>
-                <label class="switch" style="margin-left:8px;">
-                    <input type="checkbox" id="randomizeToggle" />
-                    <span class="slider"></span>
-                </label>
+      <h2>Confirm Start</h2>
+      <p class="muted" style="margin-top:8px;">You have selected the following exercise. Ready to begin?</p>
+      <div class="card" style="margin: 12px 0;">
+        <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
+      </div>
+      <div class="row" style="justify-content:center; margin-bottom: 16px;">
+         <label class="pill" title="Randomize order when starting">
+            <span>Randomize:</span>
+            <label class="switch" style="margin-left:8px;">
+              <input type="checkbox" id="randomizeToggle" />
+              <span class="slider"></span>
             </label>
-            <label class="pill" title="Choose input method">
-                <span>Handwriting:</span>
-                <label class="switch" style="margin-left:8px;">
-                    <input type="checkbox" id="handwritingToggle" />
-                    <span class="slider"></span>
-                </label>
-            </label>
-        </div>
-        <div class="row" style="justify-content:space-between;">
-            <button class="btn secondary" id="confirmBackBtn">Back to List</button>
-            <button class="btn" id="confirmStartBtn">Start Now</button>
-        </div>
+          </label>
+      </div>
+      <div class="row" style="justify-content:space-between;">
+        <button class="btn secondary" id="confirmBackBtn">Back to List</button>
+        <button class="btn" id="confirmStartBtn">Start Now</button>
+      </div>
     </section>
 
     <!-- SCREEN: RUN -->
@@ -245,22 +234,12 @@
             <div class="muted" style="font-size:13px;">Word <span id="idxNow">1</span> / <span id="idxTotal">1</span></div>
             <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
           </div>
+        </div>
+        <div style="margin-top:10px;" class="row">
+          <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
           <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
+          <button class="btn" id="submitBtn">Submit</button>
         </div>
-
-        <div id="typing-container" style="margin-top:10px;" class="row">
-            <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
-            <button class="btn" id="submitBtn">Submit</button>
-        </div>
-
-        <div id="handwriting-container" class="hidden" style="margin-top: 10px; display: flex; flex-direction: column; align-items: center;">
-            <canvas id="handwriting-canvas" width="400" height="150"></canvas>
-            <div class="row" style="margin-top: 8px;">
-                <button class="btn secondary" id="clearBtn">Clear</button>
-                <button class="btn" id="submitHwBtn">Submit</button>
-            </div>
-        </div>
-
         <div class="row" style="margin-top:8px;">
           <button class="btn secondary" id="tryAgainBtn">Try again</button>
           <button class="btn secondary" id="skipBtn">Skip</button>
@@ -387,17 +366,17 @@
 
   <script>
   // ======= CONFIG =======
-  const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8";
+  const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
 
   // ======= STATE =======
   const state = {
     ttsReady: false,
     voices: [],
     selected: { en: null, zh: null, rate: 1, pitch: 1 },
-    source: null,
-    picker: [],
-    exerciseSheet: null,
-    exerciseRows: [],
+    source: null, // {type:'master'|'custom', id}
+    picker: [], // list of {label, id} for master OR list of exercises for custom
+    exerciseSheet: null, // current sheet object
+    exerciseRows: [], // [{title, words:[...]}]
     current: {
       title: '',
       words: [],
@@ -406,15 +385,7 @@
       startedAt: 0,
       perWordStart: 0,
       selectedIndex: -1,
-      results: [],
-      inputMethod: 'typing'
-    },
-    handwriting: {
-      canvas: null,
-      ctx: null,
-      drawing: false,
-      worker: null,
-      ocrReady: false
+      results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
     }
   };
 
@@ -435,7 +406,6 @@
       pitch: state.selected.pitch,
       randomize: $('#randomizeToggle').checked,
       autoplay: $('#autoplayToggle').checked,
-      handwriting: $('#handwritingToggle').checked,
       lastCustom: $('#customId').value || ''
     }));
   }
@@ -446,57 +416,112 @@
       if(p.pitch) state.selected.pitch = p.pitch;
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
       if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
-      if(p.handwriting!=null) $('#handwritingToggle').checked = p.handwriting;
       if(p.lastCustom) $('#customId').value = p.lastCustom;
+      // voice names resolved after voices load
     }catch{}
   }
 
   function csvParse(text){
     const lines = text.replace(/\r\n?/g, "\n").split("\n").filter(l=>l.trim().length>0);
-    return lines.map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(cell => {
+    const rows = lines.map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(cell => {
       let c = cell.trim();
       if(c.startsWith('"') && c.endsWith('"')) c = c.slice(1,-1).replace(/""/g,'"');
       return c;
     }));
+    return rows;
   }
 
   function normalizeHeader(h){ return h.trim().toLowerCase().replace(/\s+/g,' '); }
-  function getCsvUrl(spreadsheetId){ return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/export?format=csv`; }
+
+  function getCsvUrl(spreadsheetId){
+    return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/export?format=csv`;
+  }
+
   async function fetchSheetCsv(spreadsheetId){
-    const res = await fetch(getCsvUrl(spreadsheetId));
+    const url = getCsvUrl(spreadsheetId);
+    const res = await fetch(url);
     if(!res.ok) throw new Error(`Failed to load CSV (${res.status})`);
     return await res.text();
   }
 
   function isChinese(str){ return /[\p{Script=Han}]/u.test(str); }
-  function splitWords(raw){ return (raw || '').split(/[，,]/g).map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean); }
-  function normEnglish(s){ return (s||'').toLocaleLowerCase().normalize('NFC').replace(/[^\p{Letter}\p{Number}]+/gu,''); }
-  function normChinese(s){ return (s||'').normalize('NFC').replace(/\s+/g,''); }
-  function isCorrect(expected, input){ return isChinese(expected) ? normChinese(expected) === normChinese(input) : normEnglish(expected) === normEnglish(input); }
-  function fmtMs(ms){ const s = Math.round(ms/1000); return s < 60 ? `${s}s` : `${Math.floor(s/60)}m ${s%60}s`; }
-  function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+  function splitWords(raw){
+    if(!raw) return [];
+    return raw
+      .split(/[，,]/g)
+      .map(s=>s.replace(/\s+/g,' ').trim())
+      .filter(Boolean);
+  }
+
+  function normEnglish(s){
+    return (s||'').toLocaleLowerCase().normalize('NFC').replace(/[^\p{Letter}\p{Number}]+/gu,'');
+  }
+  function normChinese(s){
+    return (s||'').normalize('NFC').replace(/\s+/g,'');
+  }
+  function isCorrect(expected, input){
+    if(isChinese(expected)){
+      return normChinese(expected) === normChinese(input);
+    } else {
+      return normEnglish(expected) === normEnglish(input);
+    }
+  }
+
+  function fmtMs(ms){
+    const s = Math.round(ms/1000);
+    if(s < 60) return s+"s";
+    const mm = Math.floor(s/60), ss = s%60;
+    return `${mm}m ${ss}s`;
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
 
   // ======= TTS =======
-  function loadVoices(){ if(speechSynthesis.getVoices().length) onVoices(speechSynthesis.getVoices()); }
+  function loadVoices(){
+    let list = speechSynthesis.getVoices();
+    if(list.length){ onVoices(list); }
+  }
+
   function onVoices(list){
     state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
-    const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang)), zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
-    const fill = (sel, voices) => { sel.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join(''); };
+    
+    // Populate selects (two places: inline settings & modal)
+    const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
+    const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
+
+    function fill(select, voices){
+      select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
+    }
+
     [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
     [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
+
+    // Restore previous voice by name
     const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
-    const setVoice = (key, sel1, sel2) => {
-      const v = state.voices.find(v=>v.name===prefs[key]);
-      if(v){ state.selected[key]=v; [sel1, sel2].forEach(s=>s.value=encodeURIComponent(v.name)); }
-    };
-    if(prefs.en) setVoice('en', $('#enVoice'), $('#enVoice2'));
-    if(prefs.zh) setVoice('zh', $('#zhVoice'), $('#zhVoice2'));
+    if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+    if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+
+    // Defaults if none chosen
     if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(en[0].name)); }
     if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(zh[0].name)); }
   }
-  function getVoiceForWord(word){ const zh = isChinese(word); return (zh ? state.selected.zh : state.selected.en) || (zh ? state.voices.filter(v=>/^zh/i.test(v.lang))[0] : state.voices.filter(v=>/^en/i.test(v.lang))[0]) || state.voices[0] || null; }
+
+  function getVoiceForWord(word){
+    const zh = isChinese(word);
+    const preferred = zh ? state.selected.zh : state.selected.en;
+    if(preferred) return preferred;
+    // fallback
+    const list = zh ? state.voices.filter(v=>/^zh/i.test(v.lang)) : state.voices.filter(v=>/^en/i.test(v.lang));
+    return list[0] || state.voices[0] || null;
+  }
+
   function speak(text){
-    if(!('speechSynthesis' in window)) { toast('Speech Synthesis not supported.'); return; }
+    if(!('speechSynthesis' in window)) { toast('Speech Synthesis not supported in this browser.'); return; }
     const voice = getVoiceForWord(text);
     const u = new SpeechSynthesisUtterance(text);
     if(voice){ u.voice = voice; u.lang = voice.lang; }
@@ -506,62 +531,99 @@
   }
 
   // ======= UI FLOW =======
-  function show(id){ ['#screen-home', '#screen-picker', '#screen-confirm', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden')); $(id).classList.remove('hidden'); }
-  function buildMasterList(rows){
-    const sel = $('#masterSelect'), openBtn = $('#openMasterBtn');
-    if(!sel) return;
-    sel.innerHTML = '<option value="" disabled selected>— Select —</option>' + rows.map(r=>`<option value="${r.id}">${r.title}</option>`).join('');
-    openBtn.disabled = !rows.length;
+  function show(id){
+    ['#screen-home', '#screen-picker', '#screen-confirm', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden'));
+    $(id).classList.remove('hidden');
   }
 
-  function clearInput(){
-    if (state.current.inputMethod === 'handwriting') state.handwriting.ctx.clearRect(0, 0, state.handwriting.canvas.width, state.handwriting.canvas.height);
-    else { $('#answerInput').value=''; $('#answerInput').focus(); }
-    $('#feedback').textContent='';
+  function buildMasterList(rows){
+    const sel = $('#masterSelect');
+    const openBtn = $('#openMasterBtn');
+    if(sel){
+      sel.innerHTML = '';
+      const ph = document.createElement('option');
+      ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true;
+      sel.appendChild(ph);
+    }
+    if(!rows.length){
+      if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
+      if(openBtn){ openBtn.disabled = true; }
+      return;
+    }
+    rows.forEach(r=>{
+      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
+    });
+    if(openBtn){ openBtn.disabled = false; }
   }
-  function tryAgain(){ clearInput(); }
+
+  function tryAgain(){
+    $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent='';
+  }
 
   function skipWord(){
     const expected = currentWord();
-    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs: performance.now() - state.current.perWordStart});
+    const timeMs = performance.now() - state.current.perWordStart;
+    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
     $('#feedback').innerHTML = `<span class=\"result-badge skip\">Skipped</span> It was: <b>${expected}</b>`;
     nextWord();
   }
 
   function showAnswer(){
     const expected = currentWord();
-    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs: performance.now() - state.current.perWordStart});
+    const timeMs = performance.now() - state.current.perWordStart;
+    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs});
     $('#feedback').innerHTML = `Answer: <b>${expected}</b>`;
     nextWord();
   }
 
   function nextWord(){
-    clearInput();
-    state.current.i++; state.current.perWordStart = 0;
+    const {words, order} = state.current;
+    $('#answerInput').value='';
+    state.current.i++;
+    state.current.perWordStart = 0;
     updateProgress();
-    if(state.current.i >= state.current.words.length) finishExercise();
-    else if($('#autoplayToggle').checked) setTimeout(playCurrent, 350);
-    else $('#promptWord').textContent = '(ready)';
+    if(state.current.i >= words.length){
+      finishExercise();
+    } else {
+      if($('#autoplayToggle').checked){ setTimeout(playCurrent, 350); }
+      else { $('#promptWord').textContent = '(ready)'; }
+    }
   }
 
   function finishExercise(){
     $('#progressBar').style.width = '100%';
-    const total = state.current.words.length, correct = state.current.results.filter(r=>r.correct).length, skipped = state.current.results.filter(r=>r.skipped).length;
+    const totalMs = performance.now() - state.current.startedAt;
+
+    // Aggregate
+    const total = state.current.words.length;
+    const correct = state.current.results.filter(r=>r.correct).length;
+    const skipped = state.current.results.filter(r=>r.skipped).length;
+    const accuracy = total ? Math.round((correct/total)*100) : 0;
+
     $('#summaryTitle').textContent = state.current.title;
-    $('#sumTotal').textContent = total; $('#sumCorrect').textContent = correct; $('#sumSkipped').textContent = skipped;
-    $('#sumAcc').textContent = (total ? Math.round((correct/total)*100) : 0) + '%';
-    $('#sumTime').textContent = fmtMs(performance.now() - state.current.startedAt);
-    const createItem = (c, t) => { const e=document.createElement('div'); e.className='item'; e.innerHTML=c; if(t) e.appendChild(t); return e; };
+    $('#sumTotal').textContent = total;
+    $('#sumCorrect').textContent = correct;
+    $('#sumSkipped').textContent = skipped;
+    $('#sumAcc').textContent = accuracy + '%';
+    $('#sumTime').textContent = fmtMs(totalMs);
+
     const review = $('#reviewList'); review.innerHTML='';
     state.current.results.filter(r=>!r.correct).forEach(r=>{
-      const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice'; btn.onclick = ()=> speak(r.word);
-      review.appendChild(createItem(`<div><div class=\"title\">${r.word}</div><div class=\"muted\">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`, btn));
+      const d = document.createElement('div'); d.className='item';
+      d.innerHTML = `<div><div class=\"title\">${r.word}</div><div class=\"muted\">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`;
+      const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice';
+      btn.onclick = ()=> speak(r.word);
+      d.appendChild(btn); review.appendChild(d);
     });
+
     const table = $('#resultsTable'); table.innerHTML='';
     state.current.results.forEach((r,idx)=>{
+      const d = document.createElement('div'); d.className='item';
       const badge = r.correct? '<span class=\"result-badge ok\">✓</span>' : (r.skipped? '<span class=\"result-badge skip\">⏭</span>' : '<span class=\"result-badge err\">✗</span>');
-      table.appendChild(createItem(`<div><div class=\"title\">${idx+1}. ${r.word}</div><div class=\"muted\">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`));
+      d.innerHTML = `<div><div class=\"title\">${idx+1}. ${r.word}</div><div class=\"muted\">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`;
+      table.appendChild(d);
     });
+
     show('#screen-summary');
   }
 
@@ -580,206 +642,218 @@
   }
 
   function showConfirmScreen(idx){
+    const ex = state.exerciseRows[idx];
+    if(!ex) return;
     state.current.selectedIndex = idx;
-    $('#confirmTitle').textContent = state.exerciseRows[idx].title || 'Exercise';
+    $('#confirmTitle').textContent = ex.title || 'Exercise';
     show('#screen-confirm');
   }
 
   function startExercise(idx){
     const ex = state.exerciseRows[idx]; if(!ex) return;
-    state.current.title = ex.title; state.current.words = ex.words.slice();
-    state.current.order = $('#randomizeToggle').checked ? shuffle(state.current.words.map((_,i)=>i)) : state.current.words.map((_,i)=>i);
-    state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now(); state.current.perWordStart = 0;
-    state.current.inputMethod = $('#handwritingToggle').checked ? 'handwriting' : 'typing';
-
-    $('#typing-container').classList.toggle('hidden', state.current.inputMethod !== 'typing');
-    const hwContainer = $('#handwriting-container');
-    hwContainer.classList.toggle('hidden', state.current.inputMethod !== 'handwriting');
-    if(state.current.inputMethod === 'handwriting') {
-        hwContainer.style.display = 'flex';
-        if (!state.handwriting.ctx) initHandwritingCanvas();
-        clearInput();
-    }
-
-    $('#runTitle').textContent = state.current.title; $('#runMeta').textContent = `${state.current.words.length} words`;
-    $('#promptWord').textContent = '(Press Play to begin)'; $('#answerInput').value=''; $('#feedback').textContent='';
-    show('#screen-run'); updateProgress();
+    state.current.title = ex.title || 'Exercise';
+    state.current.words = ex.words.slice();
+    state.current.order = state.current.words.map((_,i)=>i);
+    if($('#randomizeToggle').checked) state.current.order = shuffle(state.current.order);
+    state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now();
+    state.current.perWordStart = 0; state.current.attemptsForWord = 0;
+    $('#runTitle').textContent = state.current.title;
+    $('#runMeta').textContent = `${state.current.words.length} words`;
+    $('#promptWord').textContent = '(Press Play to begin)';
+    $('#idxTotal').textContent = state.current.words.length;
+    $('#answerInput').value=''; $('#feedback').textContent='';
+    show('#screen-run');
+    updateProgress();
   }
 
-  function currentWord(){ const {words, order, i} = state.current; return words[order[i]] || ''; }
+  function currentWord(){
+    const {words, order, i} = state.current; const idx = (order && order[i] != null) ? order[i] : i; return words[idx] || '';
+  }
 
   function playCurrent(){
-    if (state.current.perWordStart === 0) state.current.perWordStart = performance.now();
-    const w = currentWord(); $('#promptWord').textContent = '(playing…)';
+    if (state.current.perWordStart === 0) {
+      state.current.perWordStart = performance.now();
+      state.current.attemptsForWord = 0;
+    }
+    const w = currentWord();
+    $('#promptWord').textContent = '(playing…)';
     if(w) speak(w);
-    if(state.current.inputMethod === 'typing') $('#answerInput').focus();
+    $('#answerInput').focus();
   }
 
   function updateProgress(){
-    const i = state.current.i, total = state.current.words.length;
-    $('#idxNow').textContent = Math.min(i+1, total); $('#idxTotal').textContent = total;
-    $('#progressBar').style.width = (total ? Math.round((i/total)*100) : 0) + '%';
+    const i = state.current.i; const total = state.current.words.length;
+    $('#idxNow').textContent = Math.min(i+1, total);
+    $('#idxTotal').textContent = total;
+    const pct = total ? Math.round((i/total)*100) : 0;
+    $('#progressBar').style.width = pct + '%';
   }
 
-  function submitAnswer(input){
-    const expected = currentWord(); if(!expected) return;
+  function submitAnswer(){
+    const input = $('#answerInput').value.trim();
+    const expected = currentWord();
+    if(!expected) return;
     const timeMs = performance.now() - state.current.perWordStart;
-    if(isCorrect(expected, input.trim())){
-      state.current.results.push({word: expected, correct: true, attempts: (state.current.attemptsForWord||0) + 1, skipped: false, shownAnswer: false, timeMs});
+    state.current.attemptsForWord = (state.current.attemptsForWord||0) + 1;
+    if(isCorrect(expected, input)){
+      state.current.results.push({word: expected, correct: true, attempts: state.current.attemptsForWord, skipped: false, shownAnswer: false, timeMs});
       $('#feedback').innerHTML = '<span class="result-badge ok">Correct</span>';
       nextWord();
     } else {
       $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
-      if(state.current.inputMethod === 'typing') { $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800); $('#answerInput').select(); }
+      $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
+      $('#answerInput').focus();
     }
   }
 
   // ======= LOADERS =======
   async function loadMaster(){
-    const card = $('#masterSelect')?.closest('.card');
+    const card = document.querySelector('#masterSelect')?.closest('.card');
     try{
-      if(!MASTER_SPREADSHEET_ID) { if(card) card.style.display='none'; return; }
+      if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
+        if(card) card.style.display='none';
+        return; // silently hide if not set
+      }
+      if(card) card.style.display='';
+      
       const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
+      // trim empty lines/rows
       const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
       if(!rows.length) throw new Error('Empty sheet');
-      const data = rows.slice(1).map(r=>({ title: (r[0]||'').trim(), id: (r[1]||'').match(/\/d\/([A-Za-z0-9-_]+)/)?.[1] || (r[1]||'').trim() })).filter(x=> x.title && x.id);
+
+      // Always skip the first row so users can use any header/note text
+      const data = rows.slice(1).map(r=>{
+        const title = (r[0]||'').toString().trim();
+        let id = (r[1]||'').toString().trim();
+        // Accept full Google Sheets URLs or bare IDs
+        const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
+        return { title, id };
+      }).filter(x=> x.title && x.id);
+
       buildMasterList(data);
-    }catch(err){ console.warn('Master load failed:', err.message); if(card) card.style.display='none'; }
+    }catch(err){
+      console.warn('Master load failed:', err.message);
+      if(card) card.style.display='none';
+    }
   }
 
   async function loadExerciseSheet(sheetId, sourceLabel='Custom'){
     try{
-      show('#screen-home'); $('#exerciseList').innerHTML='';
+      show('#screen-home');
+      $('#customList').innerHTML = '';
+      $('#exerciseList').innerHTML = '';
       const csv = await fetchSheetCsv(sheetId);
-      const rows = csvParse(csv); if(!rows.length) throw new Error('Empty sheet');
+      const rows = csvParse(csv);
+      if(!rows.length) throw new Error('Empty sheet');
       const headers = rows[0].map(normalizeHeader);
-      const iTitle = headers.indexOf('title'), iWords = headers.indexOf('words');
-      if(iTitle < 0 || iWords < 0) throw new Error('Sheet must have headers: title, words');
-      const items = rows.slice(1).filter(r=>r[iTitle] || r[iWords]).map(r=>({ title: (r[iTitle]||'').trim(), words: splitWords(r[iWords]) })).filter(x=>x.words.length>0);
+      const iTitle = headers.indexOf('title');
+      const iWords = headers.indexOf('words');
+      if(iTitle < 0 || iWords < 0) throw new Error('Exercise sheet must have headers: title, words');
+      const items = rows.slice(1).filter(r=>r[iTitle] || r[iWords]).map(r=>({
+        title: (r[iTitle]||'').trim(),
+        words: splitWords(r[iWords])
+      })).filter(x=>x.words.length>0);
       if(!items.length) throw new Error('No exercises found');
       buildExercisePicker(items, sourceLabel);
-      state.source = {type:'custom', id: sheetId}; savePrefs();
-    }catch(err){ console.error(err); toast('Failed to load sheet: ' + err.message, 2600); }
-  }
-
-  // ======= HANDWRITING & OCR =======
-  async function initHandwritingCanvas() {
-    state.handwriting.canvas = $('#handwriting-canvas');
-    state.handwriting.ctx = state.handwriting.canvas.getContext('2d');
-    const { canvas, ctx } = state.handwriting;
-    ctx.strokeStyle = 'var(--text)'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-
-    const draw = (e) => {
-        if (!state.handwriting.drawing) return;
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-        ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
-    };
-    const startDrawing = (e) => {
-        state.handwriting.drawing = true;
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-        ctx.beginPath(); ctx.moveTo(x, y);
-    };
-    const stopDrawing = () => { state.handwriting.drawing = false; ctx.beginPath(); };
-
-    canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseleave', stopDrawing);
-    canvas.addEventListener('touchstart', startDrawing); canvas.addEventListener('touchmove', draw);
-    canvas.addEventListener('touchend', stopDrawing);
-
-    $('#clearBtn').addEventListener('click', clearInput);
-    $('#submitHwBtn').addEventListener('click', recognizeHandwriting);
-
-    if (!state.handwriting.worker) {
-        $('#feedback').textContent = 'Loading OCR Engine...';
-        state.handwriting.worker = await Tesseract.createWorker('eng+chi_sim', 1, {
-            logger: m => {
-                if (m.status === 'recognizing text') {
-                    $('#feedback').textContent = `Recognizing... ${Math.round(m.progress * 100)}%`;
-                }
-            }
-        });
-        state.handwriting.ocrReady = true;
-        $('#feedback').textContent = 'OCR Ready. Start writing.';
+      state.source = {type:'custom', id: sheetId};
+      savePrefs();
+    }catch(err){
+      console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600);
     }
   }
 
-  async function recognizeHandwriting() {
-    if (!state.handwriting.ocrReady) { toast('OCR engine not ready yet.'); return; }
-    const { canvas } = state.handwriting;
-    // Check if canvas is empty by checking pixel data
-    const blank = document.createElement('canvas'); blank.width = canvas.width; blank.height = canvas.height;
-    if (canvas.toDataURL() === blank.toDataURL()) { toast('Please write something first.'); return; }
-
-    try {
-        const result = await state.handwriting.worker.recognize(canvas);
-        submitAnswer(result.data.text);
-    } catch (err) {
-        console.error('OCR Error:', err);
-        toast('Could not recognize handwriting.');
-    }
-  }
-
-  // ======= EVENTS & INIT =======
+  // ======= EVENTS =======
   function bindEvents(){
-    const stopAndReset = (screen) => { if('speechSynthesis' in window) speechSynthesis.cancel(); state.current.selectedIndex = -1; show(screen); };
-    $('#reloadMasterBtn').addEventListener('click', loadMaster);
-    $('#masterSelect').addEventListener('change', () => { $('#openMasterBtn').disabled = !$('#masterSelect').value; });
-    $('#openMasterBtn').addEventListener('click', () => {
+    const stopAndReset = (screen) => {
+      if('speechSynthesis' in window) speechSynthesis.cancel();
+      state.current.selectedIndex = -1;
+      show(screen);
+    };
+
+    // Master reload (auto-load also runs on init)
+    const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
+
+    const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
+
+    const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
       const sel = $('#masterSelect');
-      if(!sel.value) { toast('Choose from the Built‑in list'); return; }
-      loadExerciseSheet(sel.value, sel.options[sel.selectedIndex].textContent);
+      const id = sel?.value;
+      const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
+      if(!id){ toast('Choose from the Built‑in list'); return; }
+      loadExerciseSheet(id, title);
     });
-    $('#loadCustomBtn').addEventListener('click', () => {
+
+    $('#loadCustomBtn').addEventListener('click', ()=>{
       const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
-      loadExerciseSheet(id.match(/\/d\/([A-Za-z0-9-_]+)/)?.[1] || id, 'Custom');
+      loadExerciseSheet(id, 'Custom');
     });
 
     $('#homeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
     $('#backHomeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
-    $('#confirmStartBtn').addEventListener('click', ()=> { if (state.current.selectedIndex > -1) startExercise(state.current.selectedIndex); });
-    $('#confirmBackBtn').addEventListener('click', ()=> show('#screen-picker'));
+
+    // Confirm screen buttons
+    $('#confirmStartBtn').addEventListener('click', () => {
+      if (state.current.selectedIndex > -1) {
+        startExercise(state.current.selectedIndex);
+      }
+    });
+    $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
+
     $('#playBtn').addEventListener('click', playCurrent);
-    $('#submitBtn').addEventListener('click', () => submitAnswer($('#answerInput').value));
+    $('#submitBtn').addEventListener('click', submitAnswer);
     $('#tryAgainBtn').addEventListener('click', tryAgain);
     $('#skipBtn').addEventListener('click', skipWord);
     $('#showBtn').addEventListener('click', showAnswer);
     $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
-    $('#backToPicker').addEventListener('click', ()=> stopAndReset('#screen-picker'));
-    $('#answerInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); submitAnswer($('#answerInput').value); } });
+    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
 
-    const setVoicePref = (key, val) => { state.selected[key] = state.voices.find(v=>v.name===decodeURIComponent(val)); savePrefs(); };
-    $('#enVoice').addEventListener('change', (e)=>setVoicePref('en', e.target.value));
-    $('#zhVoice').addEventListener('change', (e)=>setVoicePref('zh', e.target.value));
-    $('#enVoice2').addEventListener('change', (e)=>{ setVoicePref('en', e.target.value); $('#enVoice').value = e.target.value; });
-    $('#zhVoice2').addEventListener('change', (e)=>{ setVoicePref('zh', e.target.value); $('#zhVoice').value = e.target.value; });
+    $('#answerInput').addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
+    });
 
-    const setRangePref = (key, val) => { state.selected[key] = parseFloat(val); savePrefs(); };
-    $('#rate').addEventListener('input', (e)=>{ setRangePref('rate', e.target.value); $('#rate2').value=e.target.value; });
-    $('#pitch').addEventListener('input', (e)=>{ setRangePref('pitch', e.target.value); $('#pitch2').value=e.target.value; });
-    $('#rate2').addEventListener('input', (e)=>{ setRangePref('rate', e.target.value); $('#rate').value=e.target.value; });
-    $('#pitch2').addEventListener('input', (e)=>{ setRangePref('pitch', e.target.value); $('#pitch').value=e.target.value; });
+    // voice selects
+    function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
+    $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+    $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
+    $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+    $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
+
+    $('#rate').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate2').value=e.target.value; savePrefs(); });
+    $('#pitch').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch2').value=e.target.value; savePrefs(); });
+    $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
+    $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
 
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
-    $('#handwritingToggle').addEventListener('change', savePrefs);
 
-    $('#openSettingsBtn').addEventListener('click', ()=> $('#settingsModal').showModal());
-    const testSpeakEn = () => speak('Hello! This is the English voice test.');
-    const testSpeakZh = () => speak('你好！这是中文语音测试。');
-    $('#testEN').addEventListener('click', testSpeakEn); $('#testZH').addEventListener('click', testSpeakZh);
-    $('#testEN2').addEventListener('click', testSpeakEn); $('#testZH2').addEventListener('click', testSpeakZh);
+    // settings modal
+    const modal = $('#settingsModal');
+    $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
+
+    // test buttons
+    function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
+    function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
+    $('#testEN').addEventListener('click', testSpeakEn);
+    $('#testZH').addEventListener('click', testSpeakZh);
+    $('#testEN2').addEventListener('click', testSpeakEn);
+    $('#testZH2').addEventListener('click', testSpeakZh);
   }
 
+  // ======= INIT =======
   (function init(){
     loadPrefs();
     bindEvents();
-    if(!('speechSynthesis' in window)) toast('This browser does not support Speech Synthesis.');
-    else { speechSynthesis.onvoiceschanged = ()=> onVoices(speechSynthesis.getVoices()); loadVoices(); }
+
+    if(!('speechSynthesis' in window)){
+      toast('This browser does not support Speech Synthesis.');
+    } else {
+      window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
+      loadVoices();
+      // Nudge some browsers to populate voices
+      const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
+    }
+
+    // Auto-load master on page load (silently hide if not available)
     loadMaster();
   })();
   </script>
