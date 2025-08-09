@@ -238,7 +238,46 @@
         <div id="feedback" class="muted" style="margin-top:8px;"></div>
       </div>
 
-      
+      <details id="settingsPanel" style="margin-top:12px;">
+        <summary class="pill">Speech & Input Settings</summary>
+        <div class="grid cols-2" style="margin-top:8px;">
+          <div class="card">
+            <h3>Voices</h3>
+            <p class="muted">Auto-detect language. Pick preferred voices for English and Chinese.</p>
+            <label>English Voice
+              <select id="enVoice"></select>
+            </label>
+            <div class="row" style="margin-top:6px;">
+              <button class="btn secondary" id="testEN">Test EN</button>
+            </div>
+            <div style="height:12px;"></div>
+            <label>中文语音
+              <select id="zhVoice"></select>
+            </label>
+            <div class="row" style="margin-top:6px;">
+              <button class="btn secondary" id="testZH">测试中文</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Speech Options</h3>
+            <label>Rate (0.5–1.5)
+              <input id="rate" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+            </label>
+            <div style="height:8px;"></div>
+            <label>Pitch (0.5–1.5)
+              <input id="pitch" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+            </label>
+            <div style="height:8px;"></div>
+            <label>
+              <span>Auto-play next word</span>
+              <label class="switch" style="margin-left:8px;">
+                <input type="checkbox" id="autoplayToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </label>
+          </div>
+        </div>
+      </details>
     </section>
 
     <!-- SCREEN: SUMMARY -->
@@ -356,7 +395,7 @@
       rate: state.selected.rate,
       pitch: state.selected.pitch,
       randomize: $('#randomizeToggle').checked,
-      autoplay: ($('#autoplayToggle') ? $('#autoplayToggle').checked : true),
+      autoplay: $('#autoplayToggle').checked,
       lastCustom: $('#customId').value || ''
     }));
   }
@@ -366,7 +405,7 @@
       if(p.rate) state.selected.rate = p.rate;
       if(p.pitch) state.selected.pitch = p.pitch;
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
-      if(p.autoplay!=null && $('#autoplayToggle')) $('#autoplayToggle').checked = p.autoplay;
+      if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
       if(p.lastCustom) $('#customId').value = p.lastCustom;
       // voice names resolved after voices load
     }catch{}
@@ -448,7 +487,8 @@
     const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
     const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
 
-    function fill(select, voices){ if(!select) return; select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
+    function fill(select, voices){
+      select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
     }
 
     [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
@@ -456,12 +496,12 @@
 
     // Restore previous voice by name
     const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
-    if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'), $('#enVoice2')].forEach(s=>{ if(s) s.value = encodeURIComponent(v.name); }); } }
-    if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'), $('#zhVoice2')].forEach(s=>{ if(s) s.value = encodeURIComponent(v.name); }); } }
+    if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+    if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
 
     // Defaults if none chosen
-    if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>{ if(s) s.value=encodeURIComponent(en[0].name); }); }
-    if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>{ if(s) s.value=encodeURIComponent(zh[0].name); }); }
+    if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(en[0].name)); }
+    if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(zh[0].name)); }
   }
 
   function getVoiceForWord(word){
@@ -537,7 +577,7 @@
     if(state.current.i >= words.length){
       finishExercise();
     } else {
-      const ap = $('#autoplayToggle'); if(!ap || ap.checked){ setTimeout(playCurrent, 350); }
+      if($('#autoplayToggle').checked){ setTimeout(playCurrent, 350); }
       else { $('#promptWord').textContent = '(ready)'; }
     }
   }
@@ -752,17 +792,17 @@
 
     // voice selects
     function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
-    const _enVoice = $('#enVoice'); if(_enVoice) _enVoice.addEventListener('change', (e)=>{ state.selected.en = (function(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); })(e.target.value); savePrefs(); }); savePrefs(); });
-    const _zhVoice = $('#zhVoice'); if(_zhVoice) _zhVoice.addEventListener('change', (e)=>{ state.selected.zh = (function(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); })(e.target.value); savePrefs(); }); savePrefs(); });
+    $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+    $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
     $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
     $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
 
-    const _rate = $('#rate'); if(_rate) _rate.addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); const r2 = $('#rate2'); if(r2) r2.value=e.target.value; savePrefs(); }); $('#rate2').value=e.target.value; savePrefs(); });
-    const _pitch = $('#pitch'); if(_pitch) _pitch.addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); const p2 = $('#pitch2'); if(p2) p2.value=e.target.value; savePrefs(); }); $('#pitch2').value=e.target.value; savePrefs(); });
+    $('#rate').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate2').value=e.target.value; savePrefs(); });
+    $('#pitch').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch2').value=e.target.value; savePrefs(); });
     $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
     $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
 
-    const _ap = $('#autoplayToggle'); if(_ap) _ap.addEventListener('change', savePrefs);
+    $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
 
     const _homeSummary = $('#homeBtnSummary'); if(_homeSummary) _homeSummary.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
@@ -774,8 +814,8 @@
     // test buttons
     function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
     function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
-    const _testEN = $('#testEN'); if(_testEN) _testEN.addEventListener('click', ()=> speak('Hello! This is the English voice test.')); 
-    const _testZH = $('#testZH'); if(_testZH) _testZH.addEventListener('click', ()=> speak('你好！这是中文语音测试。')); 
+    $('#testEN').addEventListener('click', testSpeakEn);
+    $('#testZH').addEventListener('click', testSpeakZh);
     $('#testEN2').addEventListener('click', testSpeakEn);
     $('#testZH2').addEventListener('click', testSpeakZh);
   }
