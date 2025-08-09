@@ -228,7 +228,6 @@
       <div class="card" style="margin: 12px 0;">
         <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
       </div>
-      <!-- UPDATED: Added Handwriting Toggle -->
       <div class="row" style="justify-content:center; margin-bottom: 16px;">
          <label class="pill" title="Randomize order when starting">
             <span>Randomize:</span>
@@ -274,7 +273,6 @@
             <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
           </div>
         </div>
-        <!-- UPDATED: Added Write button, hidden by default -->
         <div style="margin-top:10px;" class="row">
           <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
           <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
@@ -435,7 +433,6 @@
       selectedIndex: -1,
       results: []
     },
-    // ADDED: Handwriting state
     handwriting: {
       enabled: false,
       instance: null,
@@ -447,7 +444,7 @@
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-  function toast(msg, ms=1800){
+  function toast(msg, ms=2200){ // Increased duration for readability
     const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
     setTimeout(()=> t.classList.add('hidden'), ms);
   }
@@ -460,10 +457,11 @@
       pitch: state.selected.pitch,
       randomize: $('#randomizeToggle').checked,
       autoplay: $('#autoplayToggle').checked,
-      handwriting: $('#handwritingToggle').checked, // ADDED
+      handwriting: $('#handwritingToggle').checked,
       lastCustom: $('#customId').value || ''
     }));
   }
+
   function loadPrefs(){
     try{
       const p = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
@@ -472,7 +470,6 @@
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
       if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
       if(p.lastCustom) $('#customId').value = p.lastCustom;
-      // ADDED: load handwriting preference
       if(p.handwriting != null) {
           $('#handwritingToggle').checked = p.handwriting;
           state.handwriting.enabled = p.handwriting;
@@ -658,7 +655,6 @@
   function startExercise(idx){
     const ex = state.exerciseRows[idx]; if(!ex) return;
     
-    // MODIFIED: Show/hide UI based on handwriting mode
     const isHandwriting = state.handwriting.enabled;
     $('#answerInput').classList.toggle('hidden', isHandwriting);
     $('#submitBtn').classList.toggle('hidden', isHandwriting);
@@ -712,7 +708,7 @@
     } else {
       $('#feedback').innerHTML = `<span class="result-badge err">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
       $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
-      $('#answerInput').focus();
+      if (!state.handwriting.enabled) $('#answerInput').focus();
     }
   }
 
@@ -796,14 +792,12 @@
     $('#testZH').addEventListener('click', testSpeakZh);
     $('#testEN2').addEventListener('click', testSpeakEn);
     $('#testZH2').addEventListener('click', testSpeakZh);
-
-    // ADDED: Handwriting events
     $('#handwritingToggle').addEventListener('change', (e) => { state.handwriting.enabled = e.target.checked; savePrefs(); });
     $('#writeBtn').addEventListener('click', showHandwritingOverlay);
     $('#handwritingOverlay').addEventListener('click', (e) => { if(e.target.id === 'handwritingOverlay' || e.target.id === 'handwritingCloseBtn') hideHandwritingOverlay(); });
   }
   
-  // =========== NEW HANDWRITING FUNCTIONS =============
+  // =========== REVISED HANDWRITING FUNCTIONS =============
   function initHandwriting() {
     try {
       if (typeof handwriting === 'undefined' || typeof handwriting.Canvas === 'undefined') throw new Error("Handwriting scripts not available.");
@@ -840,6 +834,7 @@
 
   function startRecognitionTimer() {
     clearRecognitionTimer();
+    // Recognize after 1 second of idle time
     recognitionTimeout = setTimeout(() => { if (state.handwriting.instance) state.handwriting.instance.recognize(); }, 1000);
   }
 
@@ -847,21 +842,33 @@
     if (recognitionTimeout) { clearTimeout(recognitionTimeout); recognitionTimeout = null; }
   }
 
+  /**
+   * REVISED LOGIC: Handles the result from the handwriting recognizer.
+   * Does NOT submit the answer. It populates the input field and lets the user decide.
+   */
   function handleRecognition(result, error) {
-    hideHandwritingOverlay();
-    if (error) { console.error('Handwriting recognition error:', error); toast('Recognition failed. Please try again.'); } 
-    else if (result && result.length > 0) {
-      $('#answerInput').value = result[0]; // Use the top result
-      submitAnswer(); // Feed the result into the existing app logic
-    } else { toast('Could not recognize handwriting.'); }
-    if (state.handwriting.instance) state.handwriting.instance.erase();
+    if (error) {
+      console.error('Handwriting recognition error:', error);
+      toast('Recognition failed. Please try again.');
+    } else if (result && result.length > 0) {
+      const topResult = result[0];
+      $('#answerInput').value = topResult; // Put recognized text in the main input
+      toast(`Recognized: "${topResult}". Close to submit.`);
+    } else {
+      toast('Could not recognize handwriting. Please try again.');
+    }
+    
+    // Always clear the canvas so the user can immediately try again if needed
+    if (state.handwriting.instance) {
+      state.handwriting.instance.erase();
+    }
   }
 
   // ======= INIT =======
   (function init(){
     loadPrefs();
     bindEvents();
-    initHandwriting(); // ADDED
+    initHandwriting();
 
     if(!('speechSynthesis' in window)){ toast('This browser does not support Speech Synthesis.'); } 
     else {
