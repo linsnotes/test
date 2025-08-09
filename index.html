@@ -174,7 +174,6 @@
           <li>View your <b>summary</b> at the end.</li>
         </ul>
         <div class="row" style="margin-top:10px;">
-          <button class="btn secondary" id="demoBtn" title="Try a minimal demo with local sample">Quick Demo</button>
           <span class="pill" style="margin-left:8px;">Tip: Press <span class="kbd">Enter</span> to submit</span>
         </div>
       </div>
@@ -185,6 +184,24 @@
       <div class="row" style="justify-content:space-between;">
         <h2 id="pickerTitle">Exercises</h2>
         <div class="row">
+          <button class="btn secondary" id="backHomeBtn">Back</button>
+        </div>
+      </div>
+      <div id="exerciseList" class="list" style="margin-top:10px;"></div>
+    </section>
+
+    <!-- SCREEN: CONFIRM -->
+    <section id="screen-confirm" class="card hidden">
+      <div class="row" style="justify-content:space-between;">
+        <h2 id="confirmTitle">Ready to Start</h2>
+        <div class="row">
+          <button class="btn secondary" id="backToPickerBtn">Back</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <h3 id="confirmExerciseTitle">Exercise Title</h3>
+        <p class="muted" id="confirmExerciseInfo">Number of words</p>
+        <div class="row" style="margin-top:12px;">
           <label class="pill" title="Randomize order when starting">
             <span>Randomize</span>
             <label class="switch" style="margin-left:8px;">
@@ -192,10 +209,11 @@
               <span class="slider"></span>
             </label>
           </label>
-          <button class="btn secondary" id="backHomeBtn">Back</button>
+        </div>
+        <div class="row" style="margin-top:16px;">
+          <button class="btn" id="startExerciseBtn">Start Exercise</button>
         </div>
       </div>
-      <div id="exerciseList" class="list" style="margin-top:10px;"></div>
     </section>
 
     <!-- SCREEN: RUN -->
@@ -206,7 +224,6 @@
           <div class="muted" id="runMeta"></div>
         </div>
         <div class="row">
-          <button class="btn secondary" id="revealSettingsBtn">Settings</button>
           <button class="btn secondary" id="stopBtn">Stop</button>
           <button class="btn secondary" id="homeBtnRun">Home</button>
         </div>
@@ -368,6 +385,7 @@
     picker: [], // list of {label, id} for master OR list of exercises for custom
     exerciseSheet: null, // current sheet object
     exerciseRows: [], // [{title, words:[...]}]
+    selectedExerciseIndex: null, // currently selected exercise index for confirmation
     current: {
       title: '',
       words: [],
@@ -389,7 +407,7 @@
   }
 
   function savePrefs(){
-    localStorage.setItem('tingxie_prefs', JSON.stringify({
+    const preferences = JSON.stringify({
       en: state.selected.en?.name || null,
       zh: state.selected.zh?.name || null,
       rate: state.selected.rate,
@@ -397,11 +415,15 @@
       randomize: $('#randomizeToggle').checked,
       autoplay: $('#autoplayToggle').checked,
       lastCustom: $('#customId').value || ''
-    }));
+    });
+    // Using in-memory storage instead of localStorage for Claude.ai compatibility
+    window.tingxiePrefs = preferences;
   }
+  
   function loadPrefs(){
     try{
-      const p = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+      // Using in-memory storage instead of localStorage for Claude.ai compatibility
+      const p = JSON.parse(window.tingxiePrefs || '{}');
       if(p.rate) state.selected.rate = p.rate;
       if(p.pitch) state.selected.pitch = p.pitch;
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
@@ -495,7 +517,7 @@
     [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
 
     // Restore previous voice by name
-    const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+    const prefs = JSON.parse(window.tingxiePrefs || '{}');
     if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
     if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
 
@@ -525,319 +547,4 @@
 
   // ======= UI FLOW =======
   function show(id){
-    ['#screen-home', '#screen-picker', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden'));
-    $(id).classList.remove('hidden');
-  }
-
-  function buildMasterList(rows){
-    const sel = $('#masterSelect');
-    const openBtn = $('#openMasterBtn');
-    if(sel){
-      sel.innerHTML = '';
-      const ph = document.createElement('option');
-      ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true;
-      sel.appendChild(ph);
-    }
-    if(!rows.length){
-      if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
-      if(openBtn){ openBtn.disabled = true; }
-      return;
-    }
-    rows.forEach(r=>{
-      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
-    });
-    if(openBtn){ openBtn.disabled = false; }
-  }
-
-  function tryAgain(){
-    $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent='';
-  }
-
-  function skipWord(){
-    const expected = currentWord();
-    const timeMs = performance.now() - state.current.perWordStart;
-    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
-    $('#feedback').innerHTML = `<span class=\"result-badge skip\">Skipped</span> It was: <b>${expected}</b>`;
-    nextWord();
-  }
-
-  function showAnswer(){
-    const expected = currentWord();
-    const timeMs = performance.now() - state.current.perWordStart;
-    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs});
-    $('#feedback').innerHTML = `Answer: <b>${expected}</b>`;
-    nextWord();
-  }
-
-  function nextWord(){
-    const {words, order} = state.current;
-    $('#answerInput').value='';
-    state.current.i++;
-    updateProgress();
-    if(state.current.i >= words.length){
-      finishExercise();
-    } else {
-      if($('#autoplayToggle').checked){ setTimeout(playCurrent, 350); }
-      else { $('#promptWord').textContent = '(ready)'; }
-    }
-  }
-
-  function finishExercise(){
-    $('#progressBar').style.width = '100%';
-    const totalMs = performance.now() - state.current.startedAt;
-
-    // Aggregate
-    const total = state.current.words.length;
-    const correct = state.current.results.filter(r=>r.correct).length;
-    const skipped = state.current.results.filter(r=>r.skipped).length;
-    const accuracy = total ? Math.round((correct/total)*100) : 0;
-
-    $('#summaryTitle').textContent = state.current.title;
-    $('#sumTotal').textContent = total;
-    $('#sumCorrect').textContent = correct;
-    $('#sumSkipped').textContent = skipped;
-    $('#sumAcc').textContent = accuracy + '%';
-    $('#sumTime').textContent = fmtMs(totalMs);
-
-    const review = $('#reviewList'); review.innerHTML='';
-    state.current.results.filter(r=>!r.correct).forEach(r=>{
-      const d = document.createElement('div'); d.className='item';
-      d.innerHTML = `<div><div class=\"title\">${r.word}</div><div class=\"muted\">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`;
-      const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice';
-      btn.onclick = ()=> speak(r.word);
-      d.appendChild(btn); review.appendChild(d);
-    });
-
-    const table = $('#resultsTable'); table.innerHTML='';
-    state.current.results.forEach((r,idx)=>{
-      const d = document.createElement('div'); d.className='item';
-      const badge = r.correct? '<span class=\"result-badge ok\">✓</span>' : (r.skipped? '<span class=\"result-badge skip\">⏭</span>' : '<span class=\"result-badge err\">✗</span>');
-      d.innerHTML = `<div><div class=\"title\">${idx+1}. ${r.word}</div><div class=\"muted\">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`;
-      table.appendChild(d);
-    });
-
-    show('#screen-summary');
-  }
-
-  // Helper functions for exercises (added)
-  function buildExercisePicker(items, sourceLabel='Built-in'){
-    state.exerciseRows = items;
-    $('#pickerTitle').textContent = `${sourceLabel} — Exercises`;
-    const list = $('#exerciseList'); list.innerHTML='';
-    items.forEach((it, idx)=>{
-      const d = document.createElement('div'); d.className='item';
-      d.innerHTML = `<div><div class="title">${it.title||('Exercise '+(idx+1))}</div><div class="muted">${it.words.length} words</div></div>`;
-      const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
-      btn.onclick = ()=> startExercise(idx);
-      d.appendChild(btn); list.appendChild(d);
-    });
-    show('#screen-picker');
-  }
-
-  function startExercise(idx){
-    const ex = state.exerciseRows[idx]; if(!ex) return;
-    state.current.title = ex.title || 'Exercise';
-    state.current.words = ex.words.slice();
-    state.current.order = state.current.words.map((_,i)=>i);
-    if($('#randomizeToggle').checked) state.current.order = shuffle(state.current.order);
-    state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now();
-    state.current.perWordStart = 0; state.current.attemptsForWord = 0;
-    $('#runTitle').textContent = state.current.title;
-    $('#runMeta').textContent = `${state.current.words.length} words`;
-    $('#promptWord').textContent = '(playing…)';
-    $('#idxTotal').textContent = state.current.words.length;
-    $('#answerInput').value=''; $('#feedback').textContent='';
-    show('#screen-run');
-    updateProgress();
-    playCurrent();
-  }
-
-  function currentWord(){
-    const {words, order, i} = state.current; const idx = (order && order[i] != null) ? order[i] : i; return words[idx] || '';
-  }
-
-  function playCurrent(){
-    const w = currentWord();
-    state.current.perWordStart = performance.now();
-    $('#promptWord').textContent = '(playing…)';
-    if(w) speak(w);
-    $('#answerInput').focus();
-  }
-
-  function updateProgress(){
-    const i = state.current.i; const total = state.current.words.length;
-    $('#idxNow').textContent = Math.min(i+1, total);
-    $('#idxTotal').textContent = total;
-    const pct = total ? Math.round((i/total)*100) : 0;
-    $('#progressBar').style.width = pct + '%';
-  }
-
-  function submitAnswer(){
-    const input = $('#answerInput').value.trim();
-    const expected = currentWord();
-    if(!expected) return;
-    const timeMs = performance.now() - state.current.perWordStart;
-    state.current.attemptsForWord = (state.current.attemptsForWord||0) + 1;
-    if(isCorrect(expected, input)){
-      state.current.results.push({word: expected, correct: true, attempts: state.current.attemptsForWord, skipped: false, shownAnswer: false, timeMs});
-      $('#feedback').innerHTML = '<span class="result-badge ok">Correct</span>';
-      nextWord();
-    } else {
-      $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
-      $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
-      $('#answerInput').focus();
-    }
-  }
-
-  // ======= LOADERS =======
-  async function loadMaster(){
-    const card = document.querySelector('#masterSelect')?.closest('.card');
-    try{
-      if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
-        if(card) card.style.display='none';
-        return; // silently hide if not set
-      }
-      if(card) card.style.display='';
-      
-      const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
-      // trim empty lines/rows
-      const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
-      if(!rows.length) throw new Error('Empty sheet');
-
-      // Always skip the first row so users can use any header/note text
-      const data = rows.slice(1).map(r=>{
-        const title = (r[0]||'').toString().trim();
-        let id = (r[1]||'').toString().trim();
-        // Accept full Google Sheets URLs or bare IDs
-        const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
-        return { title, id };
-      }).filter(x=> x.title && x.id);
-
-      buildMasterList(data);
-    }catch(err){
-      console.warn('Master load failed:', err.message);
-      if(card) card.style.display='none';
-    }
-  }
-
-  async function loadExerciseSheet(sheetId, sourceLabel='Custom'){
-    try{
-      show('#screen-home');
-      $('#customList').innerHTML = '';
-      $('#exerciseList').innerHTML = '';
-      const csv = await fetchSheetCsv(sheetId);
-      const rows = csvParse(csv);
-      if(!rows.length) throw new Error('Empty sheet');
-      const headers = rows[0].map(normalizeHeader);
-      const iTitle = headers.indexOf('title');
-      const iWords = headers.indexOf('words');
-      if(iTitle < 0 || iWords < 0) throw new Error('Exercise sheet must have headers: title, words');
-      const items = rows.slice(1).filter(r=>r[iTitle] || r[iWords]).map(r=>({
-        title: (r[iTitle]||'').trim(),
-        words: splitWords(r[iWords])
-      })).filter(x=>x.words.length>0);
-      if(!items.length) throw new Error('No exercises found');
-      buildExercisePicker(items, sourceLabel);
-      state.source = {type:'custom', id: sheetId};
-      savePrefs();
-    }catch(err){
-      console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600);
-    }
-  }
-
-  // ======= EVENTS =======
-  function bindEvents(){
-    // Master reload (auto-load also runs on init)
-    const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
-
-    const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
-
-    const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
-      const sel = $('#masterSelect');
-      const id = sel?.value;
-      const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
-      if(!id){ toast('Choose from the Built‑in list'); return; }
-      loadExerciseSheet(id, title);
-    });
-
-    $('#loadCustomBtn').addEventListener('click', ()=>{
-      const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
-      loadExerciseSheet(id, 'Custom');
-    });
-
-    // Small local demo
-    $('#demoBtn').addEventListener('click', ()=>{
-      const rows = [
-        {title:'Unit 1', words:['usage','united','must','animal']},
-        {title:'动物 (Animals)', words:['猫','狗','老虎','大象']},
-      ];
-      buildExercisePicker(rows, 'Demo');
-      toast('Loaded demo data');
-    });
-
-    $('#backHomeBtn').addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
-
-    $('#playBtn').addEventListener('click', ()=> speak(currentWord()));
-    $('#submitBtn').addEventListener('click', submitAnswer);
-    $('#tryAgainBtn').addEventListener('click', tryAgain);
-    $('#skipBtn').addEventListener('click', skipWord);
-    $('#showBtn').addEventListener('click', showAnswer);
-    $('#stopBtn').addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); });
-    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); });
-    const _homeRun = $('#homeBtnRun'); if(_homeRun) _homeRun.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
-
-    $('#answerInput').addEventListener('keydown', (e)=>{
-      if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
-    });
-
-    // voice selects
-    function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
-    $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
-    $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
-    $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
-    $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
-
-    $('#rate').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate2').value=e.target.value; savePrefs(); });
-    $('#pitch').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch2').value=e.target.value; savePrefs(); });
-    $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
-    $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
-
-    $('#autoplayToggle').addEventListener('change', savePrefs);
-    $('#randomizeToggle').addEventListener('change', savePrefs);
-
-    const _homeSummary = $('#homeBtnSummary'); if(_homeSummary) _homeSummary.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
-
-    // settings modal
-    const modal = $('#settingsModal');
-    $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
-
-    // test buttons
-    function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
-    function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
-    $('#testEN').addEventListener('click', testSpeakEn);
-    $('#testZH').addEventListener('click', testSpeakZh);
-    $('#testEN2').addEventListener('click', testSpeakEn);
-    $('#testZH2').addEventListener('click', testSpeakZh);
-  }
-
-  // ======= INIT =======
-  (function init(){
-    loadPrefs();
-    bindEvents();
-
-    if(!('speechSynthesis' in window)){
-      setTtsStatus('TTS unsupported'); toast('This browser does not support Speech Synthesis.');
-    } else {
-      setTtsStatus('TTS: loading voices…');
-      window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
-      loadVoices();
-      // Nudge some browsers to populate voices
-      const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
-    }
-
-    // Auto-load master on page load (silently hide if not available)
-    loadMaster();
-  })();
-  </script>
-</body>
-</html>
+    ['
