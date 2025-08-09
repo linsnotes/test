@@ -952,6 +952,28 @@
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
 
+
+    function sizeHwCanvas(){
+  const c = document.getElementById('hwCanvas');
+  if(!c) return;
+  // Match internal bitmap to current CSS size (use CSS pixels for correct coordinates)
+  const w = Math.max(1, Math.round(c.clientWidth));
+  const h = Math.max(1, Math.round(c.clientHeight));
+  if (c.width !== w || c.height !== h) {
+    c.width = w;
+    c.height = h;
+    // If handwriting object exists, update its notion of writing area too
+    if (state.hw.obj && state.hw.obj.setOptions) {
+      state.hw.obj.setOptions({ width: w, height: h });
+    }
+  }
+}
+
+
+
+
+
+    
     // settings modal
     const modal = $('#settingsModal');
     $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
