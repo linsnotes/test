@@ -423,7 +423,7 @@
     </dialog>
   </main>
 
-  <script>
+<script>
 // ======= CONFIG =======
 const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
 
@@ -457,6 +457,26 @@ state.handwriting = {
   idleTimer: null,            // timer handle
   canvas: null                // handwriting.Canvas instance
 };
+
+// --- TTS user-activation gate (prevents deprecated speak() without gesture) ---
+let ttsUnlocked = false;
+
+function unlockTTSOnce(){
+  if (ttsUnlocked || !('speechSynthesis' in window)) return;
+  ttsUnlocked = true;
+  try {
+    // Perform a silent utterance inside the user gesture to satisfy activation
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    speechSynthesis.speak(u);
+    speechSynthesis.cancel();
+  } catch {}
+}
+
+// Unlock on the first interaction (desktop + mobile)
+document.addEventListener('pointerdown', unlockTTSOnce, { once: true });
+document.addEventListener('keydown',     unlockTTSOnce, { once: true });
+document.addEventListener('touchend',    unlockTTSOnce, { once: true });
 
 // ======= HELPERS =======
 const $ = (sel) => document.querySelector(sel);
@@ -605,6 +625,16 @@ function getVoiceForWord(word){
 
 function speak(text){
   if(!('speechSynthesis' in window)) { toast('Speech Synthesis not supported in this browser.'); return; }
+
+  // Opportunistically unlock if called from a user event; otherwise this is a no-op
+  unlockTTSOnce();
+
+  if(!ttsUnlocked){
+    // Avoid deprecated speak() without activation; wait for a user gesture
+    console.warn('Blocked speech: waiting for user activation');
+    return;
+  }
+
   const voice = getVoiceForWord(text);
   const u = new SpeechSynthesisUtterance(text);
   if(voice){ u.voice = voice; u.lang = voice.lang; }
@@ -1180,8 +1210,7 @@ function bindEvents(){
   } else {
     window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
     loadVoices();
-    // Nudge some browsers to populate voices
-    const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
+    // NOTE: Removed the old "nudge" speak/cancel on page load to avoid deprecated behavior.
   }
 
   // Load handwriting libs (enable everywhere; disable toggle if it fails)
@@ -1196,7 +1225,7 @@ function bindEvents(){
   // Auto-load master on page load (silently hide if not available)
   loadMaster();
 })();
+</script>
 
-  </script>
 </body>
 </html>
