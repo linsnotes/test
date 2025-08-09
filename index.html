@@ -124,6 +124,7 @@
         </div>
       </div>
       <div class="nav-actions">
+        <button class="btn secondary" id="homeBtn">Home</button>
         <span class="tag" id="ttsStatus">TTS: checking…</span>
         <button class="btn secondary" id="openSettingsBtn" title="Speech & options">Settings</button>
       </div>
@@ -221,7 +222,6 @@
         </div>
         <div class="row">
           <button class="btn secondary" id="stopBtn">Stop</button>
-          <button class="btn secondary" id="homeBtnRun">Home</button>
         </div>
       </div>
 
@@ -302,7 +302,6 @@
         </div>
         <div class="row">
           <button class="btn secondary" id="backToPicker">Back to exercises</button>
-          <button class="btn secondary" id="homeBtnSummary">Home</button>
         </div>
       </div>
       <div class="grid cols-2" style="margin-top:10px;">
@@ -792,6 +791,7 @@
       loadExerciseSheet(id, 'Custom');
     });
 
+    $('#homeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
     $('#backHomeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
 
     // Confirm screen buttons
@@ -809,7 +809,6 @@
     $('#showBtn').addEventListener('click', showAnswer);
     $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
     const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
-    const _homeRun = $('#homeBtnRun'); if(_homeRun) _homeRun.addEventListener('click', ()=> stopAndReset('#screen-home'));
 
     $('#answerInput').addEventListener('keydown', (e)=>{
       if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
@@ -829,8 +828,6 @@
 
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
-
-    const _homeSummary = $('#homeBtnSummary'); if(_homeSummary) _homeSummary.addEventListener('click', ()=> stopAndReset('#screen-home'));
 
     // settings modal
     const modal = $('#settingsModal');
