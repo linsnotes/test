@@ -730,9 +730,13 @@
       clearTimeout(state.handwriting.idleTimer);
       state.handwriting.idleTimer = setTimeout(()=> recognizeNow(), state.handwriting.idleMs);
     };
-    ['mouseup','touchend','mousemove','touchmove'].forEach(ev=>{
-      cvs.addEventListener(ev, bumpIdle, {passive:true});
-    });
+
+    // Add listeners only once per canvas (avoid duplicates when reopening overlay)
+    if (!cvs.__hwBound) {
+      ['mouseup', 'touchend', 'mousemove', 'touchmove'].forEach(ev => {
+        cvs.addEventListener(ev, bumpIdle, { passive: true });
+      });
+      cvs.__hwBound = true;
   }
 
   function recognizeNow(){
