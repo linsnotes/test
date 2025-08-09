@@ -149,7 +149,7 @@
             <div class="row" style="margin-top:8px;">
               <button class="btn" id="openMasterBtn">Open Selected</button>
             </div>
-            <div id="masterList" class="list" style="margin-top:10px; max-height:260px; overflow:auto;"></div>
+            
           </div>
 
           <div class="card" style="min-height:220px;">
@@ -530,14 +530,24 @@
   }
 
   function buildMasterList(rows){
-    const list = $('#masterList'); list.innerHTML = '';
     const sel = $('#masterSelect');
+    const openBtn = $('#openMasterBtn');
     if(sel){
       sel.innerHTML = '';
       const ph = document.createElement('option');
       ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true;
       sel.appendChild(ph);
     }
+    if(!rows.length){
+      if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
+      if(openBtn){ openBtn.disabled = true; }
+      return;
+    }
+    rows.forEach(r=>{
+      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
+    });
+    if(openBtn){ openBtn.disabled = false; }
+  }
     if(!rows.length){ 
       list.innerHTML = '<div class="muted">No items found.</div>'; 
       if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
@@ -626,14 +636,14 @@
 
   // ======= LOADERS =======
   async function loadMaster(){
-    const card = document.querySelector('#masterList')?.closest('.card');
+    const card = document.querySelector('#masterSelect')?.closest('.card');
     try{
       if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
         if(card) card.style.display='none';
         return; // silently hide if not set
       }
       if(card) card.style.display='';
-      $('#masterList').innerHTML = '<div class="muted">Loading…</div>';
+      
       const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
       // trim empty lines/rows
       const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
