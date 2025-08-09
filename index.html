@@ -101,6 +101,15 @@
     .err{ background: rgba(231, 76, 60, .18); border:1px solid rgba(231, 76, 60, .35); }
     .skip{ background: rgba(241, 196, 15, .18); border:1px solid rgba(241, 196, 15, .35); }
 
+    /* --- Handwriting canvas --- */
+    .ink-wrap{ display:flex; flex-direction:column; gap:8px; flex:1; }
+    #inkCanvas{
+      width:100%; height:180px; background: rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.12); border-radius:12px; touch-action: none;
+    }
+    .ink-toolbar{ display:flex; gap:8px; align-items:center; }
+    .ink-note{ font-size:12px; opacity:.85; }
+
     @media (max-width: 420px){
       .nav{ padding: 10px 0; }
       .brand div:first-child{ font-size:16px; }
@@ -136,15 +145,15 @@
     <section id="screen-home" class="grid cols-2">
       <div class="card">
         <h2>Choose where to load your exercises</h2>
-        <p class="muted">You can browse a <b>Built‑in Library</b> or paste a <b>Custom Exercise</b> sheet ID.</p>
+        <p class="muted">You can browse a <b>Built-in Library</b> or paste a <b>Custom Exercise</b> sheet ID.</p>
         <div class="grid cols-2">
           <div class="card" style="min-height:220px;">
             <h3>Built-in Library</h3>
-            <p class="muted">Pick from the built‑in list.</p>
+            <p class="muted">Pick from the built-in list.</p>
             <div class="row">
               <button class="btn ghost" id="reloadMasterBtn" title="Refresh" aria-label="Refresh">↻</button>
             </div>
-            <label for="masterSelect" style="margin-top:8px; display:block;">Built‑in sheets</label>
+            <label for="masterSelect" style="margin-top:8px; display:block;">Built-in sheets</label>
             <select id="masterSelect"></select>
             <div class="row" style="margin-top:8px;">
               <button class="btn" id="openMasterBtn" disabled>Open Selected</button>
@@ -168,7 +177,7 @@
       <div class="card">
         <h2>How to start</h2>
         <ul class="muted" style="line-height:1.7; padding-left: 18px;">
-          <li>Pick from the <b>Built‑in Library</b> or paste a <b>Custom Exercise</b> Spreadsheet ID.</li>
+          <li>Pick from the <b>Built-in Library</b> or paste a <b>Custom Exercise</b> Spreadsheet ID.</li>
           <li>Select an <b>exercise</b> and press <b>Start</b>.</li>
           <li>Listen, type your answer, and use <b>Try again</b> / <b>Skip</b> / <b>Show answer</b>.</li>
           <li>View your <b>summary</b> at the end.</li>
@@ -197,11 +206,20 @@
       <div class="card" style="margin: 12px 0;">
         <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
       </div>
-      <div class="row" style="justify-content:center; margin-bottom: 16px;">
+      <div class="row" style="justify-content:center; gap:16px; margin-bottom: 16px; flex-wrap:wrap;">
          <label class="pill" title="Randomize order when starting">
             <span>Randomize:</span>
             <label class="switch" style="margin-left:8px;">
               <input type="checkbox" id="randomizeToggle" />
+              <span class="slider"></span>
+            </label>
+          </label>
+
+          <!-- NEW: Input mode toggle -->
+          <label class="pill" title="Choose Typing or Handwriting input">
+            <span>Input: <b id="inputModeLabel">Typing</b></span>
+            <label class="switch" style="margin-left:8px;">
+              <input type="checkbox" id="inputModeToggle" />
               <span class="slider"></span>
             </label>
           </label>
@@ -235,11 +253,32 @@
             <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
           </div>
         </div>
-        <div style="margin-top:10px;" class="row">
+
+        <!-- Typing input row (unchanged) -->
+        <div id="typingRow" style="margin-top:10px;" class="row">
           <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
           <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
           <button class="btn" id="submitBtn">Submit</button>
         </div>
+
+        <!-- Handwriting input row (new) -->
+        <div id="handwritingRow" class="hidden" style="margin-top:10px;">
+          <div class="ink-wrap">
+            <canvas id="inkCanvas" aria-label="Handwriting canvas"></canvas>
+            <div class="ink-toolbar">
+              <button class="btn secondary" id="inkUndoBtn" type="button">Undo</button>
+              <button class="btn secondary" id="inkClearBtn" type="button">Clear</button>
+              <button class="btn" id="inkRecognizeBtn" type="button">Recognize</button>
+              <div class="ink-note muted">Write clearly, then Recognize or type below.</div>
+            </div>
+            <div class="row">
+              <input id="inkText" type="text" placeholder="Recognized or type the text…" autocomplete="off" style="flex:1;" />
+              <button class="btn" id="playBtn2" title="Play again (handwriting)">▶️ Play</button>
+              <button class="btn" id="submitBtn2">Submit</button>
+            </div>
+          </div>
+        </div>
+
         <div class="row" style="margin-top:8px;">
           <button class="btn secondary" id="tryAgainBtn">Try again</button>
           <button class="btn secondary" id="skipBtn">Skip</button>
@@ -364,6 +403,9 @@
     </dialog>
   </main>
 
+  <!-- Tesseract.js (OCR) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
   <script>
   // ======= CONFIG =======
   const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
@@ -377,6 +419,7 @@
     picker: [], // list of {label, id} for master OR list of exercises for custom
     exerciseSheet: null, // current sheet object
     exerciseRows: [], // [{title, words:[...]}]
+    prefs: { inputMode: 'typing' }, // NEW: 'typing' | 'handwriting'
     current: {
       title: '',
       words: [],
@@ -386,7 +429,8 @@
       perWordStart: 0,
       selectedIndex: -1,
       results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
-    }
+    },
+    ink: { paths: [], drawing: false, dpr: 1 }
   };
 
   // ======= HELPERS =======
@@ -406,7 +450,8 @@
       pitch: state.selected.pitch,
       randomize: $('#randomizeToggle').checked,
       autoplay: $('#autoplayToggle').checked,
-      lastCustom: $('#customId').value || ''
+      lastCustom: $('#customId').value || '',
+      inputMode: state.prefs.inputMode || 'typing' // NEW
     }));
   }
   function loadPrefs(){
@@ -417,8 +462,11 @@
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
       if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
       if(p.lastCustom) $('#customId').value = p.lastCustom;
+      if(p.inputMode) state.prefs.inputMode = p.inputMode; // NEW
       // voice names resolved after voices load
     }catch{}
+    const t = $('#inputModeToggle'); const l = $('#inputModeLabel');
+    if(t && l){ t.checked = (state.prefs.inputMode === 'handwriting'); l.textContent = t.checked ? 'Handwriting' : 'Typing'; }
   }
 
   function csvParse(text){
@@ -490,7 +538,6 @@
   function onVoices(list){
     state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
     
-    // Populate selects (two places: inline settings & modal)
     const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
     const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
 
@@ -501,12 +548,10 @@
     [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
     [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
 
-    // Restore previous voice by name
     const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
     if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
     if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
 
-    // Defaults if none chosen
     if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(en[0].name)); }
     if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(zh[0].name)); }
   }
@@ -515,7 +560,6 @@
     const zh = isChinese(word);
     const preferred = zh ? state.selected.zh : state.selected.en;
     if(preferred) return preferred;
-    // fallback
     const list = zh ? state.voices.filter(v=>/^zh/i.test(v.lang)) : state.voices.filter(v=>/^en/i.test(v.lang));
     return list[0] || state.voices[0] || null;
   }
@@ -557,7 +601,11 @@
   }
 
   function tryAgain(){
-    $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent='';
+    $('#answerInput').value='';
+    $('#inkText') && ($('#inkText').value='');
+    clearInk();
+    $('#answerInput').focus();
+    $('#feedback').textContent='';
   }
 
   function skipWord(){
@@ -577,8 +625,10 @@
   }
 
   function nextWord(){
-    const {words, order} = state.current;
+    const {words} = state.current;
     $('#answerInput').value='';
+    $('#inkText') && ($('#inkText').value='');
+    clearInk();
     state.current.i++;
     state.current.perWordStart = 0;
     updateProgress();
@@ -594,7 +644,6 @@
     $('#progressBar').style.width = '100%';
     const totalMs = performance.now() - state.current.startedAt;
 
-    // Aggregate
     const total = state.current.words.length;
     const correct = state.current.results.filter(r=>r.correct).length;
     const skipped = state.current.results.filter(r=>r.skipped).length;
@@ -646,6 +695,9 @@
     if(!ex) return;
     state.current.selectedIndex = idx;
     $('#confirmTitle').textContent = ex.title || 'Exercise';
+    const t = $('#inputModeToggle'); const l = $('#inputModeLabel');
+    t.checked = (state.prefs.inputMode === 'handwriting');
+    l.textContent = t.checked ? 'Handwriting' : 'Typing';
     show('#screen-confirm');
   }
 
@@ -662,6 +714,16 @@
     $('#promptWord').textContent = '(Press Play to begin)';
     $('#idxTotal').textContent = state.current.words.length;
     $('#answerInput').value=''; $('#feedback').textContent='';
+
+    if(state.prefs.inputMode === 'handwriting'){
+      $('#typingRow').classList.add('hidden');
+      $('#handwritingRow').classList.remove('hidden');
+      setupInkCanvas(); clearInk(); $('#inkText').value='';
+    } else {
+      $('#handwritingRow').classList.add('hidden');
+      $('#typingRow').classList.remove('hidden');
+    }
+
     show('#screen-run');
     updateProgress();
   }
@@ -678,7 +740,7 @@
     const w = currentWord();
     $('#promptWord').textContent = '(playing…)';
     if(w) speak(w);
-    $('#answerInput').focus();
+    (state.prefs.inputMode === 'handwriting' ? $('#inkText') : $('#answerInput')).focus();
   }
 
   function updateProgress(){
@@ -689,8 +751,16 @@
     $('#progressBar').style.width = pct + '%';
   }
 
+  function getUserInput(){
+    if(state.prefs.inputMode === 'handwriting'){
+      return ($('#inkText')?.value || '').trim();
+    } else {
+      return ($('#answerInput')?.value || '').trim();
+    }
+  }
+
   function submitAnswer(){
-    const input = $('#answerInput').value.trim();
+    const input = getUserInput();
     const expected = currentWord();
     if(!expected) return;
     const timeMs = performance.now() - state.current.perWordStart;
@@ -701,8 +771,9 @@
       nextWord();
     } else {
       $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
-      $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
-      $('#answerInput').focus();
+      const tgt = (state.prefs.inputMode === 'handwriting' ? $('#inkText') : $('#answerInput'));
+      tgt.classList.add('blink'); setTimeout(()=> tgt.classList.remove('blink'), 800);
+      tgt.focus();
     }
   }
 
@@ -712,20 +783,17 @@
     try{
       if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
         if(card) card.style.display='none';
-        return; // silently hide if not set
+        return;
       }
       if(card) card.style.display='';
       
       const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
-      // trim empty lines/rows
       const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
       if(!rows.length) throw new Error('Empty sheet');
 
-      // Always skip the first row so users can use any header/note text
       const data = rows.slice(1).map(r=>{
         const title = (r[0]||'').toString().trim();
         let id = (r[1]||'').toString().trim();
-        // Accept full Google Sheets URLs or bare IDs
         const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
         return { title, id };
       }).filter(x=> x.title && x.id);
@@ -762,6 +830,120 @@
     }
   }
 
+  // ======= HANDWRITING (ink) =======
+  function setupInkCanvas(){
+    const canvas = $('#inkCanvas'); if(!canvas) return;
+    const dpr = window.devicePixelRatio || 1; state.ink.dpr = dpr;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    drawInk();
+
+    const toXY = (e)=>{
+      const r = canvas.getBoundingClientRect();
+      const p = ('touches' in e && e.touches[0]) ? e.touches[0] : e;
+      return { x: (p.clientX - r.left), y: (p.clientY - r.top) };
+    };
+
+    const start = (e)=>{ e.preventDefault(); const {x,y} = toXY(e); state.ink.drawing = true; state.ink.paths.push([{x,y}]); drawInk(); };
+    const move = (e)=>{ if(!state.ink.drawing) return; const {x,y} = toXY(e); const path = state.ink.paths[state.ink.paths.length-1]; path.push({x,y}); drawInk(); };
+    const end = ()=>{ state.ink.drawing = false; };
+
+    canvas.onpointerdown = start; canvas.onpointermove = move; canvas.onpointerup = end; canvas.onpointerleave = end;
+    canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = end;
+    window.addEventListener('resize', ()=> setupInkCanvas(), { once:true });
+  }
+
+  function drawInk(){
+    const canvas = $('#inkCanvas'); if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.restore();
+
+    ctx.save();
+    ctx.scale(state.ink.dpr, state.ink.dpr);
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#fff'; // white strokes on dark UI
+    for(const path of state.ink.paths){
+      if(path.length < 2) continue;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      for(let i=1;i<path.length;i++){ ctx.lineTo(path[i].x, path[i].y); }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function clearInk(){ state.ink.paths = []; drawInk(); }
+  function undoInk(){ state.ink.paths.pop(); drawInk(); }
+
+  // Build a white background + black ink PNG for OCR
+  function inkDataUrlForOCR(){
+    const view = $('#inkCanvas'); if(!view) return null;
+    const rect = view.getBoundingClientRect();
+
+    // Use CSS pixel size for clarity
+    const w = Math.max(1, Math.floor(rect.width));
+    const h = Math.max(1, Math.floor(rect.height));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+
+    // white background
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,w,h);
+
+    // redraw paths in black (paths are stored in CSS px)
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000';
+    for(const path of state.ink.paths){
+      if(!path || path.length < 2) continue;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      for(let i=1;i<path.length;i++){ ctx.lineTo(path[i].x, path[i].y); }
+      ctx.stroke();
+    }
+
+    return c.toDataURL('image/png');
+  }
+
+  async function recognizeInk(){
+    try{
+      if(!window.Tesseract){ toast('OCR library not loaded'); return; }
+      const dataUrl = inkDataUrlForOCR();
+      if(!dataUrl){ toast('Canvas not ready'); return; }
+      if((state.ink.paths||[]).length === 0){ toast('Write something first 🙂'); return; }
+
+      toast('Recognizing…');
+      // Prefer simplified Chinese + English; you can switch to 'eng+chi_tra'
+      const { data: { text } } = await Tesseract.recognize(
+        dataUrl,
+        'eng+chi_sim',
+        {
+          // logger: m => console.log(m), // uncomment for progress logs
+        }
+      );
+      const out = (text||'').trim();
+      if(out){
+        $('#inkText').value = out.replace(/\s+/g, isChinese(out) ? '' : ' ').trim();
+        toast('Recognition complete — check & submit');
+      }else{
+        toast('No text recognized. Try writing larger/clearer.');
+      }
+    }catch(err){
+      console.error(err);
+      toast('Recognition failed: ' + (err?.message || err));
+    }
+  }
+
   // ======= EVENTS =======
   function bindEvents(){
     const stopAndReset = (screen) => {
@@ -770,16 +952,16 @@
       show(screen);
     };
 
-    // Master reload (auto-load also runs on init)
-    const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
+    // Master reload
+    $('#reloadMasterBtn')?.addEventListener('click', loadMaster);
 
     const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
 
-    const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
+    $('#openMasterBtn')?.addEventListener('click', ()=>{ 
       const sel = $('#masterSelect');
       const id = sel?.value;
       const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
-      if(!id){ toast('Choose from the Built‑in list'); return; }
+      if(!id){ toast('Choose from the Built-in list'); return; }
       loadExerciseSheet(id, title);
     });
 
@@ -799,17 +981,36 @@
     });
     $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
 
+    // Input mode toggle
+    const modeToggle = $('#inputModeToggle');
+    const modeLabel = $('#inputModeLabel');
+    modeToggle.addEventListener('change', ()=>{
+      state.prefs.inputMode = modeToggle.checked ? 'handwriting' : 'typing';
+      modeLabel.textContent = modeToggle.checked ? 'Handwriting' : 'Typing';
+      savePrefs();
+    });
+
+    // Run screen
     $('#playBtn').addEventListener('click', playCurrent);
     $('#submitBtn').addEventListener('click', submitAnswer);
     $('#tryAgainBtn').addEventListener('click', tryAgain);
     $('#skipBtn').addEventListener('click', skipWord);
     $('#showBtn').addEventListener('click', showAnswer);
     $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
-    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
+    $('#backToPicker')?.addEventListener('click', ()=> stopAndReset('#screen-picker'));
 
+    // Typing: Enter to submit
     $('#answerInput').addEventListener('keydown', (e)=>{
       if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
     });
+
+    // Handwriting controls
+    $('#inkUndoBtn')?.addEventListener('click', undoInk);
+    $('#inkClearBtn')?.addEventListener('click', clearInk);
+    $('#inkRecognizeBtn')?.addEventListener('click', recognizeInk);
+    $('#submitBtn2')?.addEventListener('click', submitAnswer);
+    $('#playBtn2')?.addEventListener('click', playCurrent);
+    $('#inkText')?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); } });
 
     // voice selects
     function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
@@ -849,11 +1050,9 @@
     } else {
       window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
       loadVoices();
-      // Nudge some browsers to populate voices
       const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
     }
 
-    // Auto-load master on page load (silently hide if not available)
     loadMaster();
   })();
   </script>
