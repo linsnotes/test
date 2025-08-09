@@ -754,15 +754,16 @@
       toast('Loaded demo data');
     });
 
-    $('#backHomeBtn').addEventListener('click', ()=> show('#screen-home'));
+    $('#backHomeBtn').addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
 
     $('#playBtn').addEventListener('click', ()=> speak(currentWord()));
     $('#submitBtn').addEventListener('click', submitAnswer);
     $('#tryAgainBtn').addEventListener('click', tryAgain);
     $('#skipBtn').addEventListener('click', skipWord);
     $('#showBtn').addEventListener('click', showAnswer);
-    $('#stopBtn').addEventListener('click', ()=> { show('#screen-picker'); });
-    const _homeRun = $('#homeBtnRun'); if(_homeRun) _homeRun.addEventListener('click', ()=> show('#screen-home'));
+    $('#stopBtn').addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); });
+    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-picker'); }); });
+    const _homeRun = $('#homeBtnRun'); if(_homeRun) _homeRun.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
 
     $('#answerInput').addEventListener('keydown', (e)=>{
       if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
@@ -783,7 +784,7 @@
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
 
-    const _homeSummary = $('#homeBtnSummary'); if(_homeSummary) _homeSummary.addEventListener('click', ()=> show('#screen-home'));
+    const _homeSummary = $('#homeBtnSummary'); if(_homeSummary) _homeSummary.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
 
     // settings modal
     const modal = $('#settingsModal');
