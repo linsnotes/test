@@ -425,7 +425,6 @@
 
   function getCsvUrl(spreadsheetId){
     return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/export?format=csv`;
-  }/gviz/tq?tqx=out:csv`;
   }
 
   async function fetchSheetCsv(spreadsheetId){
@@ -544,6 +543,11 @@
       if(openBtn){ openBtn.disabled = true; }
       return;
     }
+    rows.forEach(r=>{
+      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
+    });
+    if(openBtn){ openBtn.disabled = false; }
+  }
 
   function tryAgain(){
     $('#answerInput').value=''; $('#answerInput').focus(); $('#feedback').textContent='';
@@ -613,6 +617,76 @@
     });
 
     show('#screen-summary');
+  }
+
+  // Helper functions for exercises (added)
+  function buildExercisePicker(items, sourceLabel='Built-in'){
+    state.exerciseRows = items;
+    $('#pickerTitle').textContent = `${sourceLabel} — Exercises`;
+    const list = $('#exerciseList'); list.innerHTML='';
+    items.forEach((it, idx)=>{
+      const d = document.createElement('div'); d.className='item';
+      d.innerHTML = `<div><div class="title">${it.title||('Exercise '+(idx+1))}</div><div class="muted">${it.words.length} words</div></div>`;
+      const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
+      btn.onclick = ()=> startExercise(idx);
+      d.appendChild(btn); list.appendChild(d);
+    });
+    show('#screen-picker');
+  }
+
+  function startExercise(idx){
+    const ex = state.exerciseRows[idx]; if(!ex) return;
+    state.current.title = ex.title || 'Exercise';
+    state.current.words = ex.words.slice();
+    state.current.order = state.current.words.map((_,i)=>i);
+    if($('#randomizeToggle').checked) state.current.order = shuffle(state.current.order);
+    state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now();
+    state.current.perWordStart = 0; state.current.attemptsForWord = 0;
+    $('#runTitle').textContent = state.current.title;
+    $('#runMeta').textContent = `${state.current.words.length} words`;
+    $('#promptWord').textContent = '(playing…)';
+    $('#idxTotal').textContent = state.current.words.length;
+    $('#answerInput').value=''; $('#feedback').textContent='';
+    show('#screen-run');
+    updateProgress();
+    playCurrent();
+  }
+
+  function currentWord(){
+    const {words, order, i} = state.current; const idx = (order && order[i] != null) ? order[i] : i; return words[idx] || '';
+  }
+
+  function playCurrent(){
+    const w = currentWord();
+    state.current.perWordStart = performance.now();
+    $('#promptWord').textContent = '(playing…)';
+    if(w) speak(w);
+    $('#answerInput').focus();
+  }
+
+  function updateProgress(){
+    const i = state.current.i; const total = state.current.words.length;
+    $('#idxNow').textContent = Math.min(i+1, total);
+    $('#idxTotal').textContent = total;
+    const pct = total ? Math.round((i/total)*100) : 0;
+    $('#progressBar').style.width = pct + '%';
+  }
+
+  function submitAnswer(){
+    const input = $('#answerInput').value.trim();
+    const expected = currentWord();
+    if(!expected) return;
+    const timeMs = performance.now() - state.current.perWordStart;
+    state.current.attemptsForWord = (state.current.attemptsForWord||0) + 1;
+    if(isCorrect(expected, input)){
+      state.current.results.push({word: expected, correct: true, attempts: state.current.attemptsForWord, skipped: false, shownAnswer: false, timeMs});
+      $('#feedback').innerHTML = '<span class="result-badge ok">Correct</span>';
+      nextWord();
+    } else {
+      $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
+      $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
+      $('#answerInput').focus();
+    }
   }
 
   // ======= LOADERS =======
