@@ -65,7 +65,7 @@
     .card h3{ margin:6px 0 8px; }
     .muted{ color: var(--muted); opacity:.9; }
 
-    input, select{ width: 100%; padding: 12px 12px; border-radius: 12px; border:1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.2); color: var(--text); outline: none; }
+    input, select{ width: 100%; padding: 12px 12px; border-radius: 12px; border:1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.2); color: var(--text); outline: none; font-size:16px; }
     input::placeholder{ color: #b8c0ff; opacity:.7; }
     label{ font-size: 13px; opacity:.9; }
 
@@ -101,7 +101,16 @@
     .err{ background: rgba(231, 76, 60, .18); border:1px solid rgba(231, 76, 60, .35); }
     .skip{ background: rgba(241, 196, 15, .18); border:1px solid rgba(241, 196, 15, .35); }
 
-    .footer{ text-align:center; opacity:.8; font-size:12px; padding: 24px 0 40px; }
+    @media (max-width: 420px){
+      .nav{ padding: 10px 0; }
+      .brand div:first-child{ font-size:16px; }
+      h2{ font-size: 20px; }
+      h3{ font-size: 16px; }
+      .btn{ padding: 9px 12px; border-radius: 10px; }
+      .item{ padding: 10px; }
+      .pill{ padding: 6px 10px; }
+      .card{ padding: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -111,7 +120,7 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <div style="font-size:18px; line-height:1;">听写 · Tingxie</div>
-          <div style="font-size:12px; opacity:.8;">Kids-friendly dictation app</div>
+          <div style="font-size:12px; opacity:.8;">Dictation app</div>
         </div>
       </div>
       <div class="nav-actions">
@@ -127,16 +136,14 @@
     <section id="screen-home" class="grid cols-2">
       <div class="card">
         <h2>Choose where to load your exercises</h2>
-        <p class="muted">You can browse a <b>Master Library</b> (from a Google Sheet you control) or paste a <b>Custom Exercise</b> sheet ID.</p>
+        <p class="muted">You can browse a <b>Built‑in Library</b> or paste a <b>Custom Exercise</b> sheet ID.</p>
         <div class="grid cols-2">
           <div class="card" style="min-height:220px;">
-            <h3>Master Library</h3>
-            <p class="muted">Loads from a master sheet (columns: <b>title</b>, <b>sheet id</b>). Replace the placeholder ID in code later.</p>
+            <h3>Built-in Library</h3>
+            <p class="muted">Pick from the built‑in list.</p>
             <div class="row">
-              <button class="btn" id="loadMasterBtn">Load Master</button>
               <button class="btn ghost" id="reloadMasterBtn" title="Refresh" aria-label="Refresh">↻</button>
             </div>
-            <div id="masterWarn" class="muted" style="margin-top:8px; display:none;">Master Spreadsheet ID is not set. Edit the code to set it.</div>
             <div id="masterList" class="list" style="margin-top:10px; max-height:260px; overflow:auto;"></div>
           </div>
 
@@ -147,7 +154,6 @@
             <input id="customId" type="text" placeholder="e.g. 1A2bC3dE4F..." autocomplete="off"/>
             <div class="row" style="margin-top:8px;">
               <button class="btn" id="loadCustomBtn">Load Exercise Sheet</button>
-              <button class="btn secondary" id="demoBtn" title="Try a minimal demo with local sample">Quick Demo</button>
             </div>
             <div id="customList" class="list" style="margin-top:10px; max-height:260px; overflow:auto;"></div>
           </div>
@@ -155,14 +161,17 @@
       </div>
 
       <div class="card">
-        <h2>How it works</h2>
+        <h2>How to start</h2>
         <ul class="muted" style="line-height:1.7; padding-left: 18px;">
-          <li>App uses <b>browser Text‑to‑Speech</b> (Chrome & Edge work best).</li>
-          <li>Pick an exercise, then the app will <b>play each word</b>. Type what you hear.</li>
-          <li>Wrong? You’ll see feedback and can <b>Try again</b>, <b>Skip</b>, or <b>Show answer</b>.</li>
-          <li>At the end, view a <b>summary</b> of your accuracy and time.</li>
+          <li>Pick from the <b>Built‑in Library</b> or paste a <b>Custom Exercise</b> Spreadsheet ID.</li>
+          <li>Select an <b>exercise</b> and press <b>Start</b>.</li>
+          <li>Listen, type your answer, and use <b>Try again</b> / <b>Skip</b> / <b>Show answer</b>.</li>
+          <li>View your <b>summary</b> at the end.</li>
         </ul>
-        <div class="pill" style="margin-top:10px;">Tip: Press <span class="kbd">Enter</span> to submit</div>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn secondary" id="demoBtn" title="Try a minimal demo with local sample">Quick Demo</button>
+          <span class="pill" style="margin-left:8px;">Tip: Press <span class="kbd">Enter</span> to submit</span>
+        </div>
       </div>
     </section>
 
@@ -194,6 +203,7 @@
         <div class="row">
           <button class="btn secondary" id="revealSettingsBtn">Settings</button>
           <button class="btn secondary" id="stopBtn">Stop</button>
+          <button class="btn secondary" id="homeBtnRun">Home</button>
         </div>
       </div>
 
@@ -272,7 +282,10 @@
           <h2>Summary</h2>
           <div class="muted" id="summaryTitle"></div>
         </div>
-        <button class="btn secondary" id="backToPicker">Back to exercises</button>
+        <div class="row">
+          <button class="btn secondary" id="backToPicker">Back to exercises</button>
+          <button class="btn secondary" id="homeBtnSummary">Home</button>
+        </div>
       </div>
       <div class="grid cols-2" style="margin-top:10px;">
         <div class="card">
@@ -335,8 +348,6 @@
         </div>
       </form>
     </dialog>
-
-    <div class="footer">Made for students (10–15). Works on desktop & mobile.</div>
   </main>
 
   <script>
@@ -515,10 +526,10 @@
 
   function buildMasterList(rows){
     const list = $('#masterList'); list.innerHTML = '';
-    if(!rows.length){ list.innerHTML = '<div class="muted">No rows found in master.</div>'; return; }
+    if(!rows.length){ list.innerHTML = '<div class="muted">No items found.</div>'; return; }
     rows.forEach(r=>{
       const div = document.createElement('div'); div.className='item';
-      div.innerHTML = `<div class="title">${r.title}</div><div class="muted">${r.id}</div>`;
+      div.innerHTML = `<div class="title">${r.title}</div>`;
       const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Open';
       btn.onclick = ()=> loadExerciseSheet(r.id, r.title);
       div.appendChild(btn);
@@ -533,7 +544,7 @@
     rows.forEach((row, idx)=>{
       const div = document.createElement('div'); div.className='item';
       const wcount = row.words.length;
-      div.innerHTML = `<div><div class="title">${row.title || 'Untitled'}</div><div class="muted">${wcount} word${wcount!==1?'s':''}</div></div>`;
+      div.innerHTML = `<div><div class=\"title\">${row.title || 'Untitled'}</div><div class=\"muted\">${wcount} word${wcount!==1?'s':''}</div></div>`;
       const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
       btn.onclick = ()=> startExercise(idx);
       div.appendChild(btn);
@@ -594,11 +605,11 @@
     const timeMs = performance.now() - state.current.perWordStart;
 
     if(ok){
-      $('#feedback').innerHTML = `<span class="result-badge ok">Correct!</span>`;
+      $('#feedback').innerHTML = `<span class=\"result-badge ok\">Correct!</span>`;
       state.current.results.push({word: expected, correct: true, attempts: 1, skipped: false, shownAnswer: false, timeMs});
       nextWord();
     } else {
-      $('#feedback').innerHTML = `<span class="result-badge err">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
+      $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
       // keep trying — attempts counted when they finally get it or skip/show
     }
   }
@@ -611,7 +622,7 @@
     const expected = currentWord();
     const timeMs = performance.now() - state.current.perWordStart;
     state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
-    $('#feedback').innerHTML = `<span class="result-badge skip">Skipped</span> It was: <b>${expected}</b>`;
+    $('#feedback').innerHTML = `<span class=\"result-badge skip\">Skipped</span> It was: <b>${expected}</b>`;
     nextWord();
   }
 
@@ -656,7 +667,7 @@
     const review = $('#reviewList'); review.innerHTML='';
     state.current.results.filter(r=>!r.correct).forEach(r=>{
       const d = document.createElement('div'); d.className='item';
-      d.innerHTML = `<div><div class="title">${r.word}</div><div class="muted">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`;
+      d.innerHTML = `<div><div class=\"title\">${r.word}</div><div class=\"muted\">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`;
       const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice';
       btn.onclick = ()=> speak(r.word);
       d.appendChild(btn); review.appendChild(d);
@@ -665,8 +676,8 @@
     const table = $('#resultsTable'); table.innerHTML='';
     state.current.results.forEach((r,idx)=>{
       const d = document.createElement('div'); d.className='item';
-      const badge = r.correct? '<span class="result-badge ok">✓</span>' : (r.skipped? '<span class="result-badge skip">⏭</span>' : '<span class="result-badge err">✗</span>');
-      d.innerHTML = `<div><div class="title">${idx+1}. ${r.word}</div><div class="muted">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`;
+      const badge = r.correct? '<span class=\"result-badge ok\">✓</span>' : (r.skipped? '<span class=\"result-badge skip\">⏭</span>' : '<span class=\"result-badge err\">✗</span>');
+      d.innerHTML = `<div><div class=\"title\">${idx+1}. ${r.word}</div><div class=\"muted\">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`;
       table.appendChild(d);
     });
 
@@ -675,12 +686,13 @@
 
   // ======= LOADERS =======
   async function loadMaster(){
-    if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
-      $('#masterWarn').style.display='block';
-    } else { $('#masterWarn').style.display='none'; }
-
+    const card = document.querySelector('#masterList')?.closest('.card');
     try{
-      if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx') throw new Error('Master ID not set');
+      if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
+        if(card) card.style.display='none';
+        return; // silently hide if not set
+      }
+      if(card) card.style.display='';
       $('#masterList').innerHTML = '<div class="muted">Loading…</div>';
       const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
       const rows = csvParse(csv);
@@ -691,10 +703,9 @@
       if(iTitle < 0 || iId < 0) throw new Error('Master sheet must have headers: title, sheet id');
       const data = rows.slice(1).filter(r=>r.length>=2).map(r=>({ title: r[iTitle], id: r[iId] }));
       buildMasterList(data);
-      toast('Master loaded');
     }catch(err){
-      console.error(err); toast('Failed to load master: ' + err.message, 2400);
-      $('#masterList').innerHTML = '';
+      console.warn('Master load failed:', err.message);
+      if(card) card.style.display='none';
     }
   }
 
@@ -703,7 +714,6 @@
       show('#screen-home');
       $('#customList').innerHTML = '';
       $('#exerciseList').innerHTML = '';
-      toast('Loading exercises…');
       const csv = await fetchSheetCsv(sheetId);
       const rows = csvParse(csv);
       if(!rows.length) throw new Error('Empty sheet');
@@ -726,15 +736,15 @@
 
   // ======= EVENTS =======
   function bindEvents(){
-    $('#loadMasterBtn').addEventListener('click', loadMaster);
-    $('#reloadMasterBtn').addEventListener('click', loadMaster);
+    // Master reload (auto-load also runs on init)
+    const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
 
     $('#loadCustomBtn').addEventListener('click', ()=>{
       const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
       loadExerciseSheet(id, 'Custom');
     });
 
-    // Small local demo (no network) for quick try — not persistent
+    // Small local demo
     $('#demoBtn').addEventListener('click', ()=>{
       const rows = [
         {title:'Unit 1', words:['usage','united','must','animal']},
@@ -752,7 +762,7 @@
     $('#skipBtn').addEventListener('click', skipWord);
     $('#showBtn').addEventListener('click', showAnswer);
     $('#stopBtn').addEventListener('click', ()=> { show('#screen-picker'); });
-    $('#revealSettingsBtn').addEventListener('click', ()=> $('#settingsPanel').open = !$('#settingsPanel').open);
+    const _homeRun = $('#homeBtnRun'); if(_homeRun) _homeRun.addEventListener('click', ()=> show('#screen-home'));
 
     $('#answerInput').addEventListener('keydown', (e)=>{
       if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
@@ -772,6 +782,8 @@
 
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
+
+    const _homeSummary = $('#homeBtnSummary'); if(_homeSummary) _homeSummary.addEventListener('click', ()=> show('#screen-home'));
 
     // settings modal
     const modal = $('#settingsModal');
@@ -800,6 +812,9 @@
       // Nudge some browsers to populate voices
       const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
     }
+
+    // Auto-load master on page load (silently hide if not available)
+    loadMaster();
   })();
   </script>
 </body>
