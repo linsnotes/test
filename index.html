@@ -324,7 +324,7 @@
   const state = {
     ttsReady: false,
     voices: [],
-    selected: { en: null, zh: null, rate: 1, pitch: 1, autoplay: true },
+    selected: { en: null, zh: null, rate: 1, pitch: 1 },
     source: null, // {type:'master'|'custom', id}
     picker: [], // list of {label, id} for master OR list of exercises for custom
     exerciseSheet: null, // current sheet object
@@ -356,7 +356,7 @@
       rate: state.selected.rate,
       pitch: state.selected.pitch,
       randomize: $('#randomizeToggle').checked,
-      autoplay: state.selected.autoplay,
+      autoplay: ($('#autoplayToggle') ? $('#autoplayToggle').checked : true),
       lastCustom: $('#customId').value || ''
     }));
   }
@@ -366,7 +366,7 @@
       if(p.rate) state.selected.rate = p.rate;
       if(p.pitch) state.selected.pitch = p.pitch;
       if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
-      if(p.autoplay!=null) state.selected.autoplay = p.autoplay;
+      if(p.autoplay!=null && $('#autoplayToggle')) $('#autoplayToggle').checked = p.autoplay;
       if(p.lastCustom) $('#customId').value = p.lastCustom;
       // voice names resolved after voices load
     }catch{}
@@ -451,13 +451,13 @@
     function fill(select, voices){ if(!select) return; select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
     }
 
-    [$('#enVoice'), $('#enVoice2')].filter(Boolean).forEach(sel=> fill(sel, en));
-    [$('#zhVoice'), $('#zhVoice2')].filter(Boolean).forEach(sel=> fill(sel, zh));
+    [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
+    [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
 
     // Restore previous voice by name
     const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
-    if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>{ if(s) s.value=encodeURIComponent(v.name); }); } }
-    if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>{ if(s) s.value=encodeURIComponent(v.name); }); } }
+    if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'), $('#enVoice2')].forEach(s=>{ if(s) s.value = encodeURIComponent(v.name); }); } }
+    if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'), $('#zhVoice2')].forEach(s=>{ if(s) s.value = encodeURIComponent(v.name); }); } }
 
     // Defaults if none chosen
     if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>{ if(s) s.value=encodeURIComponent(en[0].name); }); }
@@ -537,7 +537,7 @@
     if(state.current.i >= words.length){
       finishExercise();
     } else {
-      if(state.selected.autoplay){ setTimeout(playCurrent, 350); }
+      const ap = $('#autoplayToggle'); if(!ap || ap.checked){ setTimeout(playCurrent, 350); }
       else { $('#promptWord').textContent = '(ready)'; }
     }
   }
@@ -752,34 +752,32 @@
 
     // voice selects
     function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
-     savePrefs(); });
-     savePrefs(); });
-    const _enVoice2 = $('#enVoice2'); if(_enVoice2) _enVoice2.addEventListener('change', (e)=>{ state.selected.en = state.voices.find(v=>v.name===decodeURIComponent(e.target.value)); savePrefs(); }); savePrefs(); });
-    const _zhVoice2 = $('#zhVoice2'); if(_zhVoice2) _zhVoice2.addEventListener('change', (e)=>{ state.selected.zh = state.voices.find(v=>v.name===decodeURIComponent(e.target.value)); savePrefs(); }); savePrefs(); });
+    const _enVoice = $('#enVoice'); if(_enVoice) _enVoice.addEventListener('change', (e)=>{ state.selected.en = (function(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); })(e.target.value); savePrefs(); }); savePrefs(); });
+    const _zhVoice = $('#zhVoice'); if(_zhVoice) _zhVoice.addEventListener('change', (e)=>{ state.selected.zh = (function(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); })(e.target.value); savePrefs(); }); savePrefs(); });
+    $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+    $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
 
-     $('#rate2').value=e.target.value; savePrefs(); });
-     $('#pitch2').value=e.target.value; savePrefs(); });
-    const _rate2 = $('#rate2'); if(_rate2) _rate2.addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); const r = $('#rate'); if(r) r.value = e.target.value; savePrefs(); }); $('#rate').value=e.target.value; savePrefs(); });
-    const _pitch2 = $('#pitch2'); if(_pitch2) _pitch2.addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); const p = $('#pitch'); if(p) p.value = e.target.value; savePrefs(); }); $('#pitch').value=e.target.value; savePrefs(); });
+    const _rate = $('#rate'); if(_rate) _rate.addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); const r2 = $('#rate2'); if(r2) r2.value=e.target.value; savePrefs(); }); $('#rate2').value=e.target.value; savePrefs(); });
+    const _pitch = $('#pitch'); if(_pitch) _pitch.addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); const p2 = $('#pitch2'); if(p2) p2.value=e.target.value; savePrefs(); }); $('#pitch2').value=e.target.value; savePrefs(); });
+    $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
+    $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
 
-    
+    const _ap = $('#autoplayToggle'); if(_ap) _ap.addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
 
     const _homeSummary = $('#homeBtnSummary'); if(_homeSummary) _homeSummary.addEventListener('click', ()=> { if('speechSynthesis' in window) speechSynthesis.cancel(); show('#screen-home'); });
 
     // settings modal
     const modal = $('#settingsModal');
-    const _openSettingsBtn = $('#openSettingsBtn'); if(_openSettingsBtn) _openSettingsBtn.addEventListener('click', ()=> modal.showModal());
-    const _revealSettingsBtn = $('#revealSettingsBtn'); if(_revealSettingsBtn) _revealSettingsBtn.addEventListener('click', ()=> modal.showModal());
     $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
 
     // test buttons
     function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
     function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
-    
-    
-    const _testEN2 = $('#testEN2'); if(_testEN2) _testEN2.addEventListener('click', ()=> speak('Hello! This is the English voice test.')); 
-    const _testZH2 = $('#testZH2'); if(_testZH2) _testZH2.addEventListener('click', ()=> speak('你好！这是中文语音测试。')); 
+    const _testEN = $('#testEN'); if(_testEN) _testEN.addEventListener('click', ()=> speak('Hello! This is the English voice test.')); 
+    const _testZH = $('#testZH'); if(_testZH) _testZH.addEventListener('click', ()=> speak('你好！这是中文语音测试。')); 
+    $('#testEN2').addEventListener('click', testSpeakEn);
+    $('#testZH2').addEventListener('click', testSpeakZh);
   }
 
   // ======= INIT =======
