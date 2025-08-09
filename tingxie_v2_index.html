@@ -424,714 +424,779 @@
   </main>
 
   <script>
-  // ======= CONFIG =======
-  const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
+// ======= CONFIG =======
+const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
 
-  // ======= STATE =======
-  const state = {
-    ttsReady: false,
-    voices: [],
-    selected: { en: null, zh: null, rate: 1, pitch: 1 },
-    source: null, // {type:'master'|'custom', id}
-    picker: [], // list of {label, id} for master OR list of exercises for custom
-    exerciseSheet: null, // current sheet object
-    exerciseRows: [], // [{title, words:[...]}]
-    current: {
-      title: '',
-      words: [],
-      order: [],
-      i: 0,
-      startedAt: 0,
-      perWordStart: 0,
-      selectedIndex: -1,
-      results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
+// ======= STATE =======
+const state = {
+  ttsReady: false,
+  voices: [],
+  selected: { en: null, zh: null, rate: 1, pitch: 1 },
+  source: null, // {type:'master'|'custom', id}
+  picker: [], // list of {label, id} for master OR list of exercises for custom
+  exerciseSheet: null, // current sheet object
+  exerciseRows: [], // [{title, words:[...]}]
+  current: {
+    title: '',
+    words: [],
+    order: [],
+    i: 0,
+    startedAt: 0,
+    perWordStart: 0,
+    selectedIndex: -1,
+    results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
+  }
+};
+
+// === Handwriting state ===
+state.handwriting = {
+  available: false,           // scripts loaded ok
+  enabled: false,             // user opted in (Confirm screen)
+  exerciseChineseOnly: false, // toggle only shown when true
+  idleMs: 3000,               // auto-recognize after 3s idle
+  idleTimer: null,            // timer handle
+  canvas: null                // handwriting.Canvas instance
+};
+
+// ======= HELPERS =======
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+function toast(msg, ms=1800){
+  const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
+  setTimeout(()=> t.classList.add('hidden'), ms);
+}
+
+// CHANGED: save handwriting preference too
+function savePrefs(){
+  localStorage.setItem('tingxie_prefs', JSON.stringify({
+    en: state.selected.en?.name || null,
+    zh: state.selected.zh?.name || null,
+    rate: state.selected.rate,
+    pitch: state.selected.pitch,
+    randomize: $('#randomizeToggle').checked,
+    autoplay: $('#autoplayToggle').checked,
+    lastCustom: $('#customId').value || '',
+    handwriting: $('#handwritingToggle')?.checked || false
+  }));
+}
+
+// CHANGED: load handwriting preference (applied later in confirm screen)
+function loadPrefs(){
+  try{
+    const p = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+    if(p.rate) state.selected.rate = p.rate;
+    if(p.pitch) state.selected.pitch = p.pitch;
+    if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
+    if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
+    if(p.lastCustom) $('#customId').value = p.lastCustom;
+  }catch{}
+}
+
+function csvParse(text){
+  const lines = text.replace(/\r\n?/g, "\n").split("\n").filter(l=>l.trim().length>0);
+  const rows = lines.map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(cell => {
+    let c = cell.trim();
+    if(c.startsWith('"') && c.endsWith('"')) c = c.slice(1,-1).replace(/""/g,'"');
+    return c;
+  }));
+  return rows;
+}
+
+function normalizeHeader(h){ return h.trim().toLowerCase().replace(/\s+/g,' '); }
+
+function getCsvUrl(spreadsheetId){
+  return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/export?format=csv`;
+}
+
+async function fetchSheetCsv(spreadsheetId){
+  const url = getCsvUrl(spreadsheetId);
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(`Failed to load CSV (${res.status})`);
+  return await res.text();
+}
+
+function isChinese(str){ return /[\p{Script=Han}]/u.test(str); }
+
+function isChineseOnly(words){
+  return (words||[]).length > 0 && words.every(w => /[\p{Script=Han}]/u.test(w));
+}
+
+function splitWords(raw){
+  if(!raw) return [];
+  return raw
+    .split(/[，,]/g)
+    .map(s=>s.replace(/\s+/g,' ').trim())
+    .filter(Boolean);
+}
+
+function normEnglish(s){
+  return (s||'').toLocaleLowerCase().normalize('NFC').replace(/[^\p{Letter}\p{Number}]+/gu,'');
+}
+function normChinese(s){
+  return (s||'').normalize('NFC').replace(/\s+/g,'');
+}
+function isCorrect(expected, input){
+  if(isChinese(expected)){
+    return normChinese(expected) === normChinese(input);
+  } else {
+    return normEnglish(expected) === normEnglish(input);
+  }
+}
+
+function fmtMs(ms){
+  const s = Math.round(ms/1000);
+  if(s < 60) return s+"s";
+  const mm = Math.floor(s/60), ss = s%60;
+  return `${mm}m ${ss}s`;
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+// NEW: ensure per-word timer is initialized even if user acts before first Play
+function ensurePerWordTimer(){
+  if (state.current.perWordStart === 0) {
+    state.current.perWordStart = performance.now();
+  }
+}
+
+// ======= TTS =======
+function loadVoices(){
+  let list = speechSynthesis.getVoices();
+  if(list.length){ onVoices(list); }
+}
+
+function onVoices(list){
+  state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+  
+  // Populate selects (two places: inline settings & modal)
+  const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
+  const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
+
+  function fill(select, voices){
+    select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
+  }
+
+  [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
+  [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
+
+  // Restore previous voice by name
+  const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+  if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+  if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+
+  // Defaults if none chosen
+  if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(en[0].name)); }
+  if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(zh[0].name)); }
+}
+
+function getVoiceForWord(word){
+  const zh = isChinese(word);
+  const preferred = zh ? state.selected.zh : state.selected.en;
+  if(preferred) return preferred;
+  // fallback
+  const list = zh ? state.voices.filter(v=>/^zh/i.test(v.lang)) : state.voices.filter(v=>/^en/i.test(v.lang));
+  return list[0] || state.voices[0] || null;
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)) { toast('Speech Synthesis not supported in this browser.'); return; }
+  const voice = getVoiceForWord(text);
+  const u = new SpeechSynthesisUtterance(text);
+  if(voice){ u.voice = voice; u.lang = voice.lang; }
+  u.rate = state.selected.rate; u.pitch = state.selected.pitch;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+// ======= Handwriting libs loader =======
+function loadScript(src){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = resolve;
+    s.onerror = ()=> reject(new Error('Failed to load: '+src));
+    document.head.appendChild(s);
+  });
+}
+
+async function loadHandwritingLib(){
+  try{
+    await loadScript('https://cdn.jsdelivr.net/gh/ChenYuHo/handwriting.js/handwriting.js');
+    await loadScript('https://cdn.jsdelivr.net/gh/ChenYuHo/handwriting.js/handwriting.canvas.js');
+    state.handwriting.available = !!window.handwriting;
+  }catch(err){
+    console.warn('Handwriting lib load failed:', err.message);
+    state.handwriting.available = false;
+  }
+}
+
+// ======= UI FLOW =======
+function show(id){
+  ['#screen-home', '#screen-picker', '#screen-confirm', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden'));
+  $(id).classList.remove('hidden');
+}
+
+function buildMasterList(rows){
+  const sel = $('#masterSelect');
+  const openBtn = $('#openMasterBtn');
+  if(sel){
+    sel.innerHTML = '';
+    const ph = document.createElement('option');
+    ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true;
+    sel.appendChild(ph);
+  }
+  if(!rows.length){
+    if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
+    if(openBtn){ openBtn.disabled = true; }
+    return;
+  }
+  rows.forEach(r=>{
+    if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
+  });
+  if(openBtn){ openBtn.disabled = !sel.value; } // keep disabled until user picks
+}
+
+// Handwriting mode UI toggles
+function setHandwritingEnabled(on){
+  state.handwriting.enabled = !!on;
+
+  const input = $('#answerInput');
+  const wrap  = $('#handwritingDisplayWrap');
+  const writeBtn = $('#writeBtn');
+
+  if(state.handwriting.enabled){
+    input.classList.add('hidden');
+    input.setAttribute('disabled','true');
+    input.setAttribute('tabindex','-1');
+
+    wrap.classList.remove('hidden');
+    writeBtn.classList.remove('hidden');
+  } else {
+    input.classList.remove('hidden');
+    input.removeAttribute('disabled');
+    input.removeAttribute('tabindex');
+
+    wrap.classList.add('hidden');
+    writeBtn.classList.add('hidden'); // only visible in handwriting mode
+  }
+}
+
+function openHandwritingOverlay(){
+  if(!state.handwriting.available) return;
+  $('#handwritingOverlay').classList.remove('hidden');
+  ensureCanvasReady();
+}
+
+function closeHandwritingOverlay(){
+  $('#handwritingOverlay').classList.add('hidden');
+  clearTimeout(state.handwriting.idleTimer);
+  state.handwriting.idleTimer = null;
+}
+
+function ensureCanvasReady(){
+  const cvs = $('#hwCanvas');
+  // Fit canvas to displayed CSS size for sharp strokes
+  const rect = cvs.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cvs.width = Math.max(1, Math.floor(rect.width * dpr));
+  cvs.height = Math.max(1, Math.floor(rect.height * dpr));
+  const ctx = cvs.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  if(!state.handwriting.canvas){
+    state.handwriting.canvas = new handwriting.Canvas(cvs, 3);
+    state.handwriting.canvas.set_Undo_Redo(true, true);
+  }
+
+  // callback: append best candidate and clear strokes
+  state.handwriting.canvas.setCallBack(function(results, err){
+    if(err){ toast('Recognition error'); return; }
+    const best = (results && results[0]) ? results[0] : '';
+    if(best){
+      const input = $('#answerInput');
+      input.value = (input.value || '') + best;
+      $('#handwritingDisplay').textContent = input.value;
     }
-  };
+    state.handwriting.canvas.erase();
+  });
 
-  // === Handwriting state ===
-  state.handwriting = {
-    available: false,           // scripts loaded ok
-    enabled: false,             // user opted in (Confirm screen)
-    exerciseChineseOnly: false, // toggle only shown when true
-    idleMs: 3000,               // auto-recognize after 3s idle
-    idleTimer: null,            // timer handle
-    canvas: null                // handwriting.Canvas instance
-  };
+  state.handwriting.canvas.setOptions({
+    language: 'zh_CN',
+    width: cvs.width,
+    height: cvs.height,
+    numOfReturn: 5
+  });
 
-  // ======= HELPERS =======
-  const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-
-  function toast(msg, ms=1800){
-    const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
-    setTimeout(()=> t.classList.add('hidden'), ms);
-  }
-
-  // CHANGED: save handwriting preference too
-  function savePrefs(){
-    localStorage.setItem('tingxie_prefs', JSON.stringify({
-      en: state.selected.en?.name || null,
-      zh: state.selected.zh?.name || null,
-      rate: state.selected.rate,
-      pitch: state.selected.pitch,
-      randomize: $('#randomizeToggle').checked,
-      autoplay: $('#autoplayToggle').checked,
-      lastCustom: $('#customId').value || '',
-      handwriting: $('#handwritingToggle')?.checked || false
-    }));
-  }
-
-  // CHANGED: load handwriting preference (applied later in confirm screen)
-  function loadPrefs(){
-    try{
-      const p = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
-      if(p.rate) state.selected.rate = p.rate;
-      if(p.pitch) state.selected.pitch = p.pitch;
-      if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
-      if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
-      if(p.lastCustom) $('#customId').value = p.lastCustom;
-    }catch{}
-  }
-
-  function csvParse(text){
-    const lines = text.replace(/\r\n?/g, "\n").split("\n").filter(l=>l.trim().length>0);
-    const rows = lines.map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(cell => {
-      let c = cell.trim();
-      if(c.startsWith('"') && c.endsWith('"')) c = c.slice(1,-1).replace(/""/g,'"');
-      return c;
-    }));
-    return rows;
-  }
-
-  function normalizeHeader(h){ return h.trim().toLowerCase().replace(/\s+/g,' '); }
-
-  function getCsvUrl(spreadsheetId){
-    return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/export?format=csv`;
-  }
-
-  async function fetchSheetCsv(spreadsheetId){
-    const url = getCsvUrl(spreadsheetId);
-    const res = await fetch(url);
-    if(!res.ok) throw new Error(`Failed to load CSV (${res.status})`);
-    return await res.text();
-  }
-
-  function isChinese(str){ return /[\p{Script=Han}]/u.test(str); }
-
-  function isChineseOnly(words){
-    return (words||[]).length > 0 && words.every(w => /[\p{Script=Han}]/u.test(w));
-  }
-
-  function splitWords(raw){
-    if(!raw) return [];
-    return raw
-      .split(/[，,]/g)
-      .map(s=>s.replace(/\s+/g,' ').trim())
-      .filter(Boolean);
-  }
-
-  function normEnglish(s){
-    return (s||'').toLocaleLowerCase().normalize('NFC').replace(/[^\p{Letter}\p{Number}]+/gu,'');
-  }
-  function normChinese(s){
-    return (s||'').normalize('NFC').replace(/\s+/g,'');
-  }
-  function isCorrect(expected, input){
-    if(isChinese(expected)){
-      return normChinese(expected) === normChinese(input);
-    } else {
-      return normEnglish(expected) === normEnglish(input);
-    }
-  }
-
-  function fmtMs(ms){
-    const s = Math.round(ms/1000);
-    if(s < 60) return s+"s";
-    const mm = Math.floor(s/60), ss = s%60;
-    return `${mm}m ${ss}s`;
-  }
-
-  function shuffle(arr){
-    const a = arr.slice();
-    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-    return a;
-  }
-
-  // ======= TTS =======
-  function loadVoices(){
-    let list = speechSynthesis.getVoices();
-    if(list.length){ onVoices(list); }
-  }
-
-  function onVoices(list){
-    state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
-    
-    // Populate selects (two places: inline settings & modal)
-    const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
-    const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
-
-    function fill(select, voices){
-      select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
-    }
-
-    [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
-    [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
-
-    // Restore previous voice by name
-    const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
-    if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
-    if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
-
-    // Defaults if none chosen
-    if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(en[0].name)); }
-    if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(zh[0].name)); }
-  }
-
-  function getVoiceForWord(word){
-    const zh = isChinese(word);
-    const preferred = zh ? state.selected.zh : state.selected.en;
-    if(preferred) return preferred;
-    // fallback
-    const list = zh ? state.voices.filter(v=>/^zh/i.test(v.lang)) : state.voices.filter(v=>/^en/i.test(v.lang));
-    return list[0] || state.voices[0] || null;
-  }
-
-  function speak(text){
-    if(!('speechSynthesis' in window)) { toast('Speech Synthesis not supported in this browser.'); return; }
-    const voice = getVoiceForWord(text);
-    const u = new SpeechSynthesisUtterance(text);
-    if(voice){ u.voice = voice; u.lang = voice.lang; }
-    u.rate = state.selected.rate; u.pitch = state.selected.pitch;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-  }
-
-  // ======= Handwriting libs loader =======
-  function loadScript(src){
-    return new Promise((resolve, reject)=>{
-      const s = document.createElement('script');
-      s.src = src; s.async = true;
-      s.onload = resolve;
-      s.onerror = ()=> reject(new Error('Failed to load: '+src));
-      document.head.appendChild(s);
-    });
-  }
-
-  async function loadHandwritingLib(){
-    try{
-      await loadScript('https://cdn.jsdelivr.net/gh/ChenYuHo/handwriting.js/handwriting.js');
-      await loadScript('https://cdn.jsdelivr.net/gh/ChenYuHo/handwriting.js/handwriting.canvas.js');
-      state.handwriting.available = !!window.handwriting;
-    }catch(err){
-      console.warn('Handwriting lib load failed:', err.message);
-      state.handwriting.available = false;
-    }
-  }
-
-  // ======= UI FLOW =======
-  function show(id){
-    ['#screen-home', '#screen-picker', '#screen-confirm', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden'));
-    $(id).classList.remove('hidden');
-  }
-
-  function buildMasterList(rows){
-    const sel = $('#masterSelect');
-    const openBtn = $('#openMasterBtn');
-    if(sel){
-      sel.innerHTML = '';
-      const ph = document.createElement('option');
-      ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true;
-      sel.appendChild(ph);
-    }
-    if(!rows.length){
-      if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
-      if(openBtn){ openBtn.disabled = true; }
-      return;
-    }
-    rows.forEach(r=>{
-      if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
-    });
-    if(openBtn){ openBtn.disabled = false; }
-  }
-
-  // Handwriting mode UI toggles
-  function setHandwritingEnabled(on){
-    state.handwriting.enabled = !!on;
-
-    const input = $('#answerInput');
-    const wrap  = $('#handwritingDisplayWrap');
-    const writeBtn = $('#writeBtn');
-
-    if(state.handwriting.enabled){
-      input.classList.add('hidden');
-      input.setAttribute('disabled','true');
-      input.setAttribute('tabindex','-1');
-
-      wrap.classList.remove('hidden');
-      writeBtn.classList.remove('hidden');
-    } else {
-      input.classList.remove('hidden');
-      input.removeAttribute('disabled');
-      input.removeAttribute('tabindex');
-
-      wrap.classList.add('hidden');
-      writeBtn.classList.add('hidden'); // only visible in handwriting mode
-    }
-  }
-
-  function openHandwritingOverlay(){
-    if(!state.handwriting.available) return;
-    $('#handwritingOverlay').classList.remove('hidden');
-    ensureCanvasReady();
-  }
-
-  function closeHandwritingOverlay(){
-    $('#handwritingOverlay').classList.add('hidden');
+  // Idle recognition after 3s since last pointer activity
+  const bumpIdle = ()=>{
     clearTimeout(state.handwriting.idleTimer);
-    state.handwriting.idleTimer = null;
-  }
+    state.handwriting.idleTimer = setTimeout(()=> recognizeNow(), state.handwriting.idleMs);
+  };
 
-  function ensureCanvasReady(){
-    const cvs = $('#hwCanvas');
-    // Fit canvas to displayed CSS size for sharp strokes
-    const rect = cvs.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    cvs.width = Math.max(1, Math.floor(rect.width * dpr));
-    cvs.height = Math.max(1, Math.floor(rect.height * dpr));
-    const ctx = cvs.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    if(!state.handwriting.canvas){
-      state.handwriting.canvas = new handwriting.Canvas(cvs, 3);
-      state.handwriting.canvas.set_Undo_Redo(true, true);
-    }
-
-    // callback: append best candidate and clear strokes
-    state.handwriting.canvas.setCallBack(function(results, err){
-      if(err){ toast('Recognition error'); return; }
-      const best = (results && results[0]) ? results[0] : '';
-      if(best){
-        const input = $('#answerInput');
-        input.value = (input.value || '') + best;
-        $('#handwritingDisplay').textContent = input.value;
-      }
-      state.handwriting.canvas.erase();
+  // Add listeners only once per canvas (avoid duplicates when reopening overlay)
+  if (!cvs.__hwBound) {
+    ['mouseup', 'touchend', 'mousemove', 'touchmove'].forEach(ev => {
+      cvs.addEventListener(ev, bumpIdle, { passive: true });
     });
-
-    state.handwriting.canvas.setOptions({
-      language: 'zh_CN',
-      width: cvs.width,
-      height: cvs.height,
-      numOfReturn: 5
-    });
-
-    // Idle recognition after 3s since last pointer activity
-    const bumpIdle = ()=>{
-      clearTimeout(state.handwriting.idleTimer);
-      state.handwriting.idleTimer = setTimeout(()=> recognizeNow(), state.handwriting.idleMs);
-    };
-
-    // Add listeners only once per canvas (avoid duplicates when reopening overlay)
-    if (!cvs.__hwBound) {
-      ['mouseup', 'touchend', 'mousemove', 'touchmove'].forEach(ev => {
-        cvs.addEventListener(ev, bumpIdle, { passive: true });
-      });
-      cvs.__hwBound = true;
-    }
+    cvs.__hwBound = true;
   }
+}
 
-  function recognizeNow(){
-    if(!state.handwriting.canvas) return;
-    try{
-      state.handwriting.canvas.recognize();
-    }catch{
-      toast('Could not recognize right now.');
-    }
+function recognizeNow(){
+  if(!state.handwriting.canvas) return;
+  try{
+    state.handwriting.canvas.recognize();
+  }catch{
+    toast('Could not recognize right now.');
   }
+}
 
-  function clearRecognized(){
-    $('#answerInput').value = '';
-    $('#handwritingDisplay').textContent = '';
+function clearRecognized(){
+  $('#answerInput').value = '';
+  $('#handwritingDisplay').textContent = '';
+}
+
+function tryAgain(){
+  $('#answerInput').value=''; $('#feedback').textContent='';
+  if(state.handwriting.enabled){
+    $('#handwritingDisplay').textContent='';
+  } else {
+    $('#answerInput').focus();
   }
+}
 
-  function tryAgain(){
-    $('#answerInput').value=''; $('#feedback').textContent='';
-    if(state.handwriting.enabled){
-      $('#handwritingDisplay').textContent='';
+function skipWord(){
+  const expected = currentWord();
+  ensurePerWordTimer();
+  const timeMs = performance.now() - state.current.perWordStart;
+  state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
+
+  const fb = $('#feedback'); fb.textContent = '';
+  const badge = document.createElement('span'); badge.className='result-badge skip'; badge.textContent='Skipped';
+  fb.appendChild(badge);
+  fb.appendChild(document.createTextNode(' It was: '));
+  const b = document.createElement('b'); b.textContent = expected;
+  fb.appendChild(b);
+
+  nextWord();
+}
+
+function showAnswer(){
+  const expected = currentWord();
+  ensurePerWordTimer();
+  const timeMs = performance.now() - state.current.perWordStart;
+  state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs});
+
+  const fb = $('#feedback'); fb.textContent = '';
+  fb.appendChild(document.createTextNode('Answer: '));
+  const b = document.createElement('b'); b.textContent = expected;
+  fb.appendChild(b);
+
+  nextWord();
+}
+
+function nextWord(){
+  const {words} = state.current;
+  $('#answerInput').value='';
+  if(state.handwriting.enabled) $('#handwritingDisplay').textContent='';
+  state.current.i++;
+  state.current.perWordStart = 0;
+  updateProgress();
+  if(state.current.i >= words.length){
+    finishExercise();
+  } else {
+    if($('#autoplayToggle').checked){ setTimeout(playCurrent, 350); }
+    else { $('#promptWord').textContent = '(ready)'; }
+  }
+}
+
+function finishExercise(){
+  $('#progressBar').style.width = '100%';
+  const totalMs = performance.now() - state.current.startedAt;
+
+  // Aggregate
+  const total = state.current.words.length;
+  const correct = state.current.results.filter(r=>r.correct).length;
+  const skipped = state.current.results.filter(r=>r.skipped).length;
+  const accuracy = total ? Math.round((correct/total)*100) : 0;
+
+  $('#summaryTitle').textContent = state.current.title;
+  $('#sumTotal').textContent = total;
+  $('#sumCorrect').textContent = correct;
+  $('#sumSkipped').textContent = skipped;
+  $('#sumAcc').textContent = accuracy + '%';
+  $('#sumTime').textContent = fmtMs(totalMs);
+
+  // Build "What needs practice"
+  const review = $('#reviewList'); review.innerHTML='';
+  state.current.results.filter(r=>!r.correct).forEach(r=>{
+    const d = document.createElement('div'); d.className='item';
+
+    const left = document.createElement('div');
+    const t = document.createElement('div'); t.className='title'; t.textContent = r.word;
+    const m = document.createElement('div'); m.className='muted'; m.textContent = r.skipped ? 'skipped' : r.shownAnswer ? 'gave up' : 'incorrect';
+    left.appendChild(t); left.appendChild(m);
+
+    const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice';
+    btn.onclick = ()=> speak(r.word);
+
+    d.appendChild(left); d.appendChild(btn);
+    review.appendChild(d);
+  });
+
+  // Build results table
+  const table = $('#resultsTable'); table.innerHTML='';
+  state.current.results.forEach((r,idx)=>{
+    const d = document.createElement('div'); d.className='item';
+
+    const left = document.createElement('div');
+    const t = document.createElement('div'); t.className='title'; t.textContent = `${idx+1}. ${r.word}`;
+
+    const m = document.createElement('div'); m.className='muted';
+    const badge = document.createElement('span');
+    badge.className = 'result-badge ' + (r.correct ? 'ok' : r.skipped ? 'skip' : 'err');
+    badge.textContent = r.correct ? '✓' : r.skipped ? '⏭' : '✗';
+    m.appendChild(badge);
+    m.appendChild(document.createTextNode(' ' + (r.correct ? 'correct' : r.skipped ? 'skipped' : r.shownAnswer ? 'gave up' : 'wrong') + `, time: ${fmtMs(r.timeMs)}`));
+
+    left.appendChild(t); left.appendChild(m);
+    d.appendChild(left);
+    table.appendChild(d);
+  });
+
+  show('#screen-summary');
+}
+
+function buildExercisePicker(items, sourceLabel='Built-in'){
+  state.exerciseRows = items;
+  $('#pickerTitle').textContent = `${sourceLabel} — Exercises`;
+  const list = $('#exerciseList'); list.innerHTML='';
+
+  items.forEach((it, idx)=>{
+    const d = document.createElement('div'); d.className='item';
+
+    const left = document.createElement('div');
+    const t = document.createElement('div'); t.className='title'; t.textContent = it.title || ('Exercise ' + (idx+1));
+    const m = document.createElement('div'); m.className='muted'; m.textContent = `${it.words.length} words`;
+    left.appendChild(t); left.appendChild(m);
+
+    const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
+    btn.onclick = ()=> showConfirmScreen(idx);
+
+    d.appendChild(left); d.appendChild(btn);
+    list.appendChild(d);
+  });
+
+  show('#screen-picker');
+}
+
+// CHANGED: show handwriting toggle only for Chinese-only exercises
+function showConfirmScreen(idx){
+  const ex = state.exerciseRows[idx];
+  if(!ex) return;
+  state.current.selectedIndex = idx;
+  $('#confirmTitle').textContent = ex.title || 'Exercise';
+
+  // Decide toggle visibility
+  state.handwriting.exerciseChineseOnly = isChineseOnly(ex.words);
+  const pill = $('#handwritingPill');
+  const toggle = $('#handwritingToggle');
+  const hint = $('#handwritingHint');
+
+  // reset UI
+  pill.classList.add('hidden');
+  toggle.checked = false;
+  hint.textContent = '';
+
+  if(state.handwriting.exerciseChineseOnly){
+    pill.classList.remove('hidden');
+    // load saved pref (if present)
+    const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+    if(prefs.handwriting != null) toggle.checked = !!prefs.handwriting;
+
+    // availability: enable everywhere unless scripts failed
+    if(state.handwriting.available){
+      toggle.disabled = false;
     } else {
-      $('#answerInput').focus();
+      toggle.disabled = true;
+      hint.textContent = 'Handwriting unavailable (scripts failed to load).';
     }
-  }
+  } // else: hidden entirely for non-Chinese exercises
 
-  function skipWord(){
-    const expected = currentWord();
-    const timeMs = performance.now() - state.current.perWordStart;
-    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
-    $('#feedback').innerHTML = `<span class=\"result-badge skip\">Skipped</span> It was: <b>${expected}</b>`;
+  show('#screen-confirm');
+}
+
+// CHANGED: start with mode respected and overlay prepped
+function startExercise(idx){
+  const ex = state.exerciseRows[idx]; if(!ex) return;
+  state.current.title = ex.title || 'Exercise';
+  state.current.words = ex.words.slice();
+  state.current.order = state.current.words.map((_,i)=>i);
+  if($('#randomizeToggle').checked) state.current.order = shuffle(state.current.order);
+  state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now();
+  state.current.perWordStart = 0; state.current.attemptsForWord = 0;
+
+  $('#runTitle').textContent = state.current.title;
+  $('#runMeta').textContent = `${state.current.words.length} words`;
+  $('#promptWord').textContent = '(Press Play to begin)';
+  $('#idxTotal').textContent = state.current.words.length;
+  $('#answerInput').value=''; $('#feedback').textContent='';
+
+  // Mode
+  const hwOn = $('#handwritingToggle')?.checked && state.handwriting.exerciseChineseOnly && state.handwriting.available;
+  setHandwritingEnabled(hwOn);
+
+  // Close overlay if open, clear display
+  closeHandwritingOverlay();
+  clearRecognized();
+
+  show('#screen-run');
+  updateProgress();
+}
+
+function currentWord(){
+  const {words, order, i} = state.current; const idx = (order && order[i] != null) ? order[i] : i; return words[idx] || '';
+}
+
+function playCurrent(){
+  if (state.current.perWordStart === 0) {
+    state.current.perWordStart = performance.now();
+    state.current.attemptsForWord = 0;
+  }
+  const w = currentWord();
+  $('#promptWord').textContent = '(playing…)';
+  if(w) speak(w);
+  if(!state.handwriting.enabled){ $('#answerInput').focus(); }
+}
+
+function updateProgress(){
+  const i = state.current.i; const total = state.current.words.length;
+  $('#idxNow').textContent = Math.min(i+1, total);
+  $('#idxTotal').textContent = total;
+  const pct = total ? Math.round((i/total)*100) : 0;
+  $('#progressBar').style.width = pct + '%';
+}
+
+function submitAnswer(){
+  const input = $('#answerInput').value.trim();
+  const expected = currentWord();
+  if(!expected) return;
+
+  ensurePerWordTimer();
+  const timeMs = performance.now() - state.current.perWordStart;
+  state.current.attemptsForWord = (state.current.attemptsForWord||0) + 1;
+
+  if(isCorrect(expected, input)){
+    state.current.results.push({word: expected, correct: true, attempts: state.current.attemptsForWord, skipped: false, shownAnswer: false, timeMs});
+    const fb = $('#feedback'); fb.textContent = '';
+    const ok = document.createElement('span'); ok.className='result-badge ok'; ok.textContent='Correct';
+    fb.appendChild(ok);
     nextWord();
-  }
+  } else {
+    const fb = $('#feedback'); fb.textContent = '';
+    const badge = document.createElement('span'); badge.className='result-badge err'; badge.textContent='Wrong';
+    fb.appendChild(badge);
+    fb.appendChild(document.createTextNode(' Try again, or '));
+    const b1 = document.createElement('b'); b1.textContent='Skip';
+    const b2 = document.createElement('b'); b2.textContent='Show answer';
+    fb.appendChild(b1);
+    fb.appendChild(document.createTextNode(' / '));
+    fb.appendChild(b2);
 
-  function showAnswer(){
-    const expected = currentWord();
-    const timeMs = performance.now() - state.current.perWordStart;
-    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs});
-    $('#feedback').innerHTML = `Answer: <b>${expected}</b>`;
-    nextWord();
-  }
-
-  function nextWord(){
-    const {words, order} = state.current;
-    $('#answerInput').value='';
-    if(state.handwriting.enabled) $('#handwritingDisplay').textContent='';
-    state.current.i++;
-    state.current.perWordStart = 0;
-    updateProgress();
-    if(state.current.i >= words.length){
-      finishExercise();
-    } else {
-      if($('#autoplayToggle').checked){ setTimeout(playCurrent, 350); }
-      else { $('#promptWord').textContent = '(ready)'; }
-    }
-  }
-
-  function finishExercise(){
-    $('#progressBar').style.width = '100%';
-    const totalMs = performance.now() - state.current.startedAt;
-
-    // Aggregate
-    const total = state.current.words.length;
-    const correct = state.current.results.filter(r=>r.correct).length;
-    const skipped = state.current.results.filter(r=>r.skipped).length;
-    const accuracy = total ? Math.round((correct/total)*100) : 0;
-
-    $('#summaryTitle').textContent = state.current.title;
-    $('#sumTotal').textContent = total;
-    $('#sumCorrect').textContent = correct;
-    $('#sumSkipped').textContent = skipped;
-    $('#sumAcc').textContent = accuracy + '%';
-    $('#sumTime').textContent = fmtMs(totalMs);
-
-    const review = $('#reviewList'); review.innerHTML='';
-    state.current.results.filter(r=>!r.correct).forEach(r=>{
-      const d = document.createElement('div'); d.className='item';
-      d.innerHTML = `<div><div class=\"title\">${r.word}</div><div class=\"muted\">${r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'incorrect'}</div></div>`;
-      const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice';
-      btn.onclick = ()=> speak(r.word);
-      d.appendChild(btn); review.appendChild(d);
-    });
-
-    const table = $('#resultsTable'); table.innerHTML='';
-    state.current.results.forEach((r,idx)=>{
-      const d = document.createElement('div'); d.className='item';
-      const badge = r.correct? '<span class=\"result-badge ok\">✓</span>' : (r.skipped? '<span class=\"result-badge skip\">⏭</span>' : '<span class=\"result-badge err\">✗</span>');
-      d.innerHTML = `<div><div class=\"title\">${idx+1}. ${r.word}</div><div class=\"muted\">${badge} ${r.correct? 'correct' : r.skipped? 'skipped' : r.shownAnswer? 'gave up' : 'wrong'}, time: ${fmtMs(r.timeMs)}</div></div>`;
-      table.appendChild(d);
-    });
-
-    show('#screen-summary');
-  }
-
-  function buildExercisePicker(items, sourceLabel='Built-in'){
-    state.exerciseRows = items;
-    $('#pickerTitle').textContent = `${sourceLabel} — Exercises`;
-    const list = $('#exerciseList'); list.innerHTML='';
-    items.forEach((it, idx)=>{
-      const d = document.createElement('div'); d.className='item';
-      d.innerHTML = `<div><div class="title">${it.title||('Exercise '+(idx+1))}</div><div class="muted">${it.words.length} words</div></div>`;
-      const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
-      btn.onclick = ()=> showConfirmScreen(idx);
-      d.appendChild(btn); list.appendChild(d);
-    });
-    show('#screen-picker');
-  }
-
-  // CHANGED: show handwriting toggle only for Chinese-only exercises
-  function showConfirmScreen(idx){
-    const ex = state.exerciseRows[idx];
-    if(!ex) return;
-    state.current.selectedIndex = idx;
-    $('#confirmTitle').textContent = ex.title || 'Exercise';
-
-    // Decide toggle visibility
-    state.handwriting.exerciseChineseOnly = isChineseOnly(ex.words);
-    const pill = $('#handwritingPill');
-    const toggle = $('#handwritingToggle');
-    const hint = $('#handwritingHint');
-
-    // reset UI
-    pill.classList.add('hidden');
-    toggle.checked = false;
-    hint.textContent = '';
-
-    if(state.handwriting.exerciseChineseOnly){
-      pill.classList.remove('hidden');
-      // load saved pref (if present)
-      const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
-      if(prefs.handwriting != null) toggle.checked = !!prefs.handwriting;
-
-      // availability: enable everywhere unless scripts failed
-      if(state.handwriting.available){
-        toggle.disabled = false;
-      } else {
-        toggle.disabled = true;
-        hint.textContent = 'Handwriting unavailable (scripts failed to load).';
-      }
-    } // else: hidden entirely for non-Chinese exercises
-
-    show('#screen-confirm');
-  }
-
-  // CHANGED: start with mode respected and overlay prepped
-  function startExercise(idx){
-    const ex = state.exerciseRows[idx]; if(!ex) return;
-    state.current.title = ex.title || 'Exercise';
-    state.current.words = ex.words.slice();
-    state.current.order = state.current.words.map((_,i)=>i);
-    if($('#randomizeToggle').checked) state.current.order = shuffle(state.current.order);
-    state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now();
-    state.current.perWordStart = 0; state.current.attemptsForWord = 0;
-
-    $('#runTitle').textContent = state.current.title;
-    $('#runMeta').textContent = `${state.current.words.length} words`;
-    $('#promptWord').textContent = '(Press Play to begin)';
-    $('#idxTotal').textContent = state.current.words.length;
-    $('#answerInput').value=''; $('#feedback').textContent='';
-
-    // Mode
-    const hwOn = $('#handwritingToggle')?.checked && state.handwriting.exerciseChineseOnly && state.handwriting.available;
-    setHandwritingEnabled(hwOn);
-
-    // Close overlay if open, clear display
-    closeHandwritingOverlay();
-    clearRecognized();
-
-    show('#screen-run');
-    updateProgress();
-  }
-
-  function currentWord(){
-    const {words, order, i} = state.current; const idx = (order && order[i] != null) ? order[i] : i; return words[idx] || '';
-  }
-
-  function playCurrent(){
-    if (state.current.perWordStart === 0) {
-      state.current.perWordStart = performance.now();
-      state.current.attemptsForWord = 0;
-    }
-    const w = currentWord();
-    $('#promptWord').textContent = '(playing…)';
-    if(w) speak(w);
+    $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
     if(!state.handwriting.enabled){ $('#answerInput').focus(); }
   }
+}
 
-  function updateProgress(){
-    const i = state.current.i; const total = state.current.words.length;
-    $('#idxNow').textContent = Math.min(i+1, total);
-    $('#idxTotal').textContent = total;
-    const pct = total ? Math.round((i/total)*100) : 0;
-    $('#progressBar').style.width = pct + '%';
-  }
-
-  function submitAnswer(){
-    const input = $('#answerInput').value.trim();
-    const expected = currentWord();
-    if(!expected) return;
-    const timeMs = performance.now() - state.current.perWordStart;
-    state.current.attemptsForWord = (state.current.attemptsForWord||0) + 1;
-    if(isCorrect(expected, input)){
-      state.current.results.push({word: expected, correct: true, attempts: state.current.attemptsForWord, skipped: false, shownAnswer: false, timeMs});
-      $('#feedback').innerHTML = '<span class="result-badge ok">Correct</span>';
-      nextWord();
-    } else {
-      $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
-      $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
-      if(!state.handwriting.enabled){ $('#answerInput').focus(); }
-    }
-  }
-
-  // ======= LOADERS =======
-  async function loadMaster(){
-    const card = document.querySelector('#masterSelect')?.closest('.card');
-    try{
-      if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
-        if(card) card.style.display='none';
-        return; // silently hide if not set
-      }
-      if(card) card.style.display='';
-      
-      const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
-      // trim empty lines/rows
-      const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
-      if(!rows.length) throw new Error('Empty sheet');
-
-      // Always skip the first row so users can use any header/note text
-      const data = rows.slice(1).map(r=>{
-        const title = (r[0]||'').toString().trim();
-        let id = (r[1]||'').toString().trim();
-        // Accept full Google Sheets URLs or bare IDs
-        const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
-        return { title, id };
-      }).filter(x=> x.title && x.id);
-
-      buildMasterList(data);
-    }catch(err){
-      console.warn('Master load failed:', err.message);
+// ======= LOADERS =======
+async function loadMaster(){
+  const card = document.querySelector('#masterSelect')?.closest('.card');
+  try{
+    if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
       if(card) card.style.display='none';
+      return; // silently hide if not set
     }
+    if(card) card.style.display='';
+    
+    const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
+    // trim empty lines/rows
+    const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
+    if(!rows.length) throw new Error('Empty sheet');
+
+    // Always skip the first row so users can use any header/note text
+    const data = rows.slice(1).map(r=>{
+      const title = (r[0]||'').toString().trim();
+      let id = (r[1]||'').toString().trim();
+      // Accept full Google Sheets URLs or bare IDs
+      const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
+      return { title, id };
+    }).filter(x=> x.title && x.id);
+
+    buildMasterList(data);
+  }catch(err){
+    console.warn('Master load failed:', err.message);
+    if(card) card.style.display='none';
+  }
+}
+
+async function loadExerciseSheet(sheetId, sourceLabel='Custom'){
+  try{
+    show('#screen-home');
+    $('#customList').innerHTML = '';
+    $('#exerciseList').innerHTML = '';
+    const csv = await fetchSheetCsv(sheetId);
+    const rows = csvParse(csv);
+    if(!rows.length) throw new Error('Empty sheet');
+    const headers = rows[0].map(normalizeHeader);
+    const iTitle = headers.indexOf('title');
+    const iWords = headers.indexOf('words');
+    if(iTitle < 0 || iWords < 0) throw new Error('Exercise sheet must have headers: title, words');
+    const items = rows.slice(1).filter(r=>r[iTitle] || r[iWords]).map(r=>({
+      title: (r[iTitle]||'').trim(),
+      words: splitWords(r[iWords])
+    })).filter(x=>x.words.length>0);
+    if(!items.length) throw new Error('No exercises found');
+    buildExercisePicker(items, sourceLabel);
+    state.source = {type:'custom', id: sheetId};
+    savePrefs();
+  }catch(err){
+    console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600);
+  }
+}
+
+// ======= EVENTS =======
+function bindEvents(){
+  const stopAndReset = (screen) => {
+    if('speechSynthesis' in window) speechSynthesis.cancel();
+    state.current.selectedIndex = -1;
+    show(screen);
+  };
+
+  // Master reload (auto-load also runs on init)
+  const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
+
+  const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
+
+  const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
+    const sel = $('#masterSelect');
+    const id = sel?.value;
+    const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
+    if(!id){ toast('Choose from the Built-in list'); return; }
+    loadExerciseSheet(id, title);
+  });
+
+  $('#loadCustomBtn').addEventListener('click', ()=>{
+    const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
+    loadExerciseSheet(id, 'Custom');
+  });
+
+  $('#homeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
+  $('#backHomeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
+
+  // Confirm screen buttons
+  $('#confirmStartBtn').addEventListener('click', () => {
+    if (state.current.selectedIndex > -1) {
+      startExercise(state.current.selectedIndex);
+    }
+  });
+  $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
+
+  $('#playBtn').addEventListener('click', playCurrent);
+  $('#submitBtn').addEventListener('click', submitAnswer);
+  $('#tryAgainBtn').addEventListener('click', tryAgain);
+  $('#skipBtn').addEventListener('click', skipWord);
+  $('#showBtn').addEventListener('click', showAnswer);
+  $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
+  const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
+
+  $('#answerInput').addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
+  });
+
+  // voice selects
+  function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
+  $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+  $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
+  $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+  $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
+
+  $('#rate').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate2').value=e.target.value; savePrefs(); });
+  $('#pitch').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch2').value=e.target.value; savePrefs(); });
+  $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
+  $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
+
+  $('#autoplayToggle').addEventListener('change', savePrefs);
+  $('#randomizeToggle').addEventListener('change', savePrefs);
+
+  // settings modal
+  const modal = $('#settingsModal');
+  $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
+
+  // test buttons
+  function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
+  function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
+  $('#testEN').addEventListener('click', testSpeakEn);
+  $('#testZH').addEventListener('click', testSpeakZh);
+  $('#testEN2').addEventListener('click', testSpeakEn);
+  $('#testZH2').addEventListener('click', testSpeakZh);
+
+  // NEW: handwriting events
+  $('#handwritingToggle')?.addEventListener('change', savePrefs);
+
+  $('#writeBtn').addEventListener('click', ()=>{
+    const ov = $('#handwritingOverlay');
+    if(ov.classList.contains('hidden')) openHandwritingOverlay();
+    else closeHandwritingOverlay();
+  });
+
+  // overlay backdrop click closes when clicking outside the sheet
+  $('#handwritingOverlay').addEventListener('click', (e)=>{
+    if(e.target === e.currentTarget) closeHandwritingOverlay();
+  });
+
+  // overlay toolbar
+  $('#hwRecognizeBtn').addEventListener('click', recognizeNow);
+  $('#hwEraseBtn').addEventListener('click', ()=> state.handwriting.canvas?.erase());
+  $('#hwUndoBtn').addEventListener('click', ()=> state.handwriting.canvas?.undo());
+  $('#hwRedoBtn').addEventListener('click', ()=> state.handwriting.canvas?.redo());
+  $('#hwCloseBtn').addEventListener('click', closeHandwritingOverlay);
+
+  // clear recognized text area
+  $('#hwClearBtn').addEventListener('click', clearRecognized);
+}
+
+// ======= INIT =======
+(function init(){
+  loadPrefs();
+  bindEvents();
+
+  if(!('speechSynthesis' in window)){
+    toast('This browser does not support Speech Synthesis.');
+  } else {
+    window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
+    loadVoices();
+    // Nudge some browsers to populate voices
+    const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
   }
 
-  async function loadExerciseSheet(sheetId, sourceLabel='Custom'){
-    try{
-      show('#screen-home');
-      $('#customList').innerHTML = '';
-      $('#exerciseList').innerHTML = '';
-      const csv = await fetchSheetCsv(sheetId);
-      const rows = csvParse(csv);
-      if(!rows.length) throw new Error('Empty sheet');
-      const headers = rows[0].map(normalizeHeader);
-      const iTitle = headers.indexOf('title');
-      const iWords = headers.indexOf('words');
-      if(iTitle < 0 || iWords < 0) throw new Error('Exercise sheet must have headers: title, words');
-      const items = rows.slice(1).filter(r=>r[iTitle] || r[iWords]).map(r=>({
-        title: (r[iTitle]||'').trim(),
-        words: splitWords(r[iWords])
-      })).filter(x=>x.words.length>0);
-      if(!items.length) throw new Error('No exercises found');
-      buildExercisePicker(items, sourceLabel);
-      state.source = {type:'custom', id: sheetId};
-      savePrefs();
-    }catch(err){
-      console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600);
+  // Load handwriting libs (enable everywhere; disable toggle if it fails)
+  loadHandwritingLib().then(()=>{
+    // If Confirm is visible, refresh toggle disabled/hint state
+    const isConfirmVisible = !$('#screen-confirm').classList.contains('hidden');
+    if(isConfirmVisible && state.current.selectedIndex > -1){
+      showConfirmScreen(state.current.selectedIndex);
     }
-  }
+  });
 
-  // ======= EVENTS =======
-  function bindEvents(){
-    const stopAndReset = (screen) => {
-      if('speechSynthesis' in window) speechSynthesis.cancel();
-      state.current.selectedIndex = -1;
-      show(screen);
-    };
+  // Auto-load master on page load (silently hide if not available)
+  loadMaster();
+})();
 
-    // Master reload (auto-load also runs on init)
-    const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
-
-    const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
-
-    const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
-      const sel = $('#masterSelect');
-      const id = sel?.value;
-      const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
-      if(!id){ toast('Choose from the Built-in list'); return; }
-      loadExerciseSheet(id, title);
-    });
-
-    $('#loadCustomBtn').addEventListener('click', ()=>{
-      const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
-      loadExerciseSheet(id, 'Custom');
-    });
-
-    $('#homeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
-    $('#backHomeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
-
-    // Confirm screen buttons
-    $('#confirmStartBtn').addEventListener('click', () => {
-      if (state.current.selectedIndex > -1) {
-        startExercise(state.current.selectedIndex);
-      }
-    });
-    $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
-
-    $('#playBtn').addEventListener('click', playCurrent);
-    $('#submitBtn').addEventListener('click', submitAnswer);
-    $('#tryAgainBtn').addEventListener('click', tryAgain);
-    $('#skipBtn').addEventListener('click', skipWord);
-    $('#showBtn').addEventListener('click', showAnswer);
-    $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
-    const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
-
-    $('#answerInput').addEventListener('keydown', (e)=>{
-      if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
-    });
-
-    // voice selects
-    function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
-    $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
-    $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
-    $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
-    $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
-
-    $('#rate').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate2').value=e.target.value; savePrefs(); });
-    $('#pitch').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch2').value=e.target.value; savePrefs(); });
-    $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
-    $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
-
-    $('#autoplayToggle').addEventListener('change', savePrefs);
-    $('#randomizeToggle').addEventListener('change', savePrefs);
-
-    // settings modal
-    const modal = $('#settingsModal');
-    $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
-
-    // test buttons
-    function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
-    function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
-    $('#testEN').addEventListener('click', testSpeakEn);
-    $('#testZH').addEventListener('click', testSpeakZh);
-    $('#testEN2').addEventListener('click', testSpeakEn);
-    $('#testZH2').addEventListener('click', testSpeakZh);
-
-    // NEW: handwriting events
-    $('#handwritingToggle')?.addEventListener('change', savePrefs);
-
-    $('#writeBtn').addEventListener('click', ()=>{
-      const ov = $('#handwritingOverlay');
-      if(ov.classList.contains('hidden')) openHandwritingOverlay();
-      else closeHandwritingOverlay();
-    });
-
-    // overlay backdrop click closes when clicking outside the sheet
-    $('#handwritingOverlay').addEventListener('click', (e)=>{
-      if(e.target === e.currentTarget) closeHandwritingOverlay();
-    });
-
-    // overlay toolbar
-    $('#hwRecognizeBtn').addEventListener('click', recognizeNow);
-    $('#hwEraseBtn').addEventListener('click', ()=> state.handwriting.canvas?.erase());
-    $('#hwUndoBtn').addEventListener('click', ()=> state.handwriting.canvas?.undo());
-    $('#hwRedoBtn').addEventListener('click', ()=> state.handwriting.canvas?.redo());
-    $('#hwCloseBtn').addEventListener('click', closeHandwritingOverlay);
-
-    // clear recognized text area
-    $('#hwClearBtn').addEventListener('click', clearRecognized);
-  }
-
-  // ======= INIT =======
-  (function init(){
-    loadPrefs();
-    bindEvents();
-
-    if(!('speechSynthesis' in window)){
-      toast('This browser does not support Speech Synthesis.');
-    } else {
-      window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
-      loadVoices();
-      // Nudge some browsers to populate voices
-      const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
-    }
-
-    // Load handwriting libs (enable everywhere; disable toggle if it fails)
-    loadHandwritingLib().then(()=>{
-      // If Confirm is visible, refresh toggle disabled/hint state
-      const isConfirmVisible = !$('#screen-confirm').classList.contains('hidden');
-      if(isConfirmVisible && state.current.selectedIndex > -1){
-        showConfirmScreen(state.current.selectedIndex);
-      }
-    });
-
-    // Auto-load master on page load (silently hide if not available)
-    loadMaster();
-  })();
   </script>
 </body>
 </html>
