@@ -125,6 +125,7 @@
       </div>
       <div class="nav-actions">
         <button class="btn secondary" id="homeBtn">Home</button>
+        <span class="tag" id="ttsStatus">TTS: checking…</span>
         <button class="btn secondary" id="openSettingsBtn" title="Speech & options">Settings</button>
       </div>
     </div>
@@ -149,7 +150,7 @@
             <div class="row" style="margin-top:8px;">
               <button class="btn" id="openMasterBtn" disabled>Open Selected</button>
             </div>
-            
+
           </div>
 
           <div class="card" style="min-height:220px;">
@@ -232,7 +233,7 @@
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div>
             <div class="muted" style="font-size:13px;">Word <span id="idxNow">1</span> / <span id="idxTotal">1</span></div>
-            <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
+            <div style="font-size:22px; font-weight:800;" id="promptWord">(...)</div>
           </div>
         </div>
         <div style="margin-top:10px;" class="row">
@@ -385,6 +386,7 @@
       startedAt: 0,
       perWordStart: 0,
       selectedIndex: -1,
+      attemptsForWord: 0,
       results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
     }
   };
@@ -482,6 +484,8 @@
   }
 
   // ======= TTS =======
+  function setTtsStatus(text){ $('#ttsStatus').textContent = text; }
+
   function loadVoices(){
     let list = speechSynthesis.getVoices();
     if(list.length){ onVoices(list); }
@@ -489,7 +493,9 @@
 
   function onVoices(list){
     state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
-    
+    // The line below was removed as per user request to not show the "TTS ready..." message.
+    // setTtsStatus(`TTS ready (${state.voices.length} voices)`);
+
     // Populate selects (two places: inline settings & modal)
     const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
     const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
@@ -526,18 +532,16 @@
     const u = new SpeechSynthesisUtterance(text);
     if(voice){ u.voice = voice; u.lang = voice.lang; }
     u.rate = state.selected.rate; u.pitch = state.selected.pitch;
-    
+
     u.onend = () => {
+      // When speech ends, update prompt to a neutral state instead of revealing the word
       if ($('#promptWord').textContent === '(playing…)') {
-        $('#promptWord').textContent = text;
+        $('#promptWord').textContent = '...';
       }
     };
-    u.onerror = (e) => {
-      if ($('#promptWord').textContent === '(playing…)') {
-        $('#promptWord').textContent = text;
-      }
-      console.error("Speech synthesis error", e);
-      toast('Speech playback error.');
+    u.onerror = () => {
+      // Also handle cases where speech fails
+      $('#promptWord').textContent = '...';
     };
 
     speechSynthesis.cancel();
@@ -577,7 +581,7 @@
   function skipWord(){
     const expected = currentWord();
     const timeMs = performance.now() - state.current.perWordStart;
-    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
+    state.current.results.push({word: expected, correct: false, attempts: state.current.attemptsForWord, skipped: true, shownAnswer: false, timeMs});
     $('#feedback').innerHTML = `<span class=\"result-badge skip\">Skipped</span> It was: <b>${expected}</b>`;
     nextWord();
   }
@@ -585,7 +589,7 @@
   function showAnswer(){
     const expected = currentWord();
     const timeMs = performance.now() - state.current.perWordStart;
-    state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs});
+    state.current.results.push({word: expected, correct: false, attempts: state.current.attemptsForWord, skipped: false, shownAnswer: true, timeMs});
     $('#feedback').innerHTML = `Answer: <b>${expected}</b>`;
     nextWord();
   }
@@ -594,6 +598,7 @@
     const {words, order} = state.current;
     $('#answerInput').value='';
     state.current.i++;
+    state.current.attemptsForWord = 0; // Reset for the new word
     updateProgress();
     if(state.current.i >= words.length){
       finishExercise();
@@ -677,6 +682,7 @@
     $('#answerInput').value=''; $('#feedback').textContent='';
     show('#screen-run');
     updateProgress();
+    // Do not auto-play the first word
   }
 
   function currentWord(){
@@ -685,9 +691,7 @@
 
   function playCurrent(){
     const w = currentWord();
-    if (state.current.perWordStart === 0) { // Only set start time if it's the very first play
-        state.current.perWordStart = performance.now();
-    }
+    state.current.perWordStart = performance.now(); // Reset timer for the current word
     $('#promptWord').textContent = '(playing…)';
     if(w) speak(w);
     $('#answerInput').focus();
@@ -704,9 +708,9 @@
   function submitAnswer(){
     const input = $('#answerInput').value.trim();
     const expected = currentWord();
-    if(!expected) return;
+    if(!expected || state.current.perWordStart === 0) return; // Don't submit if nothing has been played yet
     const timeMs = performance.now() - state.current.perWordStart;
-    state.current.attemptsForWord = (state.current.attemptsForWord||0) + 1;
+    state.current.attemptsForWord++;
     if(isCorrect(expected, input)){
       state.current.results.push({word: expected, correct: true, attempts: state.current.attemptsForWord, skipped: false, shownAnswer: false, timeMs});
       $('#feedback').innerHTML = '<span class="result-badge ok">Correct</span>';
@@ -714,7 +718,7 @@
     } else {
       $('#feedback').innerHTML = `<span class=\"result-badge err\">Wrong</span> Try again, or <b>Skip</b> / <b>Show answer</b>.`;
       $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
-      $('#answerInput').focus();
+      $('#answerInput').select();
     }
   }
 
@@ -727,17 +731,14 @@
         return; // silently hide if not set
       }
       if(card) card.style.display='';
-      
+
       const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
-      // trim empty lines/rows
       const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
       if(!rows.length) throw new Error('Empty sheet');
 
-      // Always skip the first row so users can use any header/note text
       const data = rows.slice(1).map(r=>{
         const title = (r[0]||'').toString().trim();
         let id = (r[1]||'').toString().trim();
-        // Accept full Google Sheets URLs or bare IDs
         const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
         return { title, id };
       }).filter(x=> x.title && x.id);
@@ -782,12 +783,9 @@
       show(screen);
     };
 
-    // Master reload (auto-load also runs on init)
     const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
-
     const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
-
-    const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
+    const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{
       const sel = $('#masterSelect');
       const id = sel?.value;
       const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
@@ -803,7 +801,6 @@
     $('#homeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
     $('#backHomeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
 
-    // Confirm screen buttons
     $('#confirmStartBtn').addEventListener('click', () => {
       if (state.current.selectedIndex > -1) {
         startExercise(state.current.selectedIndex);
@@ -823,7 +820,6 @@
       if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
     });
 
-    // voice selects
     function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
     $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
     $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
@@ -838,11 +834,9 @@
     $('#autoplayToggle').addEventListener('change', savePrefs);
     $('#randomizeToggle').addEventListener('change', savePrefs);
 
-    // settings modal
     const modal = $('#settingsModal');
     $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
 
-    // test buttons
     function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
     function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
     $('#testEN').addEventListener('click', testSpeakEn);
@@ -857,15 +851,14 @@
     bindEvents();
 
     if(!('speechSynthesis' in window)){
-      toast('This browser does not support Speech Synthesis.');
+      setTtsStatus('TTS unsupported'); toast('This browser does not support Speech Synthesis.');
     } else {
+      setTtsStatus('TTS: loading voices…');
       window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
       loadVoices();
-      // Nudge some browsers to populate voices
       const temp = new SpeechSynthesisUtterance(''); speechSynthesis.speak(temp); speechSynthesis.cancel();
     }
 
-    // Auto-load master on page load (silently hide if not available)
     loadMaster();
   })();
   </script>
