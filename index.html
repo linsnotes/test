@@ -246,6 +246,8 @@
           <div class="muted" id="runMeta"></div>
         </div>
         <div class="row">
+          <!-- NEW BUTTON: Back to Confirmation -->
+          <button class="btn secondary" id="backToConfirmBtn">Back</button>
           <button class="btn secondary" id="stopBtn">Stop</button>
         </div>
       </div>
@@ -1142,6 +1144,19 @@ function bindEvents(){
   $('#skipBtn').addEventListener('click', skipWord);
   $('#showBtn').addEventListener('click', showAnswer);
   $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
+
+  // NEW: Back button on RUN -> go back to Confirmation (keep selectedIndex)
+  const _backToConfirm = $('#backToConfirmBtn');
+  if(_backToConfirm) _backToConfirm.addEventListener('click', ()=>{
+    if('speechSynthesis' in window) speechSynthesis.cancel();
+    closeHandwritingOverlay();
+    if(state.current.selectedIndex > -1){
+      showConfirmScreen(state.current.selectedIndex);
+    } else {
+      show('#screen-picker'); // fallback
+    }
+  });
+
   const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
 
   $('#answerInput').addEventListener('keydown', (e)=>{
