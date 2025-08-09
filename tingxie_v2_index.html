@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-t" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>听写 · Tingxie App</title>
   <meta name="theme-color" content="#6c5ce7" />
@@ -298,6 +298,7 @@
               <button class="btn secondary" id="hwUndoBtn" title="Undo stroke">Undo</button>
               <button class="btn secondary" id="hwRedoBtn" title="Redo stroke">Redo</button>
               <button class="btn" id="hwRecognizeBtn" title="Recognize now">Recognize</button>
+              <button class="btn secondary" id="hwCloseBtn" title="Close handwriting">Close</button>
             </div>
             <div class="muted" style="font-size:12px; text-align:center; margin-top:6px;">
               Handwrite Chinese (简体). Auto recognition after 3s idle, or tap “Recognize”.
@@ -729,9 +730,14 @@
       clearTimeout(state.handwriting.idleTimer);
       state.handwriting.idleTimer = setTimeout(()=> recognizeNow(), state.handwriting.idleMs);
     };
-    ['mouseup','touchend','mousemove','touchmove'].forEach(ev=>{
-      cvs.addEventListener(ev, bumpIdle, {passive:true});
-    });
+
+    // Add listeners only once per canvas (avoid duplicates when reopening overlay)
+    if (!cvs.__hwBound) {
+      ['mouseup', 'touchend', 'mousemove', 'touchmove'].forEach(ev => {
+        cvs.addEventListener(ev, bumpIdle, { passive: true });
+      });
+      cvs.__hwBound = true;
+    }
   }
 
   function recognizeNow(){
@@ -1094,6 +1100,7 @@
     $('#hwEraseBtn').addEventListener('click', ()=> state.handwriting.canvas?.erase());
     $('#hwUndoBtn').addEventListener('click', ()=> state.handwriting.canvas?.undo());
     $('#hwRedoBtn').addEventListener('click', ()=> state.handwriting.canvas?.redo());
+    $('#hwCloseBtn').addEventListener('click', closeHandwritingOverlay);
 
     // clear recognized text area
     $('#hwClearBtn').addEventListener('click', clearRecognized);
