@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>听写 · Spelling App</title>
+  <meta name="theme-color" content="#6c5ce7" />
+  <style>
+:root{
+  --wrap: 1100px;   /* unified content width (header + main) */
+
+  /* Color system — modern, friendly dark theme */
+  --bg: #0e1222;                 /* deep night */
+  --bg-elev: rgba(255,255,255,0.06);
+  --panel: rgba(255,255,255,0.08);
+  --panel-2: rgba(255,255,255,0.14);
+  --panel-3: rgba(255,255,255,0.18);
+  --line: rgba(255,255,255,0.12);
+  --line-2: rgba(255,255,255,0.18);
+  --text: #f6f7ff;
+  --muted: #c7ceee;
+
+  /* Youthful dual-accent (purple <-> aqua) */
+  --brand: #6c5ce7;
+  --brand-2: #00d4ff;
+
+  --ok: #2ecc71;
+  --warn: #f1c40f;
+  --err: #ff6b6b;
+
+  /* Radii & shadow */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 22px;
+  --shadow: 0 12px 34px rgba(0,0,0,0.35);
+
+  /* Motion */
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --fast: .16s var(--ease);
+  --slow: .28s var(--ease);
+
+  /* Spacing tokens (light touch) */
+  --space-2: 10px;
+  --space-3: 12px;
+  --space-4: 14px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body{
+  margin:0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  color: var(--text);
+
+  /* smoother layered background */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1200px 700px at -10% -10%, rgba(29, 25, 70, 0.9) 0%, rgba(29,25,70,0) 60%),
+    radial-gradient(1200px 700px at 110% 10%, rgba(15, 42, 74, 0.85) 0%, rgba(15,42,74,0) 60%),
+    radial-gradient(1200px 700px at 50% 120%, rgba(27, 46, 114, 0.85) 0%, rgba(27,46,114,0) 62%),
+    linear-gradient(180deg, #0d1023, #0e1222);
+  background-attachment: fixed, fixed, fixed, fixed; /* reduces banding */
+  transition: background var(--slow), color var(--slow);
+  position: relative;
+}
+
+/* subtle noise dither to hide banding (tiny inline SVG) */
+body::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'>\
+  <filter id='n'>\
+    <feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch' />\
+    <feColorMatrix type='saturate' values='0'/>\
+    <feComponentTransfer><feFuncA type='table' tableValues='0 0 .02 .04 .06 .08 .1 .12 .14 .16'/></feComponentTransfer>\
+  </filter>\
+  <rect width='100%' height='100%' filter='url(%23n)'/>\
+</svg>");
+}
+
+/* ===== Layout primitives ===== */
+.container{
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: clamp(12px, 2vw, 20px);
+  position: relative;
+  z-index: 1; /* float above noise */
+}
+.grid{ display:grid; gap:16px; }
+.row{ display:flex; gap: var(--space-3); align-items:center; flex-wrap: wrap; }
+
+/* ===== Header / Nav ===== */
+header{
+  position: sticky; top:0; z-index: 5;
+  backdrop-filter: saturate(1.2) blur(10px);
+  background: linear-gradient(180deg, rgba(10,12,30,0.85), rgba(10,12,30,0.35));
+  border-bottom: 1px solid var(--line);
+}
+
+/* Mobile gutters + safe-area in one place */
+@media (max-width: 640px){
+  header{
+    margin-inline: max(10px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-right));
+    border-radius: 14px;
+    overflow: hidden;
+  }
+}
+
+.nav{
+  display:flex; gap:var(--space-3); align-items:center; justify-content:space-between;
+  padding-block: var(--space-4);
+}
+.brand{ display:flex; align-items:center; gap:var(--space-2); font-weight:800; letter-spacing:0.2px; }
+.logo{
+  width: 34px; height: 34px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  box-shadow: var(--shadow);
+}
+.nav-actions{ display:flex; gap:var(--space-2); align-items:center; }
+
+/* ===== Buttons ===== */
+.btn{
+  appearance:none; border:none; cursor:pointer; color: var(--text);
+  font-weight: 700; letter-spacing:.2px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  padding: 10px 14px; border-radius: var(--r-md);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.18);
+  transition: transform var(--fast), filter var(--slow), box-shadow var(--slow), background var(--slow), border-color var(--slow);
+  min-height: 42px;
+}
+.btn:hover{ filter: brightness(1.06); transform: translateY(-1px); }
+.btn:active{ transform: translateY(0) scale(0.99); filter: brightness(.98); }
+.btn[disabled]{ opacity: .5; cursor:not-allowed; }
+
+.btn.secondary{
+  background: var(--panel-2);
+  font-weight: 600;
+  box-shadow: none;
+  border:1px solid var(--line);
+}
+.btn.secondary:hover{ filter: brightness(1.04); border-color: var(--line-2); }
+
+.btn.ghost{
+  background: transparent;
+  border:1px solid var(--line-2);
+  box-shadow:none;
+}
+.btn.ghost:hover{ border-color: #fff2; filter: brightness(1.06); }
+
+.btn:focus-visible{
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 3px rgba(0,212,255,.25),
+    0 6px 20px rgba(0,0,0,.25);
+}
+
+/* ===== Pills & Tags ===== */
+.tag{ font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.1); border:1px solid var(--line); }
+.pill{ display:inline-flex; align-items:center; gap:8px; padding: 8px 12px; border-radius: 999px; background: var(--bg-elev); border:1px solid var(--line); }
+
+/* ===== Cards ===== */
+.card{
+  background: var(--panel);
+  border:1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: transform var(--fast), border-color var(--slow), background var(--slow), box-shadow var(--slow);
+}
+.card h3{ margin:6px 0 8px; }
+.card:hover{ transform: translateY(-1px); }
+
+/* ===== Text utils ===== */
+.muted{ color: var(--muted); opacity:.95; }
+
+/* ===== Lists ===== */
+.list{ display:flex; flex-direction:column; gap:12px; }
+.item{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+  border:1px solid var(--line);
+  transition: background var(--slow), border-color var(--slow), transform var(--fast);
+}
+.item:hover{ transform: translateY(-1px); border-color: var(--line-2); }
+.item .title{ font-weight:700; }
+
+/* ===== Utilities ===== */
+.hidden{ display:none !important; }
+
+/* ===== Inputs ===== */
+input, select{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: var(--r-md);
+  border:1px solid var(--line);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  outline: none; font-size:16px;
+  transition: border-color var(--slow), background var(--slow), box-shadow var(--slow);
+}
+input::placeholder{ color: #c1c8ff; opacity:.75; }
+input:focus-visible, select:focus-visible{
+  border-color: var(--brand-2);
+  box-shadow: 0 0 0 3px rgba(0,212,255,.2);
+}
+
+/* Range styling (Speech settings) */
+input[type="range"]{
+  -webkit-appearance: none; height: 6px; background: rgba(255,255,255,0.14);
+  border-radius: 999px; padding:0; border:none;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none; width: 18px; height: 18px; border-radius:50%;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  border: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35);
+  transition: transform var(--fast);
+}
+input[type="range"]::-webkit-slider-thumb:active{ transform: scale(1.06); }
+input[type="range"]::-moz-range-thumb{
+  width: 18px; height: 18px; border-radius:50%;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  border: 0;
+}
+
+/* ===== Switch ===== */
+.switch{ position:relative; display:inline-block; width: 50px; height: 28px; }
+.switch input{ display:none; }
+.slider{
+  position:absolute; cursor:pointer; inset:0;
+  background: rgba(255,255,255,0.22);
+  border:1px solid var(--line);
+  transition: background var(--slow), border-color var(--slow);
+  border-radius: 999px;
+}
+.slider:before{
+  content:""; position:absolute; height: 22px; width: 22px; left: 2px; top: 2px;
+  background: white; border-radius: 50%; transition: transform var(--slow);
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+.switch input:checked + .slider{
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  border-color: transparent;
+}
+.switch input:checked + .slider:before{ transform: translateX(22px); }
+
+/* ===== Progress ===== */
+.progress{
+  height: 10px; border-radius: 999px; background: rgba(255,255,255,0.12); overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.25);
+}
+.progress > span{
+  display:block; height: 100%;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  width:0%; transition: width .28s var(--ease);
+}
+
+/* ===== Toast ===== */
+.toast{
+  position: fixed; bottom: max(18px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+  background: rgba(10,12,30,0.85); color:#fff; padding: 10px 14px; border-radius: var(--r-md); z-index: 20;
+  border:1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+/* ===== KBD / Badges ===== */
+.kbd{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-weight:700; letter-spacing: .2px;
+  background: rgba(255,255,255,0.12);
+  border:1px solid var(--line-2);
+  padding: 2px 6px; border-radius: 6px;
+}
+.blink{ animation: blink 1s step-start 3; }
+@keyframes blink { 50% { opacity: 0.5; } }
+
+.result-badge{
+  padding:4px 8px; border-radius:8px; font-size:12px; font-weight:800;
+  border:1px solid transparent;
+}
+.ok{ background: rgba(46, 204, 113, .18); border-color: rgba(46, 204, 113, .35); }
+.err{ background: rgba(231, 76, 60, .18); border-color: rgba(231, 76, 60, .35); }
+.skip{ background: rgba(241, 196, 15, .18); border-color: rgba(241, 196, 15, .35); }
+
+/* ===== Details / Summary (settings accordion) ===== */
+details{
+  background: var(--bg-elev);
+  border:1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 0;
+}
+details[open]{ border-color: var(--line-2); }
+summary{
+  list-style:none; cursor:pointer;
+  padding: 10px 12px;
+  border-radius: inherit;
+}
+summary::-webkit-details-marker{ display:none; }
+summary:focus-visible{ outline: none; box-shadow: 0 0 0 3px rgba(0,212,255,.2) inset; }
+
+/* ===== Handwriting overlay ===== */
+.hw-overlay{
+  position:absolute; inset:0; background: rgba(0,0,0,0.55);
+  display:flex; align-items:center; justify-content:center; z-index:10; padding:12px;
+}
+.hw-sheet{
+  background: var(--panel);
+  border:1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding:12px; width:min(680px, 100%);
+  box-shadow: var(--shadow);
+}
+#hwCanvas{
+  width:100%; height:300px;
+  background: #fff;                    /* white sheet for clarity */
+  border:1px dashed rgba(0,0,0,0.25);  /* visible on white */
+  border-radius: var(--r-md);
+  touch-action:none;
+}
+@media (max-width: 480px){ #hwCanvas{ height:220px; } }
+.hw-toolbar{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; }
+.hw-display{
+  flex:1; min-height:52px; padding:10px 12px; border-radius:12px;
+  border:1px dashed var(--line-2); background: rgba(255,255,255,0.06); overflow:auto;
+  font-size:18px;
+}
+.hw-disabled{ opacity:.5; pointer-events:none; }
+
+/* ===== HOME layout tweak ===== */
+@media (min-width: 900px){
+  #screen-home.grid.cols-2 { grid-template-columns: 1fr; }
+  #screen-home > .card:first-child > .grid.cols-2 { grid-template-columns: 1fr; }
+}
+
+/* ===== Run screen: mobile-first ergonomics ===== */
+#runMainCard{ scroll-margin-top: 10px; }
+
+/* Base input row improvements */
+#hwInputRow{ align-items: stretch; }
+
+/* Mobile: handwriting display takes full width ABOVE Play/Write/Submit */
+@media (max-width: 640px){
+  #hwInputRow{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  #handwritingDisplayWrap{
+    order: 0;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+  }
+  #handwritingDisplay{
+    min-height: 68px;
+    font-size: 20px;
+    line-height: 1.35;
+  }
+  #hwInputRow .btn#playBtn,
+  #hwInputRow .btn#writeBtn,
+  #hwInputRow .btn#submitBtn{
+    order: 1;
+    flex: 1 1 calc(33.333% - 8px);
+    min-width: 0;
+    text-align: center;
+  }
+  #answerInput{
+    order: 2;
+    width: 100%;
+  }
+}
+
+/* Tablet+: keep everything in one line when space allows */
+@media (min-width: 641px){
+  #hwInputRow{
+    display:flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+  #handwritingDisplayWrap{ min-width: 260px; }
+  #answerInput{ flex: 1 1 auto; }
+}
+
+/* ===== Dialog (Settings) ===== */
+dialog#settingsModal{
+  border:none; border-radius: var(--r-lg);
+  background: rgba(20,22,45,0.95);
+  color:var(--text);
+  width:min(720px, 92vw);
+  backdrop-filter: blur(6px) saturate(1.1);
+}
+
+/* ===== Tiny-screen typography & paddings ===== */
+@media (max-width: 420px){
+  .nav{ padding: 10px 0; }
+  .brand div:first-child{ font-size:16px; }
+  h2{ font-size: 20px; }
+  h3{ font-size: 16px; }
+  .btn{ padding: 9px 12px; border-radius: var(--r-sm); }
+  .item{ padding: 10px; }
+  .pill{ padding: 6px 10px; }
+  .card{ padding: 12px; }
+}
+
+/* ===== Motion safety ===== */
+@media (prefers-reduced-motion: reduce){
+  *{ animation: none !important; transition: none !important; }
+}
+
+/* ===== Responsive wrap (header & main always match) ===== */
+@media (min-width: 1280px){
+  :root{ --wrap: 1040px; }
+}
+@media (min-width: 1536px){
+  :root{ --wrap: 1120px; }
+}
+
+
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div style="font-size:18px; line-height:1;">听写 · Tingxie</div>
+          <div style="font-size:12px; opacity:.8;">Dictation app</div>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button class="btn secondary" id="homeBtn">Home</button>
+        <button class="btn secondary" id="openSettingsBtn" title="Speech & options">Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- SCREEN: HOME / SOURCES -->
+    <section id="screen-home" class="grid cols-2">
+      <div class="card">
+        <h2>Choose where to load your exercises</h2>
+        <p class="muted">You can browse a <b>Built-in Library</b> or paste a <b>Custom Exercise</b> sheet ID.</p>
+        <div class="grid cols-2">
+          <div class="card" style="min-height:220px;">
+            <h3>Built-in Library</h3>
+            <p class="muted">Pick from the built-in list.</p>
+            <div class="row">
+              <button class="btn ghost" id="reloadMasterBtn" title="Refresh" aria-label="Refresh">↻</button>
+            </div>
+            <label for="masterSelect" style="margin-top:8px; display:block;">Built-in sheets</label>
+            <select id="masterSelect"></select>
+            <div class="row" style="margin-top:8px;">
+              <button class="btn" id="openMasterBtn" disabled>Open Selected</button>
+            </div>
+            
+          </div>
+
+          <div class="card" style="min-height:220px;">
+            <h3>Custom Exercise</h3>
+            <p class="muted">Paste a <b>Custom Sheet ID</b>.</p>
+            <label for="customId">Custom Sheet ID</label>
+            <input id="customId" type="text" placeholder="e.g. 1A2bC3dE4F..." autocomplete="off"/>
+            <div class="row" style="margin-top:8px;">
+              <button class="btn" id="loadCustomBtn">Load Exercise Sheet</button>
+            </div>
+            <div id="customList" class="list" style="margin-top:10px; max-height:260px; overflow:auto;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>How to start</h2>
+        <ul class="muted" style="line-height:1.7; padding-left: 18px;">
+          <li>Pick from the <b>Built-in Library</b> or paste a <b>Custom Exercise</b> Spreadsheet ID.</li>
+          <li>Select an <b>exercise</b> and press <b>Start</b>.</li>
+          <li>Listen, type your answer, and use <b>Try again</b> / <b>Skip</b> / <b>Show answer</b>.</li>
+          <li>View your <b>summary</b> at the end.</li>
+        </ul>
+        <div class="row" style="margin-top:10px;">
+          <span class="pill">Tip: Press <span class="kbd">Enter</span> to submit</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN: EXERCISE PICKER -->
+    <section id="screen-picker" class="card hidden">
+      <div class="row" style="justify-content:space-between;">
+        <h2 id="pickerTitle">Exercises</h2>
+        <div class="row">
+          <button class="btn secondary" id="backHomeBtn">Back</button>
+        </div>
+      </div>
+      <div id="exerciseList" class="list" style="margin-top:10px;"></div>
+    </section>
+
+    <!-- SCREEN: CONFIRM START -->
+    <section id="screen-confirm" class="card hidden">
+      <h2>Confirm Start</h2>
+      <p class="muted" style="margin-top:8px;">You have selected the following exercise. Ready to begin?</p>
+      <div class="card" style="margin: 12px 0;">
+        <h3 id="confirmTitle" style="text-align:center; margin:0;">[Exercise Title]</h3>
+      </div>
+
+      <!-- Toggles -->
+      <div class="row" style="justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+        <div class="pill" title="Randomize order when starting">
+          <span>Randomize:</span>
+          <label class="switch" style="margin-left:8px;">
+            <input type="checkbox" id="randomizeToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Handwriting toggle (shown only for Chinese-only exercises) -->
+        <div id="handwritingPill" class="pill hidden" title="Use handwriting (中文)">
+          <span>Handwriting (中文):</span>
+          <label class="switch" style="margin-left:8px;">
+            <input type="checkbox" id="handwritingToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <span id="handwritingHint" class="muted" style="font-size:12px;"></span>
+      </div>
+
+      <div class="row" style="justify-content:space-between;">
+        <button class="btn secondary" id="confirmBackBtn">Back to List</button>
+        <button class="btn" id="confirmStartBtn">Start Now</button>
+      </div>
+    </section>
+
+    <!-- SCREEN: RUN -->
+    <section id="screen-run" class="card hidden">
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div>
+          <h2 id="runTitle">Exercise</h2>
+          <div class="muted" id="runMeta"></div>
+        </div>
+        <div class="row">
+          <!-- NEW BUTTON: Back to Confirmation -->
+          <button class="btn secondary" id="backToConfirmBtn">Back</button>
+          <button class="btn secondary" id="stopBtn">Stop</button>
+        </div>
+      </div>
+
+      <div style="margin:12px 0;" class="progress" aria-label="Progress">
+        <span id="progressBar" style="width:0%"></span>
+      </div>
+
+      <!-- RUN card (now with handwriting UI) -->
+      <div class="card" id="runMainCard" style="margin-top:10px; position:relative;">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div>
+            <div class="muted" style="font-size:13px;">Word <span id="idxNow">1</span> / <span id="idxTotal">1</span></div>
+            <div style="font-size:22px; font-weight:800;" id="promptWord">(playing…)</div>
+          </div>
+        </div>
+
+        <!-- INPUT ROW -->
+        <div id="hwInputRow" class="row" style="margin-top:10px;">
+          <!-- read-only display when handwriting enabled -->
+          <div id="handwritingDisplayWrap" class="hidden" style="flex:1; display:flex; gap:8px; align-items:center;">
+            <div id="handwritingDisplay" class="hw-display" aria-live="polite" title="Recognized text (read-only)"></div>
+            <button class="btn secondary" id="hwClearBtn" title="Clear recognized text">Clear</button>
+          </div>
+
+          <!-- original typing input (hidden when handwriting enabled) -->
+          <input id="answerInput" type="text" placeholder="Type what you hear…" autocomplete="off" style="flex: 1;" />
+
+          <button class="btn" id="playBtn" title="Play again">▶️ Play</button>
+
+          <!-- Write button (only visible when handwriting enabled) -->
+          <button class="btn hidden" id="writeBtn" title="Write">✍️ Write</button>
+
+          <button class="btn" id="submitBtn">Submit</button>
+        </div>
+
+        <div class="row" style="margin-top:8px;">
+          <button class="btn secondary" id="tryAgainBtn">Try again</button>
+          <button class="btn secondary" id="skipBtn">Skip</button>
+          <button class="btn secondary" id="showBtn">Show answer</button>
+        </div>
+        <div id="feedback" class="muted" style="margin-top:8px;"></div>
+
+        <!-- handwriting overlay (inside RUN card) -->
+        <div id="handwritingOverlay" class="hw-overlay hidden" role="dialog" aria-label="Handwriting input">
+          <div class="hw-sheet" role="document">
+            <canvas id="hwCanvas"></canvas>
+            <div class="hw-toolbar">
+              <button class="btn secondary" id="hwEraseBtn" title="Clear strokes">Erase</button>
+              <button class="btn secondary" id="hwUndoBtn" title="Undo stroke">Undo</button>
+              <button class="btn secondary" id="hwRedoBtn" title="Redo stroke">Redo</button>
+              <button class="btn" id="hwRecognizeBtn" title="Recognize now">Recognize</button>
+              <button class="btn secondary" id="hwCloseBtn" title="Close handwriting">Close</button>
+            </div>
+            <div class="muted" style="font-size:12px; text-align:center; margin-top:6px;">
+              Handwrite Chinese (简体). Auto recognition after 3s idle, or tap “Recognize”.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <details id="settingsPanel" style="margin-top:12px;">
+        <summary class="pill">Speech & Input Settings</summary>
+        <div class="grid cols-2" style="margin-top:8px;">
+          <div class="card">
+            <h3>Voices</h3>
+            <p class="muted">Auto-detect language. Pick preferred voices for English and Chinese.</p>
+            <label>English Voice
+              <select id="enVoice"></select>
+            </label>
+            <div class="row" style="margin-top:6px;">
+              <button class="btn secondary" id="testEN">Test EN</button>
+            </div>
+            <div style="height:12px;"></div>
+            <label>中文语音
+              <select id="zhVoice"></select>
+            </label>
+            <div class="row" style="margin-top:6px;">
+              <button class="btn secondary" id="testZH">测试中文</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Speech Options</h3>
+            <label>Rate (0.5–1.5)
+              <input id="rate" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+            </label>
+            <div style="height:8px;"></div>
+            <label>Pitch (0.5–1.5)
+              <input id="pitch" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+            </label>
+            <div style="height:8px;"></div>
+            <div style="display:flex; align-items:center;">
+              <span>Auto-play next word</span>
+              <label class="switch" style="margin-left:8px;">
+                <input type="checkbox" id="autoplayToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- SCREEN: SUMMARY -->
+    <section id="screen-summary" class="card hidden">
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div>
+          <h2>Summary</h2>
+          <div class="muted" id="summaryTitle"></div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="backToPicker">Back to exercises</button>
+        </div>
+      </div>
+      <div class="grid cols-2" style="margin-top:10px;">
+        <div class="card">
+          <h3>Stats</h3>
+          <div class="row" style="gap:16px; flex-wrap:wrap;">
+            <div class="pill">Words: <b id="sumTotal">0</b></div>
+            <div class="pill">Correct: <b id="sumCorrect">0</b></div>
+            <div class="pill">Skipped: <b id="sumSkipped">0</b></div>
+            <div class="pill">Accuracy: <b id="sumAcc">0%</b></div>
+            <div class="pill">Time: <b id="sumTime">0s</b></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>What needs practice</h3>
+          <div id="reviewList" class="list"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:10px;">
+        <h3>All results</h3>
+        <div id="resultsTable" class="list"></div>
+      </div>
+    </section>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- SETTINGS MODAL (simple) -->
+    <dialog id="settingsModal" style="border:none; border-radius:16px; background: rgba(20,22,45,0.95); color:var(--text); width:min(720px, 92vw);">
+      <form method="dialog" style="margin:0;">
+        <div class="card" style="box-shadow:none; background:transparent; border:none;">
+          <div class="row" style="justify-content:space-between;">
+            <h2>App Settings</h2>
+            <button class="btn secondary" value="close">Close</button>
+          </div>
+          <div class="grid cols-2" style="margin-top:8px;">
+            <div class="card">
+              <h3>Voices</h3>
+              <label>English Voice
+                <select id="enVoice2"></select>
+              </label>
+              <div style="height:6px;"></div>
+              <label>中文语音
+                <select id="zhVoice2"></select>
+              </label>
+              <div class="row" style="margin-top:6px;">
+                <button type="button" class="btn secondary" id="testEN2">Test EN</button>
+                <button type="button" class="btn secondary" id="testZH2">测试中文</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Speech</h3>
+              <label>Rate
+                <input id="rate2" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+              </label>
+              <div style="height:8px;"></div>
+              <label>Pitch
+                <input id="pitch2" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </form>
+    </dialog>
+  </main>
+
+<script>
+// ======= CONFIG =======
+const MASTER_SPREADSHEET_ID = "1ee1TP1rHK47sESfpuuqA0MyBae5NczxEO7hCYB0_xD8"; // <-- Replace with your master sheet ID (title, sheet id)
+
+// ======= STATE =======
+const state = {
+  ttsReady: false,
+  voices: [],
+  selected: { en: null, zh: null, rate: 1, pitch: 1 },
+  source: null, // {type:'master'|'custom', id}
+  picker: [], // list of {label, id} for master OR list of exercises for custom
+  exerciseSheet: null, // current sheet object
+  exerciseRows: [], // [{title, words:[...]}]
+  current: {
+    title: '',
+    words: [],
+    order: [],
+    i: 0,
+    startedAt: 0,
+    perWordStart: 0,
+    selectedIndex: -1,
+    results: [] // [{word, correct, attempts, skipped, shownAnswer, timeMs}]
+  }
+};
+
+// === Handwriting state ===
+state.handwriting = {
+  available: false,           // scripts loaded ok
+  enabled: false,             // user opted in (Confirm screen)
+  exerciseChineseOnly: false, // toggle only shown when true
+  idleMs: 3000,               // auto-recognize after 3s idle
+  idleTimer: null,            // timer handle
+  canvas: null                // handwriting.Canvas instance
+};
+
+// --- TTS user-activation gate (prevents deprecated speak() without gesture) ---
+let ttsUnlocked = false;
+
+function unlockTTSOnce(){
+  if (ttsUnlocked || !('speechSynthesis' in window)) return;
+  ttsUnlocked = true;
+  try {
+    // Perform a silent utterance inside the user gesture to satisfy activation
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    speechSynthesis.speak(u);
+    speechSynthesis.cancel();
+  } catch {}
+}
+
+// Unlock on the first interaction (desktop + mobile)
+document.addEventListener('pointerdown', unlockTTSOnce, { once: true });
+document.addEventListener('keydown',     unlockTTSOnce, { once: true });
+document.addEventListener('touchend',    unlockTTSOnce, { once: true });
+
+// ======= HELPERS =======
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+function toast(msg, ms=1800){
+  const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
+  setTimeout(()=> t.classList.add('hidden'), ms);
+}
+
+// CHANGED: save handwriting preference too
+function savePrefs(){
+  localStorage.setItem('tingxie_prefs', JSON.stringify({
+    en: state.selected.en?.name || null,
+    zh: state.selected.zh?.name || null,
+    rate: state.selected.rate,
+    pitch: state.selected.pitch,
+    randomize: $('#randomizeToggle').checked,
+    autoplay: $('#autoplayToggle').checked,
+    lastCustom: $('#customId').value || '',
+    handwriting: $('#handwritingToggle')?.checked || false
+  }));
+}
+
+// CHANGED: load handwriting preference (applied later in confirm screen)
+function loadPrefs(){
+  try{
+    const p = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+    if(p.rate) state.selected.rate = p.rate;
+    if(p.pitch) state.selected.pitch = p.pitch;
+    if(p.randomize!=null) $('#randomizeToggle').checked = p.randomize;
+    if(p.autoplay!=null) $('#autoplayToggle').checked = p.autoplay;
+    if(p.lastCustom) $('#customId').value = p.lastCustom;
+  }catch{}
+}
+
+function csvParse(text){
+  const lines = text.replace(/\r\n?/g, "\n").split("\n").filter(l=>l.trim().length>0);
+  const rows = lines.map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(cell => {
+    let c = cell.trim();
+    if(c.startsWith('"') && c.endsWith('"')) c = c.slice(1,-1).replace(/""/g,'"');
+    return c;
+  }));
+  return rows;
+}
+
+function normalizeHeader(h){ return h.trim().toLowerCase().replace(/\s+/g,' '); }
+
+function getCsvUrl(spreadsheetId){
+  return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/export?format=csv`;
+}
+
+async function fetchSheetCsv(spreadsheetId){
+  const url = getCsvUrl(spreadsheetId);
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(`Failed to load CSV (${res.status})`);
+  return await res.text();
+}
+
+function isChinese(str){ return /[\p{Script=Han}]/u.test(str); }
+
+function isChineseOnly(words){
+  return (words||[]).length > 0 && words.every(w => /[\p{Script=Han}]/u.test(w));
+}
+
+function splitWords(raw){
+  if(!raw) return [];
+  return raw
+    .split(/[，,]/g)
+    .map(s=>s.replace(/\s+/g,' ').trim())
+    .filter(Boolean);
+}
+
+function normEnglish(s){
+  return (s||'').toLocaleLowerCase().normalize('NFC').replace(/[^\p{Letter}\p{Number}]+/gu,'');
+}
+function normChinese(s){
+  return (s||'').normalize('NFC').replace(/\s+/g,'');
+}
+function isCorrect(expected, input){
+  if(isChinese(expected)){
+    return normChinese(expected) === normChinese(input);
+  } else {
+    return normEnglish(expected) === normEnglish(input);
+  }
+}
+
+function fmtMs(ms){
+  const s = Math.round(ms/1000);
+  if(s < 60) return s+"s";
+  const mm = Math.floor(s/60), ss = s%60;
+  return `${mm}m ${ss}s`;
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+// NEW: ensure per-word timer is initialized even if user acts before first Play
+function ensurePerWordTimer(){
+  if (state.current.perWordStart === 0) {
+    state.current.perWordStart = performance.now();
+  }
+}
+
+// ======= TTS =======
+function loadVoices(){
+  let list = speechSynthesis.getVoices();
+  if(list.length){ onVoices(list); }
+}
+
+function onVoices(list){
+  state.ttsReady = true; state.voices = list.slice().sort((a,b)=>a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+  
+  // Populate selects (two places: inline settings & modal)
+  const en = state.voices.filter(v=>/^en[-_]/i.test(v.lang));
+  const zh = state.voices.filter(v=>/^zh[-_]/i.test(v.lang));
+
+  function fill(select, voices){
+    select.innerHTML = voices.map(v=>`<option value="${encodeURIComponent(v.name)}">${v.name} · ${v.lang}</option>`).join('');
+  }
+
+  [$('#enVoice'), $('#enVoice2')].forEach(sel=> fill(sel, en));
+  [$('#zhVoice'), $('#zhVoice2')].forEach(sel=> fill(sel, zh));
+
+  // Restore previous voice by name
+  const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+  if(prefs.en){ const v = state.voices.find(v=>v.name===prefs.en); if(v){ state.selected.en=v; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+  if(prefs.zh){ const v = state.voices.find(v=>v.name===prefs.zh); if(v){ state.selected.zh=v; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(v.name)); } }
+
+  // Defaults if none chosen
+  if(!state.selected.en && en[0]){ state.selected.en = en[0]; [$('#enVoice'),$('#enVoice2')].forEach(s=>s.value=encodeURIComponent(en[0].name)); }
+  if(!state.selected.zh && zh[0]){ state.selected.zh = zh[0]; [$('#zhVoice'),$('#zhVoice2')].forEach(s=>s.value=encodeURIComponent(zh[0].name)); }
+}
+
+function getVoiceForWord(word){
+  const zh = isChinese(word);
+  const preferred = zh ? state.selected.zh : state.selected.en;
+  if(preferred) return preferred;
+  // fallback
+  const list = zh ? state.voices.filter(v=>/^zh/i.test(v.lang)) : state.voices.filter(v=>/^en/i.test(v.lang));
+  return list[0] || state.voices[0] || null;
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)) { toast('Speech Synthesis not supported in this browser.'); return; }
+
+  // Opportunistically unlock if called from a user event; otherwise this is a no-op
+  unlockTTSOnce();
+
+  if(!ttsUnlocked){
+    // Avoid deprecated speak() without activation; wait for a user gesture
+    console.warn('Blocked speech: waiting for user activation');
+    return;
+  }
+
+  const voice = getVoiceForWord(text);
+  const u = new SpeechSynthesisUtterance(text);
+  if(voice){ u.voice = voice; u.lang = voice.lang; }
+  u.rate = state.selected.rate; u.pitch = state.selected.pitch;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+// ======= Handwriting libs loader =======
+function loadScript(src){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = resolve;
+    s.onerror = ()=> reject(new Error('Failed to load: '+src));
+    document.head.appendChild(s);
+  });
+}
+
+async function loadHandwritingLib(){
+  try{
+    await loadScript('https://cdn.jsdelivr.net/gh/ChenYuHo/handwriting.js/handwriting.js');
+    await loadScript('https://cdn.jsdelivr.net/gh/ChenYuHo/handwriting.js/handwriting.canvas.js');
+    state.handwriting.available = !!window.handwriting;
+  }catch(err){
+    console.warn('Handwriting lib load failed:', err.message);
+    state.handwriting.available = false;
+  }
+}
+
+// ======= UI FLOW =======
+function show(id){
+  ['#screen-home', '#screen-picker', '#screen-confirm', '#screen-run', '#screen-summary'].forEach(sel=> $(sel).classList.add('hidden'));
+  $(id).classList.remove('hidden');
+}
+
+function buildMasterList(rows){
+  const sel = $('#masterSelect');
+  const openBtn = $('#openMasterBtn');
+  if(sel){
+    sel.innerHTML = '';
+    const ph = document.createElement('option');
+    ph.value = ''; ph.textContent = '— Select —'; ph.disabled = true; ph.selected = true;
+    sel.appendChild(ph);
+  }
+  if(!rows.length){
+    if(sel){ sel.innerHTML = '<option value="" disabled selected>No items</option>'; }
+    if(openBtn){ openBtn.disabled = true; }
+    return;
+  }
+  rows.forEach(r=>{
+    if(sel){ const opt = document.createElement('option'); opt.value = r.id; opt.textContent = r.title; sel.appendChild(opt); }
+  });
+  if(openBtn){ openBtn.disabled = !sel.value; } // keep disabled until user picks
+}
+
+// Handwriting mode UI toggles
+function setHandwritingEnabled(on){
+  state.handwriting.enabled = !!on;
+
+  const input = $('#answerInput');
+  const wrap  = $('#handwritingDisplayWrap');
+  const writeBtn = $('#writeBtn');
+
+  if(state.handwriting.enabled){
+    input.classList.add('hidden');
+    input.setAttribute('disabled','true');
+    input.setAttribute('tabindex','-1');
+
+    wrap.classList.remove('hidden');
+    writeBtn.classList.remove('hidden');
+  } else {
+    input.classList.remove('hidden');
+    input.removeAttribute('disabled');
+    input.removeAttribute('tabindex');
+
+    wrap.classList.add('hidden');
+    writeBtn.classList.add('hidden'); // only visible in handwriting mode
+  }
+}
+
+function openHandwritingOverlay(){
+  if(!state.handwriting.available) return;
+  $('#handwritingOverlay').classList.remove('hidden');
+  ensureCanvasReady();
+}
+
+function closeHandwritingOverlay(){
+  $('#handwritingOverlay').classList.add('hidden');
+  clearTimeout(state.handwriting.idleTimer);
+  state.handwriting.idleTimer = null;
+}
+
+function ensureCanvasReady(){
+  const cvs = $('#hwCanvas');
+  // Fit canvas to displayed CSS size for sharp strokes
+  const rect = cvs.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cvs.width = Math.max(1, Math.floor(rect.width * dpr));
+  cvs.height = Math.max(1, Math.floor(rect.height * dpr));
+  const ctx = cvs.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  if(!state.handwriting.canvas){
+    state.handwriting.canvas = new handwriting.Canvas(cvs, 3);
+    state.handwriting.canvas.set_Undo_Redo(true, true);
+  }
+
+  // callback: append best candidate and clear strokes
+  state.handwriting.canvas.setCallBack(function(results, err){
+    if(err){ toast('Recognition error'); return; }
+    const best = (results && results[0]) ? results[0] : '';
+    if(best){
+      const input = $('#answerInput');
+      input.value = (input.value || '') + best;
+      $('#handwritingDisplay').textContent = input.value;
+    }
+    state.handwriting.canvas.erase();
+  });
+
+  state.handwriting.canvas.setOptions({
+    language: 'zh_CN',
+    width: cvs.width,
+    height: cvs.height,
+    numOfReturn: 5
+  });
+
+  // Idle recognition after 3s since last pointer activity
+  const bumpIdle = ()=>{
+    clearTimeout(state.handwriting.idleTimer);
+    state.handwriting.idleTimer = setTimeout(()=> recognizeNow(), state.handwriting.idleMs);
+  };
+
+  // Add listeners only once per canvas (avoid duplicates when reopening overlay)
+  if (!cvs.__hwBound) {
+    ['mouseup', 'touchend', 'mousemove', 'touchmove'].forEach(ev => {
+      cvs.addEventListener(ev, bumpIdle, { passive: true });
+    });
+    cvs.__hwBound = true;
+  }
+}
+
+function recognizeNow(){
+  if(!state.handwriting.canvas) return;
+  try{
+    state.handwriting.canvas.recognize();
+  }catch{
+    toast('Could not recognize right now.');
+  }
+}
+
+function clearRecognized(){
+  $('#answerInput').value = '';
+  $('#handwritingDisplay').textContent = '';
+}
+
+function tryAgain(){
+  $('#answerInput').value=''; $('#feedback').textContent='';
+  if(state.handwriting.enabled){
+    $('#handwritingDisplay').textContent='';
+  } else {
+    $('#answerInput').focus();
+  }
+}
+
+function skipWord(){
+  const expected = currentWord();
+  ensurePerWordTimer();
+  const timeMs = performance.now() - state.current.perWordStart;
+  state.current.results.push({word: expected, correct: false, attempts: '—', skipped: true, shownAnswer: false, timeMs});
+
+  const fb = $('#feedback'); fb.textContent = '';
+  const badge = document.createElement('span'); badge.className='result-badge skip'; badge.textContent='Skipped';
+  fb.appendChild(badge);
+  fb.appendChild(document.createTextNode(' It was: '));
+  const b = document.createElement('b'); b.textContent = expected;
+  fb.appendChild(b);
+
+  nextWord();
+}
+
+function showAnswer(){
+  const expected = currentWord();
+  ensurePerWordTimer();
+  const timeMs = performance.now() - state.current.perWordStart;
+  state.current.results.push({word: expected, correct: false, attempts: '—', skipped: false, shownAnswer: true, timeMs});
+
+  const fb = $('#feedback'); fb.textContent = '';
+  fb.appendChild(document.createTextNode('Answer: '));
+  const b = document.createElement('b'); b.textContent = expected;
+  fb.appendChild(b);
+
+  nextWord();
+}
+
+function nextWord(){
+  const {words} = state.current;
+  $('#answerInput').value='';
+  if(state.handwriting.enabled) $('#handwritingDisplay').textContent='';
+  state.current.i++;
+  state.current.perWordStart = 0;
+  updateProgress();
+  if(state.current.i >= words.length){
+    finishExercise();
+  } else {
+    if($('#autoplayToggle').checked){ setTimeout(playCurrent, 350); }
+    else { $('#promptWord').textContent = '(ready)'; }
+  }
+}
+
+function finishExercise(){
+  $('#progressBar').style.width = '100%';
+  const totalMs = performance.now() - state.current.startedAt;
+
+  // Aggregate
+  const total = state.current.words.length;
+  const correct = state.current.results.filter(r=>r.correct).length;
+  const skipped = state.current.results.filter(r=>r.skipped).length;
+  const accuracy = total ? Math.round((correct/total)*100) : 0;
+
+  $('#summaryTitle').textContent = state.current.title;
+  $('#sumTotal').textContent = total;
+  $('#sumCorrect').textContent = correct;
+  $('#sumSkipped').textContent = skipped;
+  $('#sumAcc').textContent = accuracy + '%';
+  $('#sumTime').textContent = fmtMs(totalMs);
+
+  // Build "What needs practice"
+  const review = $('#reviewList'); review.innerHTML='';
+  state.current.results.filter(r=>!r.correct).forEach(r=>{
+    const d = document.createElement('div'); d.className='item';
+
+    const left = document.createElement('div');
+    const t = document.createElement('div'); t.className='title'; t.textContent = r.word;
+    const m = document.createElement('div'); m.className='muted'; m.textContent = r.skipped ? 'skipped' : r.shownAnswer ? 'gave up' : 'incorrect';
+    left.appendChild(t); left.appendChild(m);
+
+    const btn = document.createElement('button'); btn.className='btn secondary'; btn.textContent='Practice';
+    btn.onclick = ()=> speak(r.word);
+
+    d.appendChild(left); d.appendChild(btn);
+    review.appendChild(d);
+  });
+
+  // Build results table
+  const table = $('#resultsTable'); table.innerHTML='';
+  state.current.results.forEach((r,idx)=>{
+    const d = document.createElement('div'); d.className='item';
+
+    const left = document.createElement('div');
+    const t = document.createElement('div'); t.className='title'; t.textContent = `${idx+1}. ${r.word}`;
+
+    const m = document.createElement('div'); m.className='muted';
+    const badge = document.createElement('span');
+    badge.className = 'result-badge ' + (r.correct ? 'ok' : r.skipped ? 'skip' : 'err');
+    badge.textContent = r.correct ? '✓' : r.skipped ? '⏭' : '✗';
+    m.appendChild(badge);
+    m.appendChild(document.createTextNode(' ' + (r.correct ? 'correct' : r.skipped ? 'skipped' : r.shownAnswer ? 'gave up' : 'wrong') + `, time: ${fmtMs(r.timeMs)}`));
+
+    left.appendChild(t); left.appendChild(m);
+    d.appendChild(left);
+    table.appendChild(d);
+  });
+
+  show('#screen-summary');
+}
+
+function buildExercisePicker(items, sourceLabel='Built-in'){
+  state.exerciseRows = items;
+  $('#pickerTitle').textContent = `${sourceLabel} — Exercises`;
+  const list = $('#exerciseList'); list.innerHTML='';
+
+  items.forEach((it, idx)=>{
+    const d = document.createElement('div'); d.className='item';
+
+    const left = document.createElement('div');
+    const t = document.createElement('div'); t.className='title'; t.textContent = it.title || ('Exercise ' + (idx+1));
+    const m = document.createElement('div'); m.className='muted'; m.textContent = `${it.words.length} words`;
+    left.appendChild(t); left.appendChild(m);
+
+    const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Start';
+    btn.onclick = ()=> showConfirmScreen(idx);
+
+    d.appendChild(left); d.appendChild(btn);
+    list.appendChild(d);
+  });
+
+  show('#screen-picker');
+}
+
+// CHANGED: show handwriting toggle only for Chinese-only exercises
+function showConfirmScreen(idx){
+  const ex = state.exerciseRows[idx];
+  if(!ex) return;
+  state.current.selectedIndex = idx;
+  $('#confirmTitle').textContent = ex.title || 'Exercise';
+
+  // Decide toggle visibility
+  state.handwriting.exerciseChineseOnly = isChineseOnly(ex.words);
+  const pill = $('#handwritingPill');
+  const toggle = $('#handwritingToggle');
+  const hint = $('#handwritingHint');
+
+  // reset UI
+  pill.classList.add('hidden');
+  toggle.checked = false;
+  hint.textContent = '';
+
+  if(state.handwriting.exerciseChineseOnly){
+    pill.classList.remove('hidden');
+    // load saved pref (if present)
+    const prefs = JSON.parse(localStorage.getItem('tingxie_prefs')||'{}');
+    if(prefs.handwriting != null) toggle.checked = !!prefs.handwriting;
+
+    // availability: enable everywhere unless scripts failed
+    if(state.handwriting.available){
+      toggle.disabled = false;
+    } else {
+      toggle.disabled = true;
+      hint.textContent = 'Handwriting unavailable (scripts failed to load).';
+    }
+  } // else: hidden entirely for non-Chinese exercises
+
+  show('#screen-confirm');
+}
+
+// CHANGED: start with mode respected and overlay prepped
+function startExercise(idx){
+  const ex = state.exerciseRows[idx]; if(!ex) return;
+  state.current.title = ex.title || 'Exercise';
+  state.current.words = ex.words.slice();
+  state.current.order = state.current.words.map((_,i)=>i);
+  if($('#randomizeToggle').checked) state.current.order = shuffle(state.current.order);
+  state.current.i = 0; state.current.results = []; state.current.startedAt = performance.now();
+  state.current.perWordStart = 0; state.current.attemptsForWord = 0;
+
+  $('#runTitle').textContent = state.current.title;
+  $('#runMeta').textContent = `${state.current.words.length} words`;
+  $('#promptWord').textContent = '(Press Play to begin)';
+  $('#idxTotal').textContent = state.current.words.length;
+  $('#answerInput').value=''; $('#feedback').textContent='';
+
+  // Mode
+  const hwOn = $('#handwritingToggle')?.checked && state.handwriting.exerciseChineseOnly && state.handwriting.available;
+  setHandwritingEnabled(hwOn);
+
+  // Close overlay if open, clear display
+  closeHandwritingOverlay();
+  clearRecognized();
+
+  show('#screen-run');
+  updateProgress();
+}
+
+function currentWord(){
+  const {words, order, i} = state.current; const idx = (order && order[i] != null) ? order[i] : i; return words[idx] || '';
+}
+
+function playCurrent(){
+  if (state.current.perWordStart === 0) {
+    state.current.perWordStart = performance.now();
+    state.current.attemptsForWord = 0;
+  }
+  const w = currentWord();
+  $('#promptWord').textContent = '(playing…)';
+  if(w) speak(w);
+  if(!state.handwriting.enabled){ $('#answerInput').focus(); }
+}
+
+function updateProgress(){
+  const i = state.current.i; const total = state.current.words.length;
+  $('#idxNow').textContent = Math.min(i+1, total);
+  $('#idxTotal').textContent = total;
+  const pct = total ? Math.round((i/total)*100) : 0;
+  $('#progressBar').style.width = pct + '%';
+}
+
+function submitAnswer(){
+  const input = $('#answerInput').value.trim();
+  const expected = currentWord();
+  if(!expected) return;
+
+  ensurePerWordTimer();
+  const timeMs = performance.now() - state.current.perWordStart;
+  state.current.attemptsForWord = (state.current.attemptsForWord||0) + 1;
+
+  if(isCorrect(expected, input)){
+    state.current.results.push({word: expected, correct: true, attempts: state.current.attemptsForWord, skipped: false, shownAnswer: false, timeMs});
+    const fb = $('#feedback'); fb.textContent = '';
+    const ok = document.createElement('span'); ok.className='result-badge ok'; ok.textContent='Correct';
+    fb.appendChild(ok);
+    nextWord();
+  } else {
+    const fb = $('#feedback'); fb.textContent = '';
+    const badge = document.createElement('span'); badge.className='result-badge err'; badge.textContent='Wrong';
+    fb.appendChild(badge);
+    fb.appendChild(document.createTextNode(' Try again, or '));
+    const b1 = document.createElement('b'); b1.textContent='Skip';
+    const b2 = document.createElement('b'); b2.textContent='Show answer';
+    fb.appendChild(b1);
+    fb.appendChild(document.createTextNode(' / '));
+    fb.appendChild(b2);
+
+    $('#answerInput').classList.add('blink'); setTimeout(()=> $('#answerInput').classList.remove('blink'), 800);
+    if(!state.handwriting.enabled){ $('#answerInput').focus(); }
+  }
+}
+
+// ======= LOADERS =======
+async function loadMaster(){
+  const card = document.querySelector('#masterSelect')?.closest('.card');
+  try{
+    if(!MASTER_SPREADSHEET_ID || MASTER_SPREADSHEET_ID === 'xxxxx'){
+      if(card) card.style.display='none';
+      return; // silently hide if not set
+    }
+    if(card) card.style.display='';
+    
+    const csv = await fetchSheetCsv(MASTER_SPREADSHEET_ID);
+    // trim empty lines/rows
+    const rows = csvParse(csv).filter(r=> (r||[]).some(c=> String(c||'').trim() !== ''));
+    if(!rows.length) throw new Error('Empty sheet');
+
+    // Always skip the first row so users can use any header/note text
+    const data = rows.slice(1).map(r=>{
+      const title = (r[0]||'').toString().trim();
+      let id = (r[1]||'').toString().trim();
+      // Accept full Google Sheets URLs or bare IDs
+      const m = id.match(/\/d\/([A-Za-z0-9-_]+)/); if(m) id = m[1];
+      return { title, id };
+    }).filter(x=> x.title && x.id);
+
+    buildMasterList(data);
+  }catch(err){
+    console.warn('Master load failed:', err.message);
+    if(card) card.style.display='none';
+  }
+}
+
+async function loadExerciseSheet(sheetId, sourceLabel='Custom'){
+  try{
+    show('#screen-home');
+    $('#customList').innerHTML = '';
+    $('#exerciseList').innerHTML = '';
+    const csv = await fetchSheetCsv(sheetId);
+    const rows = csvParse(csv);
+    if(!rows.length) throw new Error('Empty sheet');
+    const headers = rows[0].map(normalizeHeader);
+    const iTitle = headers.indexOf('title');
+    const iWords = headers.indexOf('words');
+    if(iTitle < 0 || iWords < 0) throw new Error('Exercise sheet must have headers: title, words');
+    const items = rows.slice(1).filter(r=>r[iTitle] || r[iWords]).map(r=>({
+      title: (r[iTitle]||'').trim(),
+      words: splitWords(r[iWords])
+    })).filter(x=>x.words.length>0);
+    if(!items.length) throw new Error('No exercises found');
+    buildExercisePicker(items, sourceLabel);
+    state.source = {type:'custom', id: sheetId};
+    savePrefs();
+  }catch(err){
+    console.error(err); toast('Failed to load exercise sheet: ' + err.message, 2600);
+  }
+}
+
+// ======= EVENTS =======
+function bindEvents(){
+  const stopAndReset = (screen) => {
+    if('speechSynthesis' in window) speechSynthesis.cancel();
+    state.current.selectedIndex = -1;
+    show(screen);
+  };
+
+  // Master reload (auto-load also runs on init)
+  const _rmBtn = $('#reloadMasterBtn'); if(_rmBtn) _rmBtn.addEventListener('click', loadMaster);
+
+  const _selMaster = $('#masterSelect'); if(_selMaster){ _selMaster.addEventListener('change', ()=> { $('#openMasterBtn').disabled = !_selMaster.value; }); }
+
+  const _openMaster = $('#openMasterBtn'); if(_openMaster) _openMaster.addEventListener('click', ()=>{ 
+    const sel = $('#masterSelect');
+    const id = sel?.value;
+    const title = sel?.options?.[sel.selectedIndex]?.textContent || 'Built-in';
+    if(!id){ toast('Choose from the Built-in list'); return; }
+    loadExerciseSheet(id, title);
+  });
+
+  $('#loadCustomBtn').addEventListener('click', ()=>{
+    const id = $('#customId').value.trim(); if(!id) return toast('Paste a Spreadsheet ID');
+    loadExerciseSheet(id, 'Custom');
+  });
+
+  $('#homeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
+  $('#backHomeBtn').addEventListener('click', ()=> stopAndReset('#screen-home'));
+
+  // Confirm screen buttons
+  $('#confirmStartBtn').addEventListener('click', () => {
+    if (state.current.selectedIndex > -1) {
+      startExercise(state.current.selectedIndex);
+    }
+  });
+  $('#confirmBackBtn').addEventListener('click', () => show('#screen-picker'));
+
+  $('#playBtn').addEventListener('click', playCurrent);
+  $('#submitBtn').addEventListener('click', submitAnswer);
+  $('#tryAgainBtn').addEventListener('click', tryAgain);
+  $('#skipBtn').addEventListener('click', skipWord);
+  $('#showBtn').addEventListener('click', showAnswer);
+  $('#stopBtn').addEventListener('click', ()=> stopAndReset('#screen-picker'));
+
+  // NEW: Back button on RUN -> go back to Confirmation (keep selectedIndex)
+  const _backToConfirm = $('#backToConfirmBtn');
+  if(_backToConfirm) _backToConfirm.addEventListener('click', ()=>{
+    if('speechSynthesis' in window) speechSynthesis.cancel();
+    closeHandwritingOverlay();
+    if(state.current.selectedIndex > -1){
+      showConfirmScreen(state.current.selectedIndex);
+    } else {
+      show('#screen-picker'); // fallback
+    }
+  });
+
+  const _backToPicker = $('#backToPicker'); if(_backToPicker) _backToPicker.addEventListener('click', ()=> stopAndReset('#screen-picker'));
+
+  $('#answerInput').addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){ e.preventDefault(); submitAnswer(); }
+  });
+
+  // voice selects
+  function selectByName(name){ return state.voices.find(v=>v.name===decodeURIComponent(name)); }
+  $('#enVoice').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+  $('#zhVoice').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
+  $('#enVoice2').addEventListener('change', (e)=>{ state.selected.en = selectByName(e.target.value); savePrefs(); });
+  $('#zhVoice2').addEventListener('change', (e)=>{ state.selected.zh = selectByName(e.target.value); savePrefs(); });
+
+  $('#rate').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate2').value=e.target.value; savePrefs(); });
+  $('#pitch').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch2').value=e.target.value; savePrefs(); });
+  $('#rate2').addEventListener('input', (e)=>{ state.selected.rate = parseFloat(e.target.value); $('#rate').value=e.target.value; savePrefs(); });
+  $('#pitch2').addEventListener('input', (e)=>{ state.selected.pitch = parseFloat(e.target.value); $('#pitch').value=e.target.value; savePrefs(); });
+
+  $('#autoplayToggle').addEventListener('change', savePrefs);
+  $('#randomizeToggle').addEventListener('change', savePrefs);
+
+  // settings modal
+  const modal = $('#settingsModal');
+  $('#openSettingsBtn').addEventListener('click', ()=> modal.showModal());
+
+  // test buttons
+  function testSpeakEn(){ speak('Hello! This is the English voice test.'); }
+  function testSpeakZh(){ speak('你好！这是中文语音测试。'); }
+  $('#testEN').addEventListener('click', testSpeakEn);
+  $('#testZH').addEventListener('click', testSpeakZh);
+  $('#testEN2').addEventListener('click', testSpeakEn);
+  $('#testZH2').addEventListener('click', testSpeakZh);
+
+  // NEW: handwriting events
+  $('#handwritingToggle')?.addEventListener('change', savePrefs);
+
+  $('#writeBtn').addEventListener('click', ()=>{
+    const ov = $('#handwritingOverlay');
+    if(ov.classList.contains('hidden')) openHandwritingOverlay();
+    else closeHandwritingOverlay();
+  });
+
+  // overlay backdrop click closes when clicking outside the sheet
+  $('#handwritingOverlay').addEventListener('click', (e)=>{
+    if(e.target === e.currentTarget) closeHandwritingOverlay();
+  });
+
+  // overlay toolbar
+  $('#hwRecognizeBtn').addEventListener('click', recognizeNow);
+  $('#hwEraseBtn').addEventListener('click', ()=> state.handwriting.canvas?.erase());
+  $('#hwUndoBtn').addEventListener('click', ()=> state.handwriting.canvas?.undo());
+  $('#hwRedoBtn').addEventListener('click', ()=> state.handwriting.canvas?.redo());
+  $('#hwCloseBtn').addEventListener('click', closeHandwritingOverlay);
+
+  // clear recognized text area
+  $('#hwClearBtn').addEventListener('click', clearRecognized);
+}
+
+// ======= INIT =======
+(function init(){
+  loadPrefs();
+  bindEvents();
+
+  if(!('speechSynthesis' in window)){
+    toast('This browser does not support Speech Synthesis.');
+  } else {
+    window.speechSynthesis.onvoiceschanged = ()=> onVoices(window.speechSynthesis.getVoices());
+    loadVoices();
+    // NOTE: Removed the old "nudge" speak/cancel on page load to avoid deprecated behavior.
+  }
+
+  // Load handwriting libs (enable everywhere; disable toggle if it fails)
+  loadHandwritingLib().then(()=>{
+    // If Confirm is visible, refresh toggle disabled/hint state
+    const isConfirmVisible = !$('#screen-confirm').classList.contains('hidden');
+    if(isConfirmVisible && state.current.selectedIndex > -1){
+      showConfirmScreen(state.current.selectedIndex);
+    }
+  });
+
+  // Auto-load master on page load (silently hide if not available)
+  loadMaster();
+})();
+</script>
+
+</body>
+</html>
