@@ -7,6 +7,8 @@
   <meta name="theme-color" content="#6c5ce7" />
   <style>
 :root{
+  color-scheme: dark;
+  
   --wrap: 1100px;   /* unified content width (header + main) */
 
   /* Color system — modern, friendly dark theme */
@@ -233,6 +235,34 @@ input[type="range"]::-moz-range-thumb{
   background: linear-gradient(135deg, var(--brand), var(--brand-2));
   border: 0;
 }
+
+/* Select (closed) — place this AFTER the existing `input, select { … }` block */
+/*  #masterSelect */
+select{
+  color: var(--text);
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 12px;
+}
+
+/* Options (open list) — supported in some browsers/OSes */
+/*  #masterSelect option*/
+select option{
+  color: inherit;
+  background: var(--bg);
+}
+
+/* High-contrast / forced colors */
+@media (forced-colors: active){
+  select, select option{
+    color: ButtonText;
+    background: ButtonFace;
+    border-color: ButtonText;
+  }
+}
+
+
 
 /* ===== Switch ===== */
 .switch{ position:relative; display:inline-block; width: 50px; height: 28px; }
