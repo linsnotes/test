@@ -374,11 +374,14 @@ summary:focus-visible{ outline: none; box-shadow: 0 0 0 3px rgba(0,212,255,.2) i
     min-width: 0;
     text-align: center;
   }
+  /* changed: input comes first and spans full width */
   #answerInput{
-    order: 2;
-    width: 100%;
+    order: 0;                         /* was 2 */
+    flex: 0 0 100% !important;        /* override inline flex:1 */
+    width: 100% !important;
   }
 }
+
 
 /* Tablet+: keep everything in one line when space allows */
 @media (min-width: 641px){
