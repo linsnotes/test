@@ -98,6 +98,26 @@ header{
   border-bottom: 1px solid var(--line);
 }
 
+/* Mobile: give the header background some side gutters */
+@media (max-width: 640px){
+  header{
+    margin-inline: 10px;     /* the gap you want */
+    border-radius: 14px;     /* optional: round the corners */
+    overflow: hidden;        /* clips the blur/gradient to the radius */
+  }
+}
+
+/* (optional) respect iPhone safe-area in landscape */
+@supports (margin-left: max(0px)){
+  @media (max-width: 640px){
+    header{
+      margin-left:  max(10px, env(safe-area-inset-left));
+      margin-right: max(10px, env(safe-area-inset-right));
+    }
+  }
+}
+
+
 /* Header content width (background stays full-bleed) */
 header .container{
   max-width: var(--wrap-header);
