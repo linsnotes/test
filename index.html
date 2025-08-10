@@ -7,6 +7,8 @@
   <meta name="theme-color" content="#6c5ce7" />
   <style>
 :root{
+  --wrap-main: 1100px;   /* default content width */
+  --wrap-header: 1100px; /* default header content width */
   /* Color system — modern, friendly dark theme */
   --bg: #0e1222;                 /* deep night */
   --bg-elev: rgba(255,255,255,0.06);
@@ -81,7 +83,7 @@ body::after{
 }
 
 .container{
-  max-width: 1100px;
+  max-width: var(--wrap-main);
   margin: 0 auto;
   padding: clamp(12px, 2vw, 20px);
   position: relative;
@@ -95,6 +97,12 @@ header{
   background: linear-gradient(180deg, rgba(10,12,30,0.85), rgba(10,12,30,0.35));
   border-bottom: 1px solid var(--line);
 }
+
+/* Header content width (background stays full-bleed) */
+header .container{
+  max-width: var(--wrap-header);
+}
+
 .nav{
   display:flex; gap:12px; align-items:center; justify-content:space-between;
   padding: 14px 0;
@@ -408,6 +416,18 @@ dialog#settingsModal{
   *{ animation: none !important; transition: none !important; }
 }
 
+@media (min-width: 1280px){
+  :root{
+    --wrap-main: 1200px;
+    --wrap-header: 1040px; /* header a bit tighter than main */
+  }
+}
+@media (min-width: 1536px){
+  :root{
+    --wrap-main: 1280px;
+    --wrap-header: 1120px;
+  }
+}
 
 
   </style>
