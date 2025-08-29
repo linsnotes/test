@@ -192,8 +192,8 @@
         <table id="resultsTable">
           <thead>
             <tr>
-              <th>Title</th>
               <th>Subject</th>
+              <th>Title</th>
               <th>Publisher</th>
               <th>ISBN</th>
               <th>Price</th>
@@ -444,11 +444,11 @@
           const row = document.createElement('tr');
           const isAdded = myBookList.has(book.sn);
           row.innerHTML = `
+            <td>${book.subject}</td>
             <td>
               ${book.title}
               ${book.compulsory ? '<span class="chip compulsory">Compulsory</span>' : ''}
             </td>
-            <td>${book.subject}</td>
             <td>${book.publisher}</td>
             <td>${book.isbn}</td>
             <td>${book.price.toFixed(2)}</td>
