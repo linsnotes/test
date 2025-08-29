@@ -3,37 +3,58 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#007bff" />
 <title>Book List Builder</title>
 
 <!-- Library for XLSX Export -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <style>
+/* === New theme variables & small polish (non-breaking) === */
+:root{
+  --bg:#f4f5f7;
+  --card:#ffffff;
+  --text:#172b4d;
+  --muted:#5e6c84;
+  --border:#dfe1e6;
+  --accent:#007bff;
+  --accent-press:#0056b3;
+  --radius:12px;
+  --shadow:0 6px 16px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111418; --card:#161a20; --text:#e9edf3; --muted:#a6b0c3; --border:#2a2f38;
+    --accent:#4c9aff; --accent-press:#2b6dc9;
+  }
+}
+html, body { background: var(--bg); color: var(--text); }
+
 /* Basic Styles & Layout */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.6;
-  background-color: #f4f5f7;
-  color: #172b4d;
+  /* background-color: #f4f5f7;  -- now via var */
+  /* color: #172b4d;            -- now via var */
   margin: 0;
-  padding: 20px;
+  padding: max(20px, env(safe-area-inset-top)) 20px 20px 20px; /* respect iOS safe area */
 }
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 24px;
 }
 header {
-  border-bottom: 1px solid #dfe1e6;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 16px;
   margin-bottom: 24px;
 }
 h1 { margin: 0 0 4px 0; }
-h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px;}
-.subtitle { color: #5e6c84; }
+h2 { margin-top: 32px; border-bottom: 1px solid var(--border); padding-bottom: 8px;}
+.subtitle { color: var(--muted); }
 
 /* Forms & Filters */
 .filters-grid {
@@ -46,21 +67,23 @@ h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px;}
 label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #5e6c84;
+  color: var(--muted);
   margin-bottom: 4px;
 }
 input[type="text"], select {
   width: 100%;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 10px 12px;                     /* slightly larger for touch */
+  border-radius: 10px;                     /* gentle iOS-like radius */
   border: 1px solid #c1c7d0;
   background-color: #fafbfc;
-  box-sizing: border-box; /* Ensures padding doesn't affect width */
+  box-sizing: border-box;
+  min-height: 48px;                        /* touch target */
+  transition: box-shadow .2s, border-color .2s;
 }
 input[type="text"]:focus, select:focus {
-  border-color: #4c9aff;
+  border-color: var(--accent);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(76,154,255,0.3);
+  box-shadow: 0 0 0 3px rgba(0,123,255,.15);
 }
 .checkbox-group {
   display: flex;
@@ -77,7 +100,7 @@ input[type="text"]:focus, select:focus {
 }
 .btn {
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;                      /* subtle modern radius */
   padding: 10px 16px;
   font-size: 0.95rem;
   font-weight: 600;
@@ -85,13 +108,13 @@ input[type="text"]:focus, select:focus {
   text-align: center;
   transition: background-color 0.2s;
 }
-.btn.primary { background-color: #007bff; color: white; }
-.btn.primary:hover { background-color: #0056b3; }
+.btn.primary { background-color: var(--accent); color: white; }
+.btn.primary:hover { background-color: var(--accent-press); }
 .btn.secondary { background-color: #6c757d; color: white; }
 .btn.secondary:hover { background-color: #5a6268; }
-.btn.success { background-color: #28a745; color: white; font-size: 0.8rem; padding: 4px 10px; }
-.btn.danger { background-color: #dc3545; color: white; font-size: 0.8rem; padding: 4px 10px; }
-.btn.ghost { background-color: transparent; color: #6c757d; border: 1px solid #dfe1e6; }
+.btn.success { background-color: #28a745; color: white; font-size: 0.8rem; padding: 6px 12px; min-height: 36px; }
+.btn.danger { background-color: #dc3545; color: white; font-size: 0.8rem; padding: 6px 12px; min-height: 36px; }
+.btn.ghost { background-color: transparent; color: #6c757d; border: 1px solid var(--border); }
 .btn.ghost:hover { background-color: #f4f5f7; }
 
 /* Tables */
@@ -105,7 +128,7 @@ table {
 th, td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #dfe1e6;
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
   overflow: hidden;              /* prevent text spill */
   text-overflow: ellipsis;       /* nicer truncation */
@@ -115,7 +138,7 @@ th {
   background-color: #f4f5f7;
   font-size: 0.85rem;
   text-transform: uppercase;
-  color: #5e6c84;
+  color: var(--muted);
 }
 tr:last-child td { border-bottom: none; }
 .chip {
@@ -124,7 +147,7 @@ tr:last-child td { border-bottom: none; }
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #172b4d;
+  color: var(--text);
 }
 .chip.compulsory { background-color: #e6ffed; border: 1px solid #57d9a3; }
 
@@ -133,12 +156,12 @@ tr:last-child td { border-bottom: none; }
   text-align: center;
   padding: 40px 20px;
   background-color: #fafbfc;
-  border-radius: 4px;
-  color: #5e6c84;
+  border-radius: 8px;
+  color: var(--muted);
   margin-top: 16px;
   border: 1px dashed #c1c7d0;
 }
-.status-message { margin: 16px 0; color: #5e6c84; }
+.status-message { margin: 16px 0; color: var(--muted); }
 .my-list-header {
   display: flex;
   align-items: flex-start;
@@ -156,11 +179,11 @@ tr:last-child td { border-bottom: none; }
 #resultsTable col.action   { width: 8%; }
 
 /* MY LIST table (FIX: includes SN and rebalances to 100%) */
-#myListTable col.sn        { width: 8%; }   /* NEW: explicit SN width */
-#myListTable col.title     { width: 36%; }  /* was 40% */
+#myListTable col.sn        { width: 8%; }
+#myListTable col.title     { width: 36%; }
 #myListTable col.subject   { width: 14%; }
-#myListTable col.publisher { width: 14%; }  /* was 16% */
-#myListTable col.isbn      { width: 12%; }  /* was 14% */
+#myListTable col.publisher { width: 14%; }
+#myListTable col.isbn      { width: 12%; }
 #myListTable col.price     { width: 8%; }
 #myListTable col.action    { width: 8%; }
 
@@ -182,7 +205,7 @@ td.title-cell .chip { margin-left: 8px; }
 th.action-col, td.action-cell {
   position: sticky;
   right: 0;
-  background: #fff;
+  background: var(--card);
   box-shadow: -8px 0 8px -8px rgba(0,0,0,0.12);
   z-index: 1;
 }
@@ -216,9 +239,9 @@ th.action-col, td.action-cell {
     padding: 12px;
     margin: 12px 0;
     border: 1px solid #e6e8eb;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
   }
 
   /* RESULTS: Title, Subject, Publisher, ISBN, Price, Action */
@@ -261,7 +284,7 @@ th.action-col, td.action-cell {
   #resultsTable td, #myListTable td{
     white-space: normal;  /* override global nowrap so values wrap in cards */
     display: grid;
-    grid-template-columns: 40% 1fr;
+    grid-template-columns: 32% 1fr;       /* slightly tighter so values get space */
     align-items: start;
     overflow: visible; /* allow wrapping content */
     text-overflow: clip;
@@ -300,113 +323,78 @@ th.action-col, td.action-cell {
   .button-group { gap: 8px; }
   .button-group .btn { flex: 1 1 100%; }
 
-/* ---- Collapsed/expanded card layout for results (mobile only) ---- */
+  /* ---- Collapsed/expanded card layout for results (mobile only) ---- */
 
-/* Base: 2 columns (content + right rail for price/action) */
-#resultsTable tr {
-  grid-template-columns: 1fr 140px;     /* right column wide enough for price + button */
-  grid-template-areas:
-    "title title"
-    "price action";                      /* collapsed default shows price + action */
+  /* Base: 2 columns (content + right rail for price/action) */
+  #resultsTable tr {
+    grid-template-columns: 1fr 140px;     /* right column wide enough for price + button */
+    grid-template-areas:
+      "title title"
+      "price action";                      /* collapsed default shows price + action */
+  }
+
+  /* Expanded: reveal subject/publisher/isbn between title and footer */
+  #resultsTable tr.expanded {
+    grid-template-areas:
+      "title title"
+      "subject subject"
+      "publisher publisher"
+      "isbn isbn"
+      "price action";
+  }
+
+  /* Hide metadata by default (collapsed), reveal when expanded */
+  #resultsTable tr:not(.expanded) td:nth-child(2),
+  #resultsTable tr:not(.expanded) td:nth-child(3),
+  #resultsTable tr:not(.expanded) td:nth-child(4) {
+    display: none;
+  }
+
+  /* Title row becomes a clean header, with clear tap target & chevron */
+  .card-header{
+    position: relative;
+    padding-right: 44px;  /* room for chevron */
+    min-height: 48px;     /* touch target */
+    display: block;
+  }
+  .card-header .card-chevron,
+  .card-header::after{
+    content: "⌄";
+    position: absolute;
+    right: 8px; top: 8px;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    user-select: none;
+    pointer-events: none; /* header itself handles the click */
+    transition: transform .2s ease;
+    background: var(--card);
+  }
+  #resultsTable tr.expanded .card-header .card-chevron,
+  #resultsTable tr.expanded .card-header::after{ transform: rotate(180deg); }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    .card-header::after{ transition: none; }
+  }
+
+  /* Sticky filter bar so users can tweak without scrolling back */
+  #filters{
+    position: sticky; top: 0; z-index: 20;
+    background: var(--bg);
+    padding-top: env(safe-area-inset-top);
+    backdrop-filter: saturate(180%) blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Friendlier taps on coarse pointers */
+  @media (pointer:coarse){
+    .btn { padding: 12px 16px; min-height: 44px; }
+  }
 }
-
-/* Expanded: reveal subject/publisher/isbn between title and footer */
-#resultsTable tr.expanded {
-  grid-template-areas:
-    "title title"
-    "subject subject"
-    "publisher publisher"
-    "isbn isbn"
-    "price action";
-}
-
-/* Map cells into areas (already present, kept here for clarity) */
-#resultsTable td:nth-child(1){ grid-area: title; }
-#resultsTable td:nth-child(2){ grid-area: subject; }
-#resultsTable td:nth-child(3){ grid-area: publisher; }
-#resultsTable td:nth-child(4){ grid-area: isbn; }
-#resultsTable td:nth-child(5){ grid-area: price; }
-#resultsTable td:nth-child(6){ grid-area: action; }
-
-/* Hide metadata by default (collapsed), reveal when expanded */
-#resultsTable tr:not(.expanded) td:nth-child(2),
-#resultsTable tr:not(.expanded) td:nth-child(3),
-#resultsTable tr:not(.expanded) td:nth-child(4) {
-  display: none;
-}
-
-/* Title row becomes a clean header */
-#resultsTable td.title-cell {
-  position: relative;
-  padding-right: 44px;                   /* room for chevron */
-  -webkit-line-clamp: 3;                 /* slightly roomier on mobile */
-  margin-bottom: 2px;
-}
-
-/* Right-side footer row: align price + button neatly */
-#resultsTable td.price-cell,
-#resultsTable td.action-cell {
-  display: flex !important;
-  align-items: center;
-  gap: 8px;
-}
-#resultsTable td.price-cell { justify-content: flex-start; }
-#resultsTable td.action-cell { justify-content: flex-end; }
-
-/* Hide labels for price/action; keep labels for meta fields when expanded */
-#resultsTable td.price-cell::before,
-#resultsTable td.action-cell::before { display: none; }
-
-/* Meta block cosmetics (only visible in expanded state) */
-#resultsTable tr.expanded td:nth-child(2),
-#resultsTable tr.expanded td:nth-child(3),
-#resultsTable tr.expanded td:nth-child(4) {
-  border-top: 1px dashed #e6e8eb;
-  padding-top: 6px;
-  color: #2e3a4a;
-}
-
-/* Chevron toggle: touch-friendly, right-aligned in the title cell */
-#resultsTable .card-toggle {
-  position: absolute;
-  right: 8px;
-  top: 8px;
-  width: 28px;
-  height: 28px;
-  border: 1px solid #dfe1e6;
-  border-radius: 50%;
-  background: #fff;
-  cursor: pointer;
-}
-#resultsTable .card-toggle::before {
-  content: "⌄";                           /* simple chevron */
-  display: block;
-  font-size: 16px;
-  line-height: 26px;
-  text-align: center;
-}
-#resultsTable tr.expanded .card-toggle::before {
-  transform: rotate(180deg);
-}
-#resultsTable .card-toggle:active {
-  background: #f4f5f7;
-}
-
-/* Tighter label/value grid so values get more room */
-#resultsTable td { grid-template-columns: 35% 1fr; }  /* was 40% 1fr */
-
-/* Buttons: full width on the smallest screens */
-.button-group { gap: 8px; }
-.button-group .btn { flex: 1 1 100%; }
-
-
-
-  
-}
-
-
-
-  
 </style>
 </head>
 <body>
@@ -436,7 +424,8 @@ th.action-col, td.action-cell {
           </div>
           <div class="form-group">
             <label for="search">Title Keyword</label>
-            <input id="search" type="text" placeholder="e.g., Workbook, 1A, etc." />
+            <!-- Added inputmode & enterkeyhint for nicer mobile keyboard -->
+            <input id="search" type="text" inputmode="search" enterkeyhint="search" placeholder="e.g., Workbook, 1A, etc." />
           </div>
           <div class="form-group checkbox-group">
             <input id="compOnly" type="checkbox" />
@@ -453,7 +442,8 @@ th.action-col, td.action-cell {
     <!-- Results Section -->
     <section id="results-section">
       <h2>2. Search Results</h2>
-      <div id="resultsCounter" class="status-message">Loading books...</div>
+      <!-- Added live region attributes for accessibility -->
+      <div id="resultsCounter" class="status-message" role="status" aria-live="polite">Loading books...</div>
       <div class="table-wrapper">
 
       <table id="resultsTable">
@@ -491,7 +481,8 @@ th.action-col, td.action-cell {
         <button id="clearBtn" class="btn secondary">Clear List</button>
         <button id="xlsxBtn" class="btn primary">Download XLSX</button>
       </div>
-      <div id="myListCounter" class="status-message">Your list is empty.</div>
+      <!-- Added live region attributes -->
+      <div id="myListCounter" class="status-message" role="status" aria-live="polite">Your list is empty.</div>
       <div class="table-wrapper">
 
         <table id="myListTable">
@@ -544,7 +535,6 @@ th.action-col, td.action-cell {
       subject: { singular: 'Subject', plural: 'Subjects' },
       banding: { singular: 'Banding', plural: 'Bandings' },
     };
-    
 
     // ===== DOM Elements =====
     const $ = sel => document.querySelector(sel);
@@ -561,10 +551,12 @@ th.action-col, td.action-cell {
     const myBookList = new Map(); // Use Map to prevent duplicates and easily manage items.
     let awaitSelection = true; // while any dropdown is "Select", show empty result
 
-
     // ===== Utility Functions =====
     const normalize = v => (v ?? '').toString().trim();
     const isCompulsory = v => /^y(es)?$/i.test(normalize(v));
+
+    // New: simple helpers for responsive behaviors
+    const isMobileCards = () => window.matchMedia('(max-width: 640px)').matches;
 
     /**
      * Maps spreadsheet header names to required object keys.
@@ -645,7 +637,6 @@ th.action-col, td.action-cell {
       selectElement.value = currentValue && currentValue !== "" ? currentValue : SELECT;
     }
 
-
     function populateFilters() {
       const levelSel = $('#level');
       const subjectSel = $('#subject');
@@ -674,7 +665,6 @@ th.action-col, td.action-cell {
       populateSelect(bandingSel, bandingPool.map(b => b.banding), current.banding);
     }
 
-    // helper: treat SELECT like no constraint during filtering
     const effective = v => (isSelect(v) ? ALL : v);
 
     function applyFilters(event) {
@@ -709,7 +699,6 @@ th.action-col, td.action-cell {
       renderResultsTable();
     }
 
-    
     function renderResultsTable() {
       resultsTableBody.innerHTML = ''; // Clear previous results
 
@@ -725,15 +714,18 @@ th.action-col, td.action-cell {
 
         filteredBooks.forEach(book => {
           const row = document.createElement('tr');
+          row.id = `row-${book.sn}`; // NEW: so aria-controls has a target
+
           const isAdded = myBookList.has(book.sn);
           row.innerHTML = `
-            <td class="title-cell" data-label="Title" title="${book.title}">
+            <td class="title-cell card-header" data-label="Title" title="${book.title}"
+                role="button" tabindex="0" aria-expanded="false" aria-controls="row-${book.sn}">
               ${book.title}
               ${book.compulsory ? '<span class="chip compulsory">Compulsory</span>' : ''}
               <button class="btn success add-btn add-btn-inline" data-sn="${book.sn}" ${isAdded ? 'disabled' : ''}>
                 ${isAdded ? 'Added' : 'Add'}
               </button>
-              <button class="card-toggle" aria-expanded="false" aria-label="Show details"></button>
+              <span class="card-chevron" aria-hidden="true"></span>
             </td>
             <td data-label="Subject">${book.subject}</td>
             <td class="hide-sm" data-label="Publisher">${book.publisher}</td>
@@ -753,7 +745,6 @@ th.action-col, td.action-cell {
         ? 'Waiting for selections…'
         : `${filteredBooks.length} book(s) found.`;
     }
-    
 
     /**
      * Renders the user's selected books into the "My Book List" table.
@@ -794,10 +785,34 @@ th.action-col, td.action-cell {
       myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
     }
 
-    /**
-     * Handles clicks within the results table (e.g., "Add" buttons).
-     */
+    // NEW: expand/collapse behavior for mobile cards (accordion)
+    function toggleCard(tr, headerEl){
+      if (!isMobileCards()) return; // desktop: no-op
+      // close others
+      tr.parentElement.querySelectorAll('tr.expanded').forEach(row => {
+        if (row !== tr) {
+          row.classList.remove('expanded');
+          row.querySelector('.card-header')?.setAttribute('aria-expanded','false');
+        }
+      });
+      // toggle current
+      const expanded = tr.classList.toggle('expanded');
+      headerEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    }
 
+    // collapse any expanded rows when leaving mobile layout
+    window.addEventListener('resize', () => {
+      if (!isMobileCards()){
+        document.querySelectorAll('#resultsTable tr.expanded')
+          .forEach(r=> r.classList.remove('expanded'));
+        document.querySelectorAll('#resultsTable .card-header[aria-expanded="true"]')
+          .forEach(h=> h.setAttribute('aria-expanded','false'));
+      }
+    });
+
+    /**
+     * Handles clicks within the results table (e.g., "Add" buttons) and card header toggles.
+     */
     function handleResultsClick(event) {
       // 1) Add button logic (existing)
       if (event.target.classList.contains('add-btn')) {
@@ -814,27 +829,20 @@ th.action-col, td.action-cell {
         return;
       }
 
-      // 2) NEW: expand/collapse toggle (mobile cards)
-
-      if (event.target.classList.contains('card-toggle')) {
-        const tr = event.target.closest('tr');
-        const tbody = tr.parentElement;
-        // close others
-        tbody.querySelectorAll('tr.expanded').forEach(row => {
-          if (row !== tr) {
-            row.classList.remove('expanded');
-            row.querySelector('.card-toggle')?.setAttribute('aria-expanded', 'false');
-          }
-        });
-        // toggle current
-        const expanded = tr.classList.toggle('expanded');
-        event.target.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      // 2) NEW: expand/collapse when tapping the title header (ignore clicks on inline Add)
+      const header = event.target.closest('.card-header');
+      if (header && !event.target.closest('.add-btn')) {
+        toggleCard(header.closest('tr'), header);
       }
     }
 
-
-
-    
+    // NEW: keyboard support for header (Enter/Space toggles)
+    resultsTableBody.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('card-header')){
+        e.preventDefault();
+        toggleCard(e.target.closest('tr'), e.target);
+      }
+    });
 
     /**
      * Handles clicks within the "My List" table (e.g., "Remove" buttons).
@@ -952,7 +960,12 @@ th.action-col, td.action-cell {
             applyFilters();
         }
     });
-    $('#search').addEventListener('input', applyFilters);
+
+    // Debounced search input (smoother typing)
+    const debounce = (fn, delay=200) => {
+      let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,args), delay); };
+    };
+    document.querySelector('#search').addEventListener('input', debounce(applyFilters, 200));
 
     resultsTableBody.addEventListener('click', handleResultsClick);
     myListTableBody.addEventListener('click', handleMyListClick);
