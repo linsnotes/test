@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Book List Builder</title>
 
-<!-- ====== Minimal, clean styling (no external CSS) ====== -->
 <style>
   :root{
     --bg:#0f172a; --card:#111827; --muted:#1f2937; --text:#e5e7eb; --sub:#9ca3af;
@@ -83,7 +82,7 @@
       </div>
     </header>
 
-    <!-- ====== Filters ====== -->
+    <!-- Filters -->
     <section class="card">
       <form id="filtersForm">
         <div class="filters">
@@ -115,9 +114,8 @@
       </form>
     </section>
 
-    <!-- ====== Results + My List ====== -->
+    <!-- Results + My List -->
     <div class="two-cols">
-      <!-- Results -->
       <section class="card">
         <div class="row" style="margin-bottom:6px">
           <div class="counter" id="resultsCounter">Loading…</div>
@@ -127,7 +125,6 @@
         <div id="results" class="groups"></div>
       </section>
 
-      <!-- My List -->
       <section class="card sticky" id="myListCard">
         <div class="row" style="margin-bottom:6px">
           <strong>My List</strong>
@@ -143,31 +140,33 @@
     </div>
 
     <p class="small muted" style="margin:16px 4px">
-      Data source: Google Sheet (first sheet). Replace <code>MASTER_SHEET_ID</code> in the code.
-      For help, see <a class="help" href="https://support.google.com/docs/answer/9143380" target="_blank" rel="noopener">Share a sheet</a>.
+      Data source: Google Sheet (first sheet). Replace <code>MASTER_SHEET_ID</code> below.
     </p>
   </div>
 
   <div id="toast" class="toast"></div>
 
-  <!-- ====== Libraries (CDN). If you truly need one-file offline, download these and inline their minified code. ====== -->
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 
-  <!-- ====== App Logic ====== -->
   <script>
-  // ---------- Configuration ----------
-  const SHEET_ID = '1EM6Zy3Ii7wKoLrQt40ioyLip1RdDeqgBHKRt5aGB9l8'; // <<<<<<<<<<<<<<<<<< replace with your Google Sheet ID
-  const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+  // ===== Configuration =====
+  const SHEET_ID = '1EM6Zy3Ii7wKoLrQt40ioyLip1RdDeqgBHKRt5aGB9l8'; // <<<<<<<<<<<< REPLACE THIS
+  const XLSX_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
 
-  // ---------- App State ----------
-  let rawRows = [];        // array of objects from sheet
-  let filtered = [];       // current filtered rows
-  const myListMap = new Map(); // key -> item (deduped)
-  const KEY_ORDER = ['sn','level','subject','banding','textbook','compulsory'];
-
-  // ---------- Utilities ----------
+  // ===== State =====
+  let rawRows = [];
+  let filtered = [];
+  const myListMap = new Map();
   const $ = sel => document.querySelector(sel);
+
+  // ===== Helpers =====
+  const norm = v => (v ?? '').toString().trim();
+  const toBoolYes = v => /^y(es)?$/i.test(norm(v)); // "Y" or "Yes" (any case)
+  const escapeHtml = str => (str??'').toString()
+      .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
+  const clone = (obj) => (typeof structuredClone === 'function') ? structuredClone(obj) : JSON.parse(JSON.stringify(obj));
   const showToast = (msg, kind='info') => {
     const el = $('#toast');
     el.textContent = msg;
@@ -175,13 +174,9 @@
     el.classList.add('show');
     setTimeout(()=>el.classList.remove('show'), 1800);
   };
-
-  const norm = v => (v ?? '').toString().trim();
-  const toBoolYes = v => /^y(es)?$/i.test(norm(v)); // YES / Yes / Y
-  const nice = v => norm(v);
+  const uniqueSorted = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
 
   function mapHeaders(headerRow){
-    // Normalize headers to known keys regardless of order/case/extra spaces
     const map = {};
     headerRow.forEach((h, idx) => {
       const key = norm(h).toLowerCase();
@@ -192,12 +187,9 @@
       else if (key === 'textbook') map.textbook = idx;
       else if (key === 'compulsory') map.compulsory = idx;
     });
-    // Ensure required columns exist
     const needed = ['sn','level','subject','banding','textbook','compulsory'];
     const missing = needed.filter(k => !(k in map));
-    if (missing.length){
-      throw new Error('Missing required column(s): ' + missing.join(', '));
-    }
+    if (missing.length){ throw new Error('Missing column(s): ' + missing.join(', ')); }
     return map;
   }
 
@@ -207,122 +199,51 @@
     const out = [];
     for (let i=1;i<rows2D.length;i++){
       const r = rows2D[i] || [];
-      // skip completely empty lines
       if (r.every(x => !norm(x))) continue;
       out.push({
-        sn: nice(r[indexMap.sn]),
-        level: nice(r[indexMap.level]),
-        subject: nice(r[indexMap.subject]),
-        banding: nice(r[indexMap.banding]),
-        textbook: nice(r[indexMap.textbook]),
+        sn: norm(r[indexMap.sn]),
+        level: norm(r[indexMap.level]),
+        subject: norm(r[indexMap.subject]),
+        banding: norm(r[indexMap.banding]),
+        textbook: norm(r[indexMap.textbook]),
         compulsory: toBoolYes(r[indexMap.compulsory])
       });
     }
     return out;
   }
 
-  function uniqueSorted(values){
-    return [...new Set(values.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
+  function fillSelect(sel, values, keepVal){
+    const prev = keepVal ?? sel.value;
+    const opts = ['<option value="">All</option>'].concat(values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`));
+    sel.innerHTML = opts.join('');
+    if (prev && values.includes(prev)) sel.value = prev;
   }
 
   function populateFilters(){
-    // dependent lists
     const levelSel = $('#level'), subjectSel = $('#subject'), bandingSel = $('#banding');
+    const current = { level: levelSel.value, subject: subjectSel.value, banding: bandingSel.value };
 
-    const current = {
-      level: levelSel.value,
-      subject: subjectSel.value,
-      banding: bandingSel.value
-    };
-
-    // Build filtered pools for options
-    const poolForLevel = rawRows;
-    const levels = uniqueSorted(poolForLevel.map(r => r.level));
+    const levels = uniqueSorted(rawRows.map(r => r.level));
     fillSelect(levelSel, levels, current.level);
 
-    const poolForSubject = rawRows.filter(r => !current.level || r.level === current.level);
-    const subjects = uniqueSorted(poolForSubject.map(r => r.subject));
-    fillSelect(subjectSel, subjects, current.subject);
+    const poolSubject = rawRows.filter(r => !current.level || r.level === current.level);
+    fillSelect(subjectSel, uniqueSorted(poolSubject.map(r => r.subject)), current.subject);
 
-    const poolForBanding = rawRows.filter(r =>
+    const poolBanding = rawRows.filter(r =>
       (!current.level || r.level === current.level) &&
       (!current.subject || r.subject === current.subject)
     );
-    const bandings = uniqueSorted(poolForBanding.map(r => r.banding));
-    fillSelect(bandingSel, bandings, current.banding);
-  }
-
-  function fillSelect(sel, options, keepVal){
-    const prev = keepVal ?? sel.value;
-    const opts = ['<option value="">All</option>'].concat(options.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`));
-    sel.innerHTML = opts.join('');
-    if (prev && options.includes(prev)) sel.value = prev;
-  }
-
-  function escapeHtml(str){
-    return (str??'').toString()
-      .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
-  }
-
-  // ---------- Fetch & Parse ----------
-  async function loadSheet(){
-    $('#resultsCounter').textContent = 'Loading…';
-    try{
-      const resp = await fetch(CSV_URL, {cache:'no-store'});
-      if (!resp.ok) throw new Error('Fetch failed, check sharing permissions.');
-      const csvText = await resp.text();
-
-      // Parse with SheetJS so we can extend to XLSX easily if needed
-      const wb = XLSX.read(csvText, { type: 'string' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows2D = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
-
-      rawRows = arrayToObjects(rows2D);
-
-      populateFilters();
-      applyFilters(); // initial render
-    }catch(err){
-      console.error(err);
-      $('#results').innerHTML = `<div class="empty">Failed to load the sheet. Please ensure the sheet is public ("Anyone with the link can view") and the ID is correct.<br><br><code>${escapeHtml(err.message)}</code></div>`;
-      $('#resultsCounter').textContent = '0 items';
-    }
-  }
-
-  // ---------- Filtering & Rendering ----------
-  function applyFilters(ev){
-    if (ev) ev.preventDefault();
-
-    const level = $('#level').value;
-    const subject = $('#subject').value;
-    const banding = $('#banding').value;
-    const compOnly = $('#compOnly').checked;
-    const kw = $('#search').value.trim().toLowerCase();
-
-    filtered = rawRows.filter(r =>
-      (!level || r.level === level) &&
-      (!subject || r.subject === subject) &&
-      (!banding || r.banding === banding) &&
-      (!compOnly || r.compulsory) &&
-      (!kw || r.textbook.toLowerCase().includes(kw))
-    );
-
-    // Update dependent dropdowns as user goes
-    populateFilters();
-
-    renderGroups('#results', filtered);
-    const n = filtered.length;
-    $('#resultsCounter').textContent = n ? `${n} textbook${n>1?'s':''} shown` : 'No results';
+    fillSelect(bandingSel, uniqueSorted(poolBanding.map(r => r.banding)), current.banding);
   }
 
   function groupBySubjectBanding(rows){
-    const map = new Map(); // subject -> Map(banding -> items[])
+    const map = new Map();
     for (const r of rows){
       if (!map.has(r.subject)) map.set(r.subject, new Map());
       const sub = map.get(r.subject);
       if (!sub.has(r.banding)) sub.set(r.banding, []);
       sub.get(r.banding).push(r);
     }
-    // sort inside each banding by SN then textbook
     for (const [, bandMap] of map){
       for (const [, arr] of bandMap){
         arr.sort((a,b)=>{
@@ -336,15 +257,11 @@
   }
 
   function renderGroups(containerSel, rows){
-    const container = $(containerSel);
-    if (!rows.length){
-      container.innerHTML = '<div class="empty">No results match your filters.</div>';
-      return;
-    }
+    const container = document.querySelector(containerSel);
+    if (!rows.length){ container.innerHTML = '<div class="empty">No results match your filters.</div>'; return; }
     const map = groupBySubjectBanding(rows);
-    const parts = [];
-    // Sort subjects and bandings
     const subjects = [...map.keys()].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
+    const parts = [];
     for (const subj of subjects){
       const bandMap = map.get(subj);
       const bandings = [...bandMap.keys()].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
@@ -382,21 +299,36 @@
     container.innerHTML = parts.join('');
   }
 
-  // ---------- My List (persistent across adds, deduped) ----------
+  function applyFilters(ev){
+    if (ev) ev.preventDefault();
+    const level = $('#level').value;
+    const subject = $('#subject').value;
+    const banding = $('#banding').value;
+    const compOnly = $('#compOnly').checked;
+    const kw = $('#search').value.trim().toLowerCase();
+
+    filtered = rawRows.filter(r =>
+      (!level || r.level === level) &&
+      (!subject || r.subject === subject) &&
+      (!banding || r.banding === banding) &&
+      (!compOnly || r.compulsory) &&
+      (!kw || r.textbook.toLowerCase().includes(kw))
+    );
+
+    populateFilters();
+    renderGroups('#results', filtered);
+    const n = filtered.length;
+    $('#resultsCounter').textContent = n ? `${n} textbook${n>1?'s':''} shown` : 'No results';
+  }
+
   function keyOf(r){ return [r.subject,r.banding,r.level,r.textbook].join('◆'); }
 
   function addCurrentToMyList(){
-    if (!filtered.length){
-      showToast('No results to add.', 'warn');
-      return;
-    }
+    if (!filtered.length){ showToast('No results to add.', 'warn'); return; }
     let added = 0;
     for (const r of filtered){
       const k = keyOf(r);
-      if (!myListMap.has(k)){
-        myListMap.set(k, structuredClone(r));
-        added++;
-      }
+      if (!myListMap.has(k)){ myListMap.set(k, clone(r)); added++; }
     }
     renderMyList();
     showToast(added ? `Added ${added} item${added>1?'s':''} to My List` : 'All items were already in My List', added?'ok':'info');
@@ -406,20 +338,12 @@
     const items = [...myListMap.values()];
     $('#myListEmpty').style.display = items.length ? 'none' : '';
     renderGroups('#myList', items);
-
-    // meta text
-    const listSummary = items.length ? `${items.length} total item${items.length>1?'s':''}` : 'Empty';
     const name = $('#studentName').value.trim();
-    $('#myListMeta').textContent = (name ? `${name} • ` : '') + listSummary;
+    $('#myListMeta').textContent = (name ? `${name} • ` : '') + (items.length ? `${items.length} total item${items.length>1?'s':''}` : 'Empty');
   }
 
-  function clearMyList(){
-    myListMap.clear();
-    renderMyList();
-    showToast('My List cleared');
-  }
+  function clearMyList(){ myListMap.clear(); renderMyList(); showToast('My List cleared'); }
 
-  // ---------- PDF (html2pdf.js renders HTML → PDF; good for Chinese text) ----------
   function downloadPDF(){
     const name = $('#studentName').value.trim();
     const node = document.createElement('div');
@@ -431,37 +355,54 @@
       <div style="font-size:12px;margin-bottom:10px;color:#111">Generated ${new Date().toLocaleString()}</div>
       ${document.querySelector('#myList').innerHTML || '<div>No items</div>'}
     `;
-    // Ensure chips look nice on white
     node.querySelectorAll('.chip').forEach(el=>{
       el.style.background='#eef2f7'; el.style.border='1px solid #cfd7e3'; el.style.color='#111'; el.style.borderRadius='999px'; el.style.padding='2px 8px';
     });
     const opt = {
-      margin:       10,
-      filename:     `BookList${name?'-'+name.replace(/[\\/:*?"<>|]/g,''):''}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: ['css','legacy'] }
+      margin: 10,
+      filename: `BookList${name?'-'+name.replace(/[\\/:*?"<>|]/g,''):''}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css','legacy'] }
     };
     html2pdf().set(opt).from(node).save();
   }
 
-  // ---------- Events ----------
+  // ===== Data load (XLSX via SheetJS) =====
+  async function loadSheet(){
+    $('#resultsCounter').textContent = 'Loading…';
+    try{
+      const resp = await fetch(XLSX_URL, { cache:'no-store' });
+      if (!resp.ok) throw new Error('Fetch failed. Check sharing permissions and Sheet ID.');
+      const ab = await resp.arrayBuffer();
+      const wb = XLSX.read(ab, { type: 'array' });
+      const firstName = wb.SheetNames[0];
+      const ws = wb.Sheets[firstName];
+      const rows2D = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
+      rawRows = arrayToObjects(rows2D);
+
+      populateFilters();
+      applyFilters(); // initial
+    }catch(err){
+      console.error(err);
+      $('#results').innerHTML = `<div class="empty">Failed to load the sheet. Make sure it is public ("Anyone with the link can view") and the ID is correct.<br><br><code>${escapeHtml(err.message)}</code></div>`;
+      $('#resultsCounter').textContent = '0 items';
+    }
+  }
+
+  // ===== Events =====
   $('#filtersForm').addEventListener('submit', applyFilters);
   $('#level').addEventListener('change', ()=>{ populateFilters(); applyFilters(); });
   $('#subject').addEventListener('change', ()=>{ populateFilters(); applyFilters(); });
   $('#banding').addEventListener('change', applyFilters);
   $('#compOnly').addEventListener('change', applyFilters);
-  $('#search').addEventListener('input', ()=>{ /* live filter */ applyFilters(); });
+  $('#search').addEventListener('input', applyFilters);
 
   $('#resetBtn').addEventListener('click', ()=>{
-    $('#level').value = '';
-    $('#subject').value = '';
-    $('#banding').value = '';
-    $('#search').value = '';
-    $('#compOnly').checked = false;
-    populateFilters();
-    applyFilters();
+    $('#level').value = ''; $('#subject').value = ''; $('#banding').value = '';
+    $('#search').value = ''; $('#compOnly').checked = false;
+    populateFilters(); applyFilters();
   });
 
   $('#addBtn').addEventListener('click', addCurrentToMyList);
@@ -469,7 +410,7 @@
   $('#pdfBtn').addEventListener('click', downloadPDF);
   $('#studentName').addEventListener('input', renderMyList);
 
-  // ---------- Init ----------
+  // Init
   loadSheet();
   </script>
 </body>
