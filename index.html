@@ -123,7 +123,6 @@
     color: #172b4d;
   }
   .chip.compulsory { background-color: #e6ffed; border: 1px solid #57d9a3; }
-  .remarks-col { min-width: 150px; } /* For printing */
 
   /* Helper Classes */
   .message {
@@ -230,7 +229,6 @@
               <th>Publisher</th>
               <th>ISBN</th>
               <th>Price</th>
-              <th class="remarks-col">Remarks</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -446,7 +444,6 @@
             <td>${book.publisher}</td>
             <td>${book.isbn}</td>
             <td>${book.price.toFixed(2)}</td>
-            <td class="remarks-col"></td>
             <td>
               <button class="btn danger remove-btn" data-sn="${book.sn}">Remove</button>
             </td>
@@ -513,7 +510,7 @@
         const listItems = Array.from(myBookList.values())
           .sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
 
-        const headers = ['SN', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price', 'Remarks'];
+        const headers = ['SN', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
         const data = listItems.map(book => [
             book.sn,
             book.subject,
@@ -521,7 +518,6 @@
             book.publisher,
             book.isbn,
             book.price,
-            '' // Empty remarks column
         ]);
 
         const worksheetData = [headers, ...data];
