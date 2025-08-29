@@ -125,16 +125,37 @@
   }
   .chip.compulsory { background-color: #e6ffed; border: 1px solid #57d9a3; }
 
-  /* Make the last header cell sticky */
+  /* First column (left side) */
+  #resultsTable th:first-child,
+  #resultsTable td:first-child,
+  #myListTable th:first-child,
+  #myListTable td:first-child {
+    position: sticky;
+    left: 0;
+    background: #fff;      /* keep text visible */
+    z-index: 2;
+  }
+
+  /* Last column (right side) */
   #resultsTable th:last-child,
   #resultsTable td:last-child,
   #myListTable th:last-child,
   #myListTable td:last-child {
     position: sticky;
     right: 0;
-    background: #fff;       /* keep text readable */
-    z-index: 2;             /* ensure it stays above other cells */
+    background: #fff;      /* keep text visible */
+    z-index: 2;
   }
+
+  /* Ensure header cells stay above body cells */
+  #resultsTable th:first-child,
+  #resultsTable th:last-child,
+  #myListTable th:first-child,
+  #myListTable th:last-child {
+    background: #f4f5f7;   /* match your header background */
+    z-index: 3;
+  }
+
 
 
   /* Helper Classes */
