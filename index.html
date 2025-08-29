@@ -137,7 +137,6 @@
   .status-message { margin: 16px 0; color: #5e6c84; }
   .my-list-header {
     display: flex;
-    justify-content: column;
     align-items: flex-start;
     gap: 8px;
   }
@@ -456,7 +455,9 @@
         });
       }
 
-      resultsCounter.textContent = `${filteredBooks.length} book(s) found.`;
+      resultsCounter.textContent = awaitSelection
+        ? 'Waiting for selections…'
+        : `${filteredBooks.length} book(s) found.`;
     }
     
 
