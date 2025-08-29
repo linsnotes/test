@@ -151,322 +151,319 @@
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 
   <script>
-  // ===== Configuration =====
-  const SHEET_ID = '1EM6Zy3Ii7wKoLrQt40ioyLip1RdDeqgBHKRt5aGB9l8'; // <<<<<<<<<<<< REPLACE THIS WITH YOUR GOOGLE SHEET ID
-  const XLSX_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
+  document.addEventListener('DOMContentLoaded', () => {
+    // ===== Configuration =====
+    const SHEET_ID = '1EM6Zy3Ii7wKoLrQt40ioyLip1RdDeqgBHKRt5aGB9l8'; // <<<<<<<<<<<< REPLACE THIS WITH YOUR GOOGLE SHEET ID
+    const XLSX_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
 
-  // ===== State =====
-  let rawRows = [];
-  let filtered = [];
-  const myListMap = new Map();
-  const $ = sel => document.querySelector(sel);
+    // ===== State =====
+    let rawRows = [];
+    let filtered = [];
+    const myListMap = new Map();
+    const $ = sel => document.querySelector(sel);
 
-  // ===== Helpers =====
-  const norm = v => (v ?? '').toString().trim();
-  const toBoolYes = v => /^y(es)?$/i.test(norm(v)); // "Y" or "Yes" (any case)
-  const escapeHtml = str => (str??'').toString()
-      .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
-  const clone = (obj) => (typeof structuredClone === 'function') ? structuredClone(obj) : JSON.parse(JSON.stringify(obj));
-  const showToast = (msg, kind='info') => {
-    const el = $('#toast');
-    el.textContent = msg;
-    el.style.borderColor = kind==='ok' ? '#14532d' : (kind==='warn' ? '#6b4f16' : '#2b3443');
-    el.classList.add('show');
-    setTimeout(()=>el.classList.remove('show'), 1800);
-  };
-  const uniqueSorted = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
+    // ===== Helpers =====
+    const norm = v => (v ?? '').toString().trim();
+    const toBoolYes = v => /^y(es)?$/i.test(norm(v)); // "Y" or "Yes" (any case)
+    const escapeHtml = str => (str??'').toString()
+        .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
+    const clone = (obj) => (typeof structuredClone === 'function') ? structuredClone(obj) : JSON.parse(JSON.stringify(obj));
+    const showToast = (msg, kind='info') => {
+      const el = $('#toast');
+      el.textContent = msg;
+      el.style.borderColor = kind==='ok' ? '#14532d' : (kind==='warn' ? '#6b4f16' : '#2b3443');
+      el.classList.add('show');
+      setTimeout(()=>el.classList.remove('show'), 1800);
+    };
+    const uniqueSorted = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
 
-  function mapHeaders(headerRow){
-    const map = {};
-    headerRow.forEach((h, idx) => {
-      const key = norm(h).toLowerCase();
-      if (key === 'sn') map.sn = idx;
-      else if (key === 'level') map.level = idx;
-      else if (key === 'subject') map.subject = idx;
-      else if (key === 'banding') map.banding = idx;
-      else if (key === 'textbook') map.textbook = idx;
-      else if (key === 'compulsory') map.compulsory = idx;
-    });
-    const needed = ['sn','level','subject','banding','textbook','compulsory'];
-    const missing = needed.filter(k => !(k in map));
-    if (missing.length){ throw new Error('Missing column(s): ' + missing.join(', ')); }
-    return map;
-  }
-
-  function arrayToObjects(rows2D){
-    const headers = rows2D[0] || [];
-    const indexMap = mapHeaders(headers);
-    const out = [];
-    for (let i=1;i<rows2D.length;i++){
-      const r = rows2D[i] || [];
-      // Skip empty rows
-      if (r.every(x => !norm(x))) continue;
-
-      // Check if the row has enough columns based on indexMap
-      // and if 'textbook' column (or other key columns) is not empty
-      if (indexMap.textbook !== undefined && !norm(r[indexMap.textbook])) {
-          // If textbook column is empty, it's likely an irrelevant row, skip it
-          continue;
-      }
-
-
-      out.push({
-        sn: norm(r[indexMap.sn]),
-        level: norm(r[indexMap.level]),
-        subject: norm(r[indexMap.subject]),
-        banding: norm(r[indexMap.banding]),
-        textbook: norm(r[indexMap.textbook]),
-        compulsory: toBoolYes(r[indexMap.compulsory])
+    function mapHeaders(headerRow){
+      const map = {};
+      headerRow.forEach((h, idx) => {
+        const key = norm(h).toLowerCase();
+        if (key === 'sn') map.sn = idx;
+        else if (key === 'level') map.level = idx;
+        else if (key === 'subject') map.subject = idx;
+        else if (key === 'banding') map.banding = idx;
+        else if (key === 'textbook') map.textbook = idx;
+        else if (key === 'compulsory') map.compulsory = idx;
       });
+      const needed = ['sn','level','subject','banding','textbook','compulsory'];
+      const missing = needed.filter(k => !(k in map));
+      if (missing.length){ throw new Error('Missing column(s): ' + missing.join(', ')); }
+      return map;
     }
-    return out;
-  }
 
-  function fillSelect(sel, values, keepVal){
-    const prev = keepVal ?? sel.value;
-    const opts = ['<option value="">All</option>'].concat(values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`));
-    sel.innerHTML = opts.join('');
-    if (prev && values.includes(prev)) sel.value = prev;
-  }
+    function arrayToObjects(rows2D){
+      const headers = rows2D[0] || [];
+      const indexMap = mapHeaders(headers);
+      const out = [];
+      for (let i=1;i<rows2D.length;i++){
+        const r = rows2D[i] || [];
+        // Skip empty rows
+        if (r.every(x => !norm(x))) continue;
 
-  function populateFilters(){
-    const levelSel = $('#level'), subjectSel = $('#subject'), bandingSel = $('#banding');
-    const current = { level: levelSel.value, subject: subjectSel.value, banding: bandingSel.value };
+        // Skip rows where the textbook column is empty
+        if (indexMap.textbook === undefined || !norm(r[indexMap.textbook])) {
+            continue;
+        }
 
-    const levels = uniqueSorted(rawRows.map(r => r.level));
-    fillSelect(levelSel, levels, current.level);
-
-    const poolSubject = rawRows.filter(r => !current.level || r.level === current.level);
-    fillSelect(subjectSel, uniqueSorted(poolSubject.map(r => r.subject)), current.subject);
-
-    const poolBanding = rawRows.filter(r =>
-      (!current.level || r.level === current.level) &&
-      (!current.subject || r.subject === current.subject)
-    );
-    fillSelect(bandingSel, uniqueSorted(poolBanding.map(r => r.banding)), current.banding);
-  }
-
-  function groupBySubjectBanding(rows){
-    const map = new Map();
-    for (const r of rows){
-      if (!map.has(r.subject)) map.set(r.subject, new Map());
-      const sub = map.get(r.subject);
-      if (!sub.has(r.banding)) sub.set(r.banding, []);
-      sub.get(r.banding).push(r);
-    }
-    for (const [, bandMap] of map){
-      for (const [, arr] of bandMap){
-        arr.sort((a,b)=>{
-          const snA = parseInt(a.sn,10), snB = parseInt(b.sn,10);
-          if (!isNaN(snA) && !isNaN(snB) && snA!==snB) return snA-snB;
-          return a.textbook.localeCompare(b.textbook,'en',{numeric:true});
+        out.push({
+          sn: norm(r[indexMap.sn]),
+          level: norm(r[indexMap.level]),
+          subject: norm(r[indexMap.subject]),
+          banding: norm(r[indexMap.banding]),
+          textbook: norm(r[indexMap.textbook]),
+          compulsory: toBoolYes(r[indexMap.compulsory])
         });
       }
+      return out;
     }
-    return map;
-  }
 
-  function renderGroups(containerSel, rows){
-    const container = document.querySelector(containerSel);
-    if (!rows.length){ container.innerHTML = '<div class="empty">No results match your filters.</div>'; return; }
-    const map = groupBySubjectBanding(rows);
-    const subjects = [...map.keys()].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
-    const parts = [];
-    for (const subj of subjects){
-      const bandMap = map.get(subj);
-      const bandings = [...bandMap.keys()].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
-      const inner = [];
-      for (const b of bandings){
-        const items = bandMap.get(b);
-        inner.push(`
-          <div class="subgroup">
-            <div class="subhead">Banding: ${escapeHtml(b)} <span class="chip">${items.length} item${items.length>1?'s':''}</span></div>
-            <ul class="list">
-              ${items.map(it => `
-                <li>
-                  <span>${escapeHtml(it.textbook)}</span>
-                  <span class="chips">
-                    <span class="chip">Level ${escapeHtml(it.level)}</span>
-                    ${it.compulsory ? '<span class="chip ok">Compulsory</span>' : ''}
-                  </span>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
+    function fillSelect(sel, values, keepVal){
+      const prev = keepVal ?? sel.value;
+      const opts = ['<option value="">All</option>'].concat(values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`));
+      sel.innerHTML = opts.join('');
+      if (prev && values.includes(prev)) sel.value = prev;
+    }
+
+    function populateFilters(){
+      const levelSel = $('#level'), subjectSel = $('#subject'), bandingSel = $('#banding');
+      const current = { level: levelSel.value, subject: subjectSel.value, banding: bandingSel.value };
+
+      const levels = uniqueSorted(rawRows.map(r => r.level));
+      fillSelect(levelSel, levels, current.level);
+
+      const poolSubject = rawRows.filter(r => !current.level || r.level === current.level);
+      fillSelect(subjectSel, uniqueSorted(poolSubject.map(r => r.subject)), current.subject);
+
+      const poolBanding = rawRows.filter(r =>
+        (!current.level || r.level === current.level) &&
+        (!current.subject || r.subject === current.subject)
+      );
+      fillSelect(bandingSel, uniqueSorted(poolBanding.map(r => r.banding)), current.banding);
+    }
+
+    function groupBySubjectBanding(rows){
+      const map = new Map();
+      for (const r of rows){
+        if (!map.has(r.subject)) map.set(r.subject, new Map());
+        const sub = map.get(r.subject);
+        if (!sub.has(r.banding)) sub.set(r.banding, []);
+        sub.get(r.banding).push(r);
+      }
+      for (const [, bandMap] of map){
+        for (const [, arr] of bandMap){
+          arr.sort((a,b)=>{
+            const snA = parseInt(a.sn,10), snB = parseInt(b.sn,10);
+            if (!isNaN(snA) && !isNaN(snB) && snA!==snB) return snA-snB;
+            return a.textbook.localeCompare(b.textbook,'en',{numeric:true});
+          });
+        }
+      }
+      return map;
+    }
+
+    function renderGroups(containerSel, rows){
+      const container = document.querySelector(containerSel);
+      if (!rows.length){ container.innerHTML = '<div class="empty">No results match your filters.</div>'; return; }
+      const map = groupBySubjectBanding(rows);
+      const subjects = [...map.keys()].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
+      const parts = [];
+      for (const subj of subjects){
+        const bandMap = map.get(subj);
+        const bandings = [...bandMap.keys()].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
+        const inner = [];
+        for (const b of bandings){
+          const items = bandMap.get(b);
+          inner.push(`
+            <div class="subgroup">
+              <div class="subhead">Banding: ${escapeHtml(b)} <span class="chip">${items.length} item${items.length>1?'s':''}</span></div>
+              <ul class="list">
+                ${items.map(it => `
+                  <li>
+                    <span>${escapeHtml(it.textbook)}</span>
+                    <span class="chips">
+                      <span class="chip">Level ${escapeHtml(it.level)}</span>
+                      ${it.compulsory ? '<span class="chip ok">Compulsory</span>' : ''}
+                    </span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          `);
+        }
+        parts.push(`
+          <details class="group" open>
+            <summary>
+              <span>${escapeHtml(subj)}</span>
+              <span class="spacer"></span>
+              <span class="tag">${bandings.length} banding${bandings.length>1?'s':''}</span>
+            </summary>
+            ${inner.join('')}
+          </details>
         `);
       }
-      parts.push(`
-        <details class="group" open>
-          <summary>
-            <span>${escapeHtml(subj)}</span>
-            <span class="spacer"></span>
-            <span class="tag">${bandings.length} banding${bandings.length>1?'s':''}</span>
-          </summary>
-          ${inner.join('')}
-        </details>
-      `);
+      container.innerHTML = parts.join('');
     }
-    container.innerHTML = parts.join('');
-  }
 
-  function applyFilters(ev){
-    if (ev) ev.preventDefault();
-    const level = $('#level').value;
-    const subject = $('#subject').value;
-    const banding = $('#banding').value;
-    const compOnly = $('#compOnly').checked;
-    const kw = $('#search').value.trim().toLowerCase();
+    function applyFilters(ev){
+      if (ev) ev.preventDefault();
+      const level = $('#level').value;
+      const subject = $('#subject').value;
+      const banding = $('#banding').value;
+      const compOnly = $('#compOnly').checked;
+      const kw = $('#search').value.trim().toLowerCase();
 
-    filtered = rawRows.filter(r =>
-      (!level || r.level === level) &&
-      (!subject || r.subject === subject) &&
-      (!banding || r.banding === banding) &&
-      (!compOnly || r.compulsory) &&
-      (!kw || r.textbook.toLowerCase().includes(kw))
-    );
+      filtered = rawRows.filter(r =>
+        (!level || r.level === level) &&
+        (!subject || r.subject === subject) &&
+        (!banding || r.banding === banding) &&
+        (!compOnly || r.compulsory) &&
+        (!kw || r.textbook.toLowerCase().includes(kw))
+      );
 
-    // populateFilters(); // Do not call this here, it resets current filter selections
-    renderGroups('#results', filtered);
-    const n = filtered.length;
-    $('#resultsCounter').textContent = n ? `${n} textbook${n>1?'s':''} shown` : 'No results';
-  }
-
-  function keyOf(r){ return [r.subject,r.banding,r.level,r.textbook].join('◆'); }
-
-  function addCurrentToMyList(){
-    if (!filtered.length){ showToast('No results to add.', 'warn'); return; }
-    let added = 0;
-    for (const r of filtered){
-      const k = keyOf(r);
-      if (!myListMap.has(k)){ myListMap.set(k, clone(r)); added++; }
+      renderGroups('#results', filtered);
+      const n = filtered.length;
+      $('#resultsCounter').textContent = n ? `${n} textbook${n>1?'s':''} shown` : 'No results';
     }
-    renderMyList();
-    showToast(added ? `Added ${added} item${added>1?'s':''} to My List` : 'All items were already in My List', added?'ok':'info');
-  }
 
-  function renderMyList(){
-    const items = [...myListMap.values()];
-    $('#myListEmpty').style.display = items.length ? 'none' : '';
-    renderGroups('#myList', items);
-    const name = $('#studentName').value.trim();
-    $('#myListMeta').textContent = (name ? `${name} • ` : '') + (items.length ? `${items.length} total item${items.length>1?'s':''}` : 'Empty');
-  }
+    function keyOf(r){ return [r.subject,r.banding,r.level,r.textbook].join('◆'); }
 
-  function clearMyList(){ myListMap.clear(); renderMyList(); showToast('My List cleared'); }
-
-  function downloadPDF(){
-    const name = $('#studentName').value.trim();
-    const node = document.createElement('div');
-    node.style.padding = '12px';
-    node.style.background = '#ffffff';
-    node.style.color = '#000000';
-    // Style for the PDF content to ensure readability
-    const pdfContentStyle = `
-        <style>
-            body { font-family: sans-serif; }
-            .pdf-container { padding: 12px; background: #ffffff; color: #000000; }
-            .pdf-title { font-weight: 700; font-size: 18px; margin-bottom: 6px; }
-            .pdf-meta { font-size: 12px; margin-bottom: 10px; color: #333; }
-            .group { border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-            .group summary {
-                list-style: none; padding: 10px 12px; background: #f0f0f0; border-bottom: 1px solid #ccc;
-                font-weight: 700; display: flex; align-items: center; justify-content: space-between;
-            }
-            .group summary span.tag { background: #e0e0e0; padding: 2px 8px; border-radius: 999px; font-size: 0.8em; color: #333; }
-            .subgroup { padding: 8px 12px 10px 12px; }
-            .subhead { font-weight: 700; margin: 8px 0; color: #333; }
-            ul.list { margin: 0; padding: 0; list-style: none; }
-            ul.list li {
-                background: #f9f9f9; border: 1px solid #eee; padding: 8px 10px; border-radius: 6px;
-                display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
-            }
-            .chips { display: flex; gap: 6px; align-items: center; }
-            .chip {
-                background: #eef2f7; border: 1px solid #cfd7e3; color: #111;
-                border-radius: 999px; padding: 2px 8px; font-size: 0.75em;
-            }
-            .chip.ok { background: #d1fae5; border-color: #0f5132; color: #062014; }
-            .empty { padding: 14px; border: 1px dashed #ccc; border-radius: 8px; color: #666; background: #fdfdfd; }
-        </style>
-    `;
-
-    node.innerHTML = `
-      ${pdfContentStyle}
-      <div class="pdf-container">
-          <div class="pdf-title">Book List${name?': '+escapeHtml(name):''}</div>
-          <div class="pdf-meta">Generated ${new Date().toLocaleString()}</div>
-          ${document.querySelector('#myList').innerHTML || '<div class="empty">No items</div>'}
-      </div>
-    `;
-
-    // The styles for chips and other elements are already handled by the injected CSS.
-    // No need for individual element style manipulation here unless specific overrides are required.
-
-    const opt = {
-      margin: 10,
-      filename: `BookList${name?'-'+name.replace(/[\\/:*?"<>|]/g,''):''}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css','legacy'] }
-    };
-    html2pdf().set(opt).from(node).save();
-  }
-
-  // ===== Data load (XLSX via SheetJS) =====
-  async function loadSheet(){
-    $('#resultsCounter').textContent = 'Loading…';
-    try{
-      const resp = await fetch(XLSX_URL, { cache:'no-store' });
-      if (!resp.ok) {
-          throw new Error(`Fetch failed: ${resp.status} ${resp.statusText}. Ensure the Google Sheet is published to the web (File > Share > Publish to web) and shared with "Anyone with the link can view". Also, double-check your SHEET_ID.`);
+    function addCurrentToMyList(){
+      if (!filtered.length){ showToast('No results to add.', 'warn'); return; }
+      let added = 0;
+      for (const r of filtered){
+        const k = keyOf(r);
+        if (!myListMap.has(k)){ myListMap.set(k, clone(r)); added++; }
       }
-      const ab = await resp.arrayBuffer();
-      const wb = XLSX.read(ab, { type: 'array' });
-      const firstName = wb.SheetNames[0];
-      const ws = wb.Sheets[firstName];
-      const rows2D = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
-      rawRows = arrayToObjects(rows2D);
-
-      populateFilters();
-      applyFilters(); // initial
-    }catch(err){
-      console.error(err);
-      $('#results').innerHTML = `<div class="empty">Failed to load the sheet.<br><br><code>${escapeHtml(err.message)}</code><br><br>Please check the console for more details.</div>`;
-      $('#resultsCounter').textContent = '0 items';
+      renderMyList();
+      showToast(added ? `Added ${added} item${added>1?'s':''} to My List` : 'All items were already in My List', added?'ok':'info');
     }
-  }
 
-  // ===== Events =====
-  $('#filtersForm').addEventListener('submit', applyFilters);
-  $('#level').addEventListener('change', ()=>{
-    // When level changes, re-populate subject and banding based on the new level, then apply filters
-    populateFilters();
-    applyFilters();
+    function renderMyList(){
+      const items = [...myListMap.values()];
+      $('#myListEmpty').style.display = items.length ? 'none' : '';
+      renderGroups('#myList', items);
+      const name = $('#studentName').value.trim();
+      $('#myListMeta').textContent = (name ? `${name} • ` : '') + (items.length ? `${items.length} total item${items.length>1?'s':''}` : 'Empty');
+    }
+
+    function clearMyList(){ myListMap.clear(); renderMyList(); showToast('My List cleared'); }
+
+    function downloadPDF(){
+      const name = $('#studentName').value.trim();
+      const listContent = $('#myList').innerHTML;
+      if (myListMap.size === 0) {
+        showToast('Your list is empty.', 'warn');
+        return;
+      }
+      
+      const node = document.createElement('div');
+      
+      const pdfContentStyle = `
+          <style>
+              body { font-family: sans-serif; }
+              .pdf-container { padding: 12px; background: #ffffff; color: #000000; }
+              .pdf-title { font-weight: 700; font-size: 18px; margin-bottom: 6px; }
+              .pdf-meta { font-size: 12px; margin-bottom: 10px; color: #333; }
+              .group { border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; overflow: hidden; page-break-inside: avoid; }
+              .group summary {
+                  list-style: none; padding: 10px 12px; background: #f0f0f0; border-bottom: 1px solid #ccc;
+                  font-weight: 700; display: flex; align-items: center; justify-content: space-between;
+              }
+              .group summary span.tag { background: #e0e0e0; padding: 2px 8px; border-radius: 999px; font-size: 0.8em; color: #333; }
+              .subgroup { padding: 8px 12px 10px 12px; }
+              .subhead { font-weight: 700; margin: 8px 0; color: #333; }
+              ul.list { margin: 0; padding: 0; list-style: none; }
+              ul.list li {
+                  background: #f9f9f9; border: 1px solid #eee; padding: 8px 10px; border-radius: 6px;
+                  display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+              }
+              .chips { display: flex; gap: 6px; align-items: center; }
+              .chip {
+                  background: #eef2f7; border: 1px solid #cfd7e3; color: #111;
+                  border-radius: 999px; padding: 2px 8px; font-size: 0.75em;
+              }
+              .chip.ok { background: #d1fae5; border-color: #0f5132; color: #062014; }
+              .empty { padding: 14px; border: 1px dashed #ccc; border-radius: 8px; color: #666; background: #fdfdfd; }
+              .spacer { flex: 1; }
+          </style>
+      `;
+
+      node.innerHTML = `
+        ${pdfContentStyle}
+        <div class="pdf-container">
+            <div class="pdf-title">Book List${name?': '+escapeHtml(name):''}</div>
+            <div class="pdf-meta">Generated ${new Date().toLocaleString()}</div>
+            ${listContent}
+        </div>
+      `;
+
+      const opt = {
+        margin: 10,
+        filename: `BookList${name?'-'+name.replace(/[\\/:*?"<>|]/g,''):''}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css','legacy'] }
+      };
+      html2pdf().set(opt).from(node).save();
+    }
+
+    // ===== Data load (XLSX via SheetJS) =====
+    async function loadSheet(){
+      $('#resultsCounter').textContent = 'Loading…';
+      try{
+        const resp = await fetch(XLSX_URL, { cache:'no-store' });
+        if (!resp.ok) {
+            throw new Error(`Fetch failed: ${resp.status} ${resp.statusText}. Ensure the Google Sheet is published to the web (File > Share > Publish to web) and shared with "Anyone with the link can view". Also, double-check your SHEET_ID.`);
+        }
+        const ab = await resp.arrayBuffer();
+        const wb = XLSX.read(ab, { type: 'array' });
+        const firstName = wb.SheetNames[0];
+        const ws = wb.Sheets[firstName];
+        const rows2D = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
+        rawRows = arrayToObjects(rows2D);
+
+        populateFilters();
+        applyFilters(); // initial
+      }catch(err){
+        console.error(err);
+        $('#results').innerHTML = `<div class="empty">Failed to load the sheet.<br><br><code>${escapeHtml(err.message)}</code><br><br>Please check the console for more details.</div>`;
+        $('#resultsCounter').textContent = '0 items';
+      }
+    }
+
+    // ===== Events =====
+    $('#filtersForm').addEventListener('submit', applyFilters);
+    $('#level').addEventListener('change', ()=>{
+      populateFilters();
+      applyFilters();
+    });
+    $('#subject').addEventListener('change', ()=>{
+      populateFilters();
+      applyFilters();
+    });
+    $('#banding').addEventListener('change', applyFilters);
+    $('#compOnly').addEventListener('change', applyFilters);
+    // Use 'input' event for real-time searching as the user types
+    $('#search').addEventListener('input', applyFilters);
+
+    $('#resetBtn').addEventListener('click', ()=>{
+      $('#filtersForm').reset(); // More effective way to reset a form
+      populateFilters();
+      applyFilters();
+    });
+
+    $('#addBtn').addEventListener('click', addCurrentToMyList);
+    $('#clearBtn').addEventListener('click', clearMyList);
+    $('#pdfBtn').addEventListener('click', downloadPDF);
+    $('#studentName').addEventListener('input', renderMyList);
+
+    // Init
+    loadSheet();
   });
-  $('#subject').addEventListener('change', ()=>{
-    // When subject changes, re-populate banding based on the new subject (and current level), then apply filters
-    populateFilters();
-    applyFilters();
-  });
-  $('#banding').addEventListener('change', applyFilters);
-  $('#compOnly').addEventListener('change', applyFilters);
-  $('#search').addEventListener('input', applyFilters);
-
-  $('#resetBtn').addEventListener('click', ()=>{
-    $('#level').value = ''; $('#subject').value = ''; $('#banding').value = '';
-    $('#search').value = ''; $('#compOnly').checked = false;
-    populateFilters(); // Re-populate all filters with 'All' options
-    applyFilters(); // Apply filters to show all results initially
-  });
-
-  $('#addBtn').addEventListener('click', addCurrentToMyList);
-  $('#clearBtn').addEventListener('click', clearMyList);
-  $('#pdfBtn').addEventListener('click', downloadPDF);
-  $('#studentName').addEventListener('input', renderMyList);
-
-  // Init
-  loadSheet();
   </script>
 </body>
 </html>
