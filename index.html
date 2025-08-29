@@ -222,7 +222,7 @@
         <table id="myListTable">
           <thead>
             <tr>
-              <th>SN</th>
+              <th>No</th>
               <th>Subject</th>
               <th>Title</th>
               <th>Publisher</th>
@@ -484,12 +484,12 @@
         $('#myListTable').style.display = '';
         
         // Sort by SN for consistent ordering
-        listItems.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
+        // listItems.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
 
         listItems.forEach(book => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${book.sn}</td>
+            <td>${idx + 1}</td>
             <td>${book.subject}</td>
             <td>${book.title}</td>
             <td>${book.publisher}</td>
@@ -560,12 +560,14 @@
             return;
         }
 
-        const listItems = Array.from(myBookList.values())
-          .sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
+        //const listItems = Array.from(myBookList.values())
+          //.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
+        // Keep insertion order to match on-screen numbering
+        const listItems = Array.from(myBookList.values());
 
-        const headers = ['SN', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
+        const headers = ['No', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
         const data = listItems.map(book => [
-            book.sn,
+            idx + 1,
             book.subject,
             book.title,
             book.publisher,
