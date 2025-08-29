@@ -182,55 +182,130 @@
 
   /* Mobile: smaller type + fixed table layout, NO WRAP */
 /* ===== Mobile: slim sticky Action column + scroll, no wrap ===== */
-/* ===== Mobile: slim sticky Action col; only affect table action buttons ===== */
+/* ============================================================
+   Mobile tables: side-scroll + sticky Action column (right)
+   - NO wrapping (inherits your global th/td white-space: nowrap)
+   - Icon-only buttons ONLY inside the Action column cells
+   - Standardized mobile font sizes so headers/body feel consistent
+   ----------------------------------------------------------------
+   QUICK TUNING (change just these):
+     --table-min-results : minimum width for #resultsTable before scrolling
+     --table-min-mylist  : minimum width for #myListTable  before scrolling
+     --action-col        : Action column width (match button size + a bit)
+     --action-btn        : Button visual size inside the Action column
+     --action-ico        : Icon glyph size ("+", "✓", "−")
+     --mobile-font-body  : Base mobile body font size
+     --mobile-font-th    : Mobile table header font size
+     --mobile-font-td    : Mobile table cell font size
+   ============================================================ */
 @media (max-width: 600px){
-  /* Keep side-scroll */
-  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  #resultsTable { table-layout: auto; min-width: 900px; }
-  #myListTable  { table-layout: auto; min-width: 1000px; }
+  :root{
+    /* -------- Layout & sizing knobs -------- */
+    --table-min-results: 900px;
+    --table-min-mylist : 1000px;
 
-  /* Freeze ONLY the Action column on the right */
+    /* Action column/button sizing */
+    --action-col: 48px;   /* was 56px; shrink here to save horizontal space */
+    --action-btn: 36px;   /* was 40px; keep ≥36px for comfortable taps */
+    --action-ico: 16px;   /* was 18px */
+
+    /* -------- Standardized mobile font sizes -------- */
+    --mobile-font-body: 14px;
+    --mobile-font-th  : 12px;
+    --mobile-font-td  : 13px;
+  }
+
+  /* Standardize mobile font sizes (keeps things consistent) */
+  body { font-size: var(--mobile-font-body); }
+  #resultsTable th, #myListTable th { font-size: var(--mobile-font-th); }
+  #resultsTable td, #myListTable td { font-size: var(--mobile-font-td); }
+
+  /* Restore horizontal scroll for wide tables */
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #resultsTable { table-layout: auto; min-width: var(--table-min-results); }
+  #myListTable  { table-layout: auto; min-width: var(--table-min-mylist); }
+
+  /* Freeze ONLY the Action column on the right (both tables) */
   #resultsTable th:last-child, #resultsTable td:last-child,
   #myListTable  th:last-child, #myListTable  td:last-child{
     position: sticky;
     right: 0;
-    background: #fff;
     z-index: 3;
-    width: 56px;      /* narrow column */
-    min-width: 56px;
-    max-width: 56px;
     text-align: center;
+
+    /* Column width controlled by variable */
+    width: var(--action-col);
+    min-width: var(--action-col);
+    max-width: var(--action-col);
+
+    /* Visual separation from scrolling content */
+    background: #fff; /* match body cell background */
     box-shadow: -8px 0 8px -8px rgba(0,0,0,0.15);
   }
+  /* Ensure header cell stacks above sticky body cells */
   #resultsTable thead th:last-child,
-  #myListTable  thead th:last-child{ z-index: 4; }
+  #myListTable  thead th:last-child{
+    z-index: 4;
+    background: #f4f5f7; /* match your header background color */
+  }
 
-  /* ——— Icon-only buttons: scope to Action cells ONLY ——— */
+  /* Icon-only buttons — scoped to Action cells ONLY (so other .btns are unaffected) */
   #resultsTable td:last-child .add-btn,
   #resultsTable td:last-child .remove-btn,
   #myListTable  td:last-child .remove-btn{
-    padding: 0;                 /* don't touch other .btns */
-    width: 40px; height: 40px;  /* good tap target */
+    padding: 0;                 /* do NOT affect global .btns */
+    width: var(--action-btn);
+    height: var(--action-btn);
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0;               /* visually hide text, keep for a11y */
+    font-size: 0;               /* visually hide text; keep for a11y with aria-label/title */
     line-height: 1;
   }
-  /* Show simple glyphs */
-  #resultsTable td:last-child .add-btn::after           { content: "+";  font-size: 18px; }
-  #resultsTable td:last-child .add-btn.success::after,
-  #resultsTable td:last-child .add-btn[disabled]::after { content: "✓";  font-size: 18px; }
-  #resultsTable td:last-child .remove-btn::after,
-  #myListTable  td:last-child .remove-btn::after        { content: "−";  font-size: 18px; }
 
-  /* Keep first column non-sticky on small screens to avoid crowding */
+  /* Glyphs for icon-only buttons (change content if you prefer emoji or SVG) */
+  #resultsTable td:last-child .add-btn::after                 { content: "+"; font-size: var(--action-ico); }
+  #resultsTable td:last-child .add-btn.success::after,
+  #resultsTable td:last-child .add-btn[disabled]::after       { content: "✓"; font-size: var(--action-ico); }
+  #resultsTable td:last-child .remove-btn::after,
+  #myListTable  td:last-child .remove-btn::after              { content: "−"; font-size: var(--action-ico); }
+
+  /* Unfreeze the first column on very small screens to reduce crowding */
   #resultsTable th:first-child, #resultsTable td:first-child,
   #myListTable  th:first-child, #myListTable  td:first-child{
     position: static;
   }
+
+  /* (Optional) Keep tap targets accessible if you shrink below 36px:
+     Expands the clickable area to ~44px without changing visuals.
+     Remove this if not needed. */
+  #resultsTable td:last-child .add-btn,
+  #resultsTable td:last-child .remove-btn,
+  #myListTable  td:last-child .remove-btn{ position: relative; }
+  #resultsTable td:last-child .add-btn::before,
+  #resultsTable td:last-child .remove-btn::before,
+  #myListTable  td:last-child .remove-btn::before{
+    content:"";
+    position:absolute;
+    inset:-4px;  /* grow hit area */
+  }
 }
+
+/* ===== Developer Notes =========================================
+  • To make the Action column narrower/wider:
+      change --action-col (column) and --action-btn / --action-ico (button/icon).
+  • To give more space to Title/ISBN columns:
+      increase --table-min-results / --table-min-mylist so users scroll more.
+  • To adjust when this layout kicks in:
+      change the @media breakpoint (max-width: 600px).
+  • Accessibility:
+      keep aria-label/title on buttons, and prefer ≥36px visual size
+      or enable the hit-area ::before block above.
+  • Scope:
+      styles only target the last column (Action) cells; your other .btns
+      (Apply Filters, Reset, Download XLSX, Clear) remain untouched.
+================================================================= */
 
 
 
