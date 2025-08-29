@@ -252,9 +252,17 @@
 
     // options
     const ALL = "ALL";
+    const SELECT = "SELECT";
     const isAll = v => v === ALL;
+    const isSelect = v => v === SELECT;
     const matches = (filter, value) => isAll(filter) || value === filter;
 
+    const LABELS = {
+      level:   { singular: 'Level',   plural: 'Levels' },
+      subject: { singular: 'Subject', plural: 'Subjects' },
+      banding: { singular: 'Banding', plural: 'Bandings' },
+    };
+    
 
     // ===== DOM Elements =====
     const $ = sel => document.querySelector(sel);
@@ -269,6 +277,8 @@
     let allBooks = [];
     let filteredBooks = [];
     const myBookList = new Map(); // Use Map to prevent duplicates and easily manage items.
+    let awaitSelection = true; // while any dropdown is "Select", show empty result
+
 
     // ===== Utility Functions =====
     const normalize = v => (v ?? '').toString().trim();
@@ -325,83 +335,105 @@
     }
 
     /**
-     * Populates a <select> dropdown with unique, sorted values.
+     * Populates a <select> with:
+     * 1) Select (default, yields empty results)
+     * 2) All ...
+     * 3) Actual values
      */
     function populateSelect(selectElement, values, currentValue) {
-      const uniqueValues = [...new Set(values.filter(Boolean))].sort((a,b) => a.localeCompare(b, 'en', { numeric: true }));
-      
-      selectElement.innerHTML = `<option value="${ALL}">All ${selectElement.id.charAt(0).toUpperCase() + selectElement.id.slice(1)}s</option>`; // e.g., "All Levels"
+      const uniqueValues = [...new Set(values.filter(Boolean))]
+        .sort((a,b) => a.localeCompare(b, 'en', { numeric: true }));
+
+      const { singular, plural } = LABELS[selectElement.id] || { singular: 'Option', plural: 'Options' };
+
+      // Build options
+      selectElement.innerHTML = `
+        <option value="${SELECT}">Select ${singular}</option>
+        <option value="${ALL}">All ${plural}</option>
+      `;
+
       uniqueValues.forEach(val => {
         const option = document.createElement('option');
         option.value = val;
         option.textContent = val;
         selectElement.appendChild(option);
       });
-      selectElement.value = currentValue && currentValue !== "" ? currentValue : ALL;
+
+      // Default to SELECT unless a specific currentValue is provided
+      selectElement.value = currentValue && currentValue !== "" ? currentValue : SELECT;
     }
 
-    /**
-     * Populates all filter dropdowns based on the available books.
-     */
+
     function populateFilters() {
       const levelSel = $('#level');
       const subjectSel = $('#subject');
       const bandingSel = $('#banding');
 
       // Preserve current filter values
-      const currentFilters = {
-        level: levelSel.value || ALL,
-        subject: subjectSel.value || ALL,
-        banding: bandingSel.value || ALL
+      const current = {
+        level: levelSel.value || SELECT,
+        subject: subjectSel.value || SELECT,
+        banding: bandingSel.value || SELECT
       };
 
-      populateSelect(levelSel, allBooks.map(b => b.level), currentFilters.level);
+      // Build Level options from all books
+      populateSelect(levelSel, allBooks.map(b => b.level), current.level);
 
-      const subjectPool = allBooks.filter(b => isAll(currentFilters.level) || b.level === currentFilters.level);
-      populateSelect(subjectSel, subjectPool.map(b => b.subject), currentFilters.subject);
+      // If level is ALL or SELECT, use full pool; else filter by level
+      const subjectPool = (isAll(current.level) || isSelect(current.level))
+        ? allBooks
+        : allBooks.filter(b => b.level === current.level);
+      populateSelect(subjectSel, subjectPool.map(b => b.subject), current.subject);
 
-      const bandingPool = subjectPool.filter(b => isAll(currentFilters.subject) || b.subject === currentFilters.subject);
-      populateSelect(bandingSel, bandingPool.map(b => b.banding), currentFilters.banding);
+      // If subject is ALL or SELECT, use subjectPool; else filter by subject
+      const bandingPool = (isAll(current.subject) || isSelect(current.subject))
+        ? subjectPool
+        : subjectPool.filter(b => b.subject === current.subject);
+      populateSelect(bandingSel, bandingPool.map(b => b.banding), current.banding);
+    }
 
+    function applyFilters(event) {
+      if (event) event.preventDefault();
+
+      const level = $('#level').value;
+      const subject = $('#subject').value;
+      const banding = $('#banding').value;
+      const compOnly = $('#compOnly').checked;
+      const keyword = $('#search').value.trim().toLowerCase();
+
+      // If ANY dropdown is still "Select", show empty results (default state)
+      awaitSelection = [level, subject, banding].some(isSelect);
+      if (awaitSelection) {
+        filteredBooks = [];
+        renderResultsTable();
+        return;
+      }
+
+      // Normal filtering (with "All" support)
+      filteredBooks = allBooks.filter(book =>
+        matches(level,   book.level)   &&
+        matches(subject, book.subject) &&
+        matches(banding, book.banding) &&
+        (!compOnly || book.compulsory) &&
+        (!keyword || book.title.toLowerCase().includes(keyword))
+      );
+
+      renderResultsTable();
     }
     
-    /**
-     * Applies the selected filters to the list of all books.
-     */
-    function applyFilters(event) {
-        if (event) event.preventDefault();
-
-        const level = $('#level').value;
-        const subject = $('#subject').value;
-        const banding = $('#banding').value;
-        const compOnly = $('#compOnly').checked;
-        const keyword = $('#search').value.trim().toLowerCase();
-
-        filteredBooks = allBooks.filter(book =>
-            matches(level,   book.level)   &&
-            matches(subject, book.subject) &&
-            matches(banding, book.banding) &&
-            (!compOnly || book.compulsory) &&
-            (!keyword || book.title.toLowerCase().includes(keyword))
-        );
-
-        renderResultsTable();
-    }
-
-    /**
-     * Renders the filtered search results into the main table.
-     */
     function renderResultsTable() {
       resultsTableBody.innerHTML = ''; // Clear previous results
 
       if (filteredBooks.length === 0) {
-        resultsMessage.textContent = 'No books match your current filters.';
-        resultsMessage.style.display = 'block';
         $('#resultsTable').style.display = 'none';
+        resultsMessage.style.display = 'block';
+        resultsMessage.textContent = awaitSelection
+          ? 'Select a Level, Subject, and Banding (or choose “All”) to see books.'
+          : 'No books match your current filters.';
       } else {
         resultsMessage.style.display = 'none';
         $('#resultsTable').style.display = '';
-        
+
         filteredBooks.forEach(book => {
           const row = document.createElement('tr');
           const isAdded = myBookList.has(book.sn);
@@ -423,8 +455,10 @@
           resultsTableBody.appendChild(row);
         });
       }
+
       resultsCounter.textContent = `${filteredBooks.length} book(s) found.`;
     }
+    
 
     /**
      * Renders the user's selected books into the "My Book List" table.
@@ -559,7 +593,10 @@
         const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
         allBooks = processSheetData(data);
-        filteredBooks = [...allBooks]; // Initially, all books are "filtered"
+
+        // Start empty until user picks filters
+        filteredBooks = [];
+        awaitSelection = true;
 
         populateFilters();
         renderResultsTable();
