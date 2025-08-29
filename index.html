@@ -357,11 +357,12 @@
 
       populateSelect(levelSel, allBooks.map(b => b.level), currentFilters.level);
 
-      const subjectPool = allBooks.filter(b => !currentFilters.level || b.level === currentFilters.level);
+      const subjectPool = allBooks.filter(b => isAll(currentFilters.level) || b.level === currentFilters.level);
       populateSelect(subjectSel, subjectPool.map(b => b.subject), currentFilters.subject);
 
-      const bandingPool = subjectPool.filter(b => !currentFilters.subject || b.subject === currentFilters.subject);
+      const bandingPool = subjectPool.filter(b => isAll(currentFilters.subject) || b.subject === currentFilters.subject);
       populateSelect(bandingSel, bandingPool.map(b => b.banding), currentFilters.banding);
+
     }
     
     /**
