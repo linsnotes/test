@@ -453,7 +453,8 @@
             <td>${book.isbn}</td>
             <td>${book.price.toFixed(2)}</td>
             <td>
-              <button class="btn success add-btn" data-sn="${book.sn}" ${isAdded ? 'disabled' : ''}>
+              <button class="btn ${isAdded ? 'success' : 'primary'} add-btn"
+                      data-sn="${book.sn}" ${isAdded ? 'disabled' : ''}>
                 ${isAdded ? 'Added' : 'Add'}
               </button>
             </td>
@@ -518,6 +519,8 @@
           myBookList.set(sn, bookToAdd);
           event.target.disabled = true;
           event.target.textContent = 'Added';
+          event.target.classList.remove('primary');
+          event.target.classList.add('success');
           renderMyListTable();
         }
       }
