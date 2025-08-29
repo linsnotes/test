@@ -283,6 +283,18 @@
     const normalize = v => (v ?? '').toString().trim();
     const isCompulsory = v => /^y(es)?$/i.test(normalize(v));
 
+
+    function resetDropdownsToSelect() {
+      ['level','subject','banding'].forEach(id => { document.getElementById(id).value = SELECT; });
+      // Rebuild dependent options so everything shows "Select …" correctly
+      populateFilters();
+    }
+    function clearSearchBox() {
+      const s = document.getElementById('search');
+      if (s && s.value) s.value = '';
+    }
+
+
     /**
      * Maps spreadsheet header names to required object keys.
      * This makes the code resilient to column reordering.
