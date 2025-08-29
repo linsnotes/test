@@ -232,6 +232,40 @@
   }
 }
 
+  /* ===== Mobile: tune Action column width ===== */
+@media (max-width: 600px){
+  /* change these three numbers to taste */
+  :root{
+    --action-col: 48px;  /* column width (was 56px) */
+    --action-btn: 36px;  /* button size (was 40px) */
+    --action-ico: 16px;  /* icon size (was 18px) */
+  }
+
+  /* Column gets narrower */
+  #resultsTable th:last-child, #resultsTable td:last-child,
+  #myListTable  th:last-child, #myListTable  td:last-child{
+    width: var(--action-col);
+    min-width: var(--action-col);
+    max-width: var(--action-col);
+  }
+
+  /* Buttons shrink to fit the skinnier col (scoped to Action cells only) */
+  #resultsTable td:last-child .add-btn,
+  #resultsTable td:last-child .remove-btn,
+  #myListTable  td:last-child .remove-btn{
+    width: var(--action-btn);
+    height: var(--action-btn);
+  }
+
+  /* Icon sizes match the smaller button */
+  #resultsTable td:last-child .add-btn::after           { font-size: var(--action-ico); }
+  #resultsTable td:last-child .add-btn.success::after,
+  #resultsTable td:last-child .add-btn[disabled]::after { font-size: var(--action-ico); }
+  #resultsTable td:last-child .remove-btn::after,
+  #myListTable  td:last-child .remove-btn::after        { font-size: var(--action-ico); }
+}
+
+
 
 
 </style>
