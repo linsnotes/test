@@ -125,6 +125,18 @@
   }
   .chip.compulsory { background-color: #e6ffed; border: 1px solid #57d9a3; }
 
+  /* Make the last header cell sticky */
+  #resultsTable th:last-child,
+  #resultsTable td:last-child,
+  #myListTable th:last-child,
+  #myListTable td:last-child {
+    position: sticky;
+    right: 0;
+    background: #fff;       /* keep text readable */
+    z-index: 2;             /* ensure it stays above other cells */
+  }
+
+
   /* Helper Classes */
   .message {
     text-align: center;
