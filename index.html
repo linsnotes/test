@@ -181,59 +181,46 @@
   }
 
   /* Mobile: smaller type + fixed table layout, NO WRAP */
+/* ===== Mobile: freeze Action col + restore horizontal scroll (no ellipsis, no wrap) ===== */
 @media (max-width: 600px){
-  /* overall sizing */
-  body { font-size: 14px; }
-  header h1 { font-size: 1.2rem; }
-  #results-section h2, #my-list-section h2 { font-size: 1rem; }
-  label { font-size: 0.8rem; }
+  /* Restore scrollable wide tables */
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #resultsTable { table-layout: auto; min-width: 900px; }
+  #myListTable  { table-layout: auto; min-width: 1000px; }
 
-  /* keep tables compact and consistent */
-  #resultsTable, #myListTable { table-layout: fixed; } /* enables ellipsis to work */
+  /* No wrapping, no ellipsis */
   #resultsTable th, #resultsTable td,
-  #myListTable th, #myListTable td{
-    font-size: 12px;
-    padding: 8px 10px;
-    white-space: nowrap;        /* <-- no wrap */
-    overflow: hidden;
-    text-overflow: ellipsis;    /* show … when too long */
+  #myListTable  th, #myListTable  td{
+    white-space: nowrap;
+    overflow: visible;      /* undo any previous ellipsis */
+    text-overflow: clip;    /* undo any previous ellipsis */
+    width: auto;            /* ignore any fixed % widths from earlier */
   }
 
-  /* Column widths (tweak to taste; sums ~100%) */
-  /* Search Results: Subject, Title, Publisher, ISBN, Price, Action */
-  #resultsTable th:nth-child(1), #resultsTable td:nth-child(1) { width: 18%; }
-  #resultsTable th:nth-child(2), #resultsTable td:nth-child(2) { width: 32%; } /* Title gets more room */
-  #resultsTable th:nth-child(3), #resultsTable td:nth-child(3) { width: 16%; }
-  #resultsTable th:nth-child(4), #resultsTable td:nth-child(4) { width: 16%; }
-  #resultsTable th:nth-child(5), #resultsTable td:nth-child(5) { width: 10%; }
-  #resultsTable th:nth-child(6), #resultsTable td:nth-child(6) { width: 8%;  }
+  /* Keep ONLY the Action column sticky on the right */
+  #resultsTable th:last-child, #resultsTable td:last-child,
+  #myListTable  th:last-child, #myListTable  td:last-child{
+    position: sticky;
+    right: 0;
+    background: #fff;
+    z-index: 3;                     /* stay above body cells */
+    min-width: 96px;                /* room for the button */
+    box-shadow: -8px 0 8px -8px rgba(0,0,0,0.15); /* subtle divider */
+  }
+  /* Ensure the header Action cell sits above its column cells */
+  #resultsTable thead th:last-child,
+  #myListTable  thead th:last-child{ z-index: 4; }
 
-  /* My Book List: No, Subject, Title, Publisher, ISBN, Price, Action */
-  #myListTable th:nth-child(1), #myListTable td:nth-child(1) { width: 6%;  }  /* No */
-  #myListTable th:nth-child(2), #myListTable td:nth-child(2) { width: 16%; }  /* Subject */
-  #myListTable th:nth-child(3), #myListTable td:nth-child(3) { width: 32%; }  /* Title */
-  #myListTable th:nth-child(4), #myListTable td:nth-child(4) { width: 16%; }  /* Publisher */
-  #myListTable th:nth-child(5), #myListTable td:nth-child(5) { width: 16%; }  /* ISBN */
-  #myListTable th:nth-child(6), #myListTable td:nth-child(6) { width: 7%;  }  /* Price */
-  #myListTable th:nth-child(7), #myListTable td:nth-child(7) { width: 7%;  }  /* Action */
-
-  /* Buttons/chips tighter so Action column fits */
-  .btn { padding: 6px 10px; font-size: 12px; }
-  .chip { font-size: 11px; padding: 1px 6px; }
-}
-
-/* Extra-small phones: disable sticky edge columns to avoid odd overlaps */
-@media (max-width: 480px){
+  /* Unfreeze the first column on mobile (keeps layout clean) */
   #resultsTable th:first-child, #resultsTable td:first-child,
-  #resultsTable th:last-child,  #resultsTable td:last-child,
-  #myListTable th:first-child,  #myListTable td:first-child,
-  #myListTable th:last-child,   #myListTable td:last-child{
+  #myListTable  th:first-child, #myListTable  td:first-child{
     position: static;
   }
+
+  /* Make buttons fit comfortably in the sticky Action col */
+  .btn { padding: 6px 10px; font-size: 12px; }
 }
 
-/* Smoother horizontal scroll on iOS */
-.table-wrapper { -webkit-overflow-scrolling: touch; }
 
 
 </style>
