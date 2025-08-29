@@ -672,12 +672,20 @@ th.action-col, td.action-cell {
         const bookToAdd = filteredBooks.find(b => b.sn === sn);
         if (bookToAdd && !myBookList.has(sn)) {
           myBookList.set(sn, bookToAdd);
-          event.target.disabled = true;
-          event.target.textContent = 'Added';
+
+          // Disable ALL Add buttons for this SN (desktop + inline)
+          document.querySelectorAll(`.add-btn[data-sn="${sn}"]`).forEach(btn => {
+            btn.disabled = true;
+            btn.textContent = 'Added';
+          });
+
           renderMyListTable();
         }
       }
     }
+
+
+    
 
     /**
      * Handles clicks within the "My List" table (e.g., "Remove" buttons).
