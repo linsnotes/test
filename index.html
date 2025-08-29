@@ -299,6 +299,109 @@ th.action-col, td.action-cell {
   /* Buttons stack cleanly on very small screens */
   .button-group { gap: 8px; }
   .button-group .btn { flex: 1 1 100%; }
+
+/* ---- Collapsed/expanded card layout for results (mobile only) ---- */
+
+/* Base: 2 columns (content + right rail for price/action) */
+#resultsTable tr {
+  grid-template-columns: 1fr 140px;     /* right column wide enough for price + button */
+  grid-template-areas:
+    "title title"
+    "price action";                      /* collapsed default shows price + action */
+}
+
+/* Expanded: reveal subject/publisher/isbn between title and footer */
+#resultsTable tr.expanded {
+  grid-template-areas:
+    "title title"
+    "subject subject"
+    "publisher publisher"
+    "isbn isbn"
+    "price action";
+}
+
+/* Map cells into areas (already present, kept here for clarity) */
+#resultsTable td:nth-child(1){ grid-area: title; }
+#resultsTable td:nth-child(2){ grid-area: subject; }
+#resultsTable td:nth-child(3){ grid-area: publisher; }
+#resultsTable td:nth-child(4){ grid-area: isbn; }
+#resultsTable td:nth-child(5){ grid-area: price; }
+#resultsTable td:nth-child(6){ grid-area: action; }
+
+/* Hide metadata by default (collapsed), reveal when expanded */
+#resultsTable tr:not(.expanded) td:nth-child(2),
+#resultsTable tr:not(.expanded) td:nth-child(3),
+#resultsTable tr:not(.expanded) td:nth-child(4) {
+  display: none;
+}
+
+/* Title row becomes a clean header */
+#resultsTable td.title-cell {
+  position: relative;
+  padding-right: 44px;                   /* room for chevron */
+  -webkit-line-clamp: 3;                 /* slightly roomier on mobile */
+  margin-bottom: 2px;
+}
+
+/* Right-side footer row: align price + button neatly */
+#resultsTable td.price-cell,
+#resultsTable td.action-cell {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+#resultsTable td.price-cell { justify-content: flex-start; }
+#resultsTable td.action-cell { justify-content: flex-end; }
+
+/* Hide labels for price/action; keep labels for meta fields when expanded */
+#resultsTable td.price-cell::before,
+#resultsTable td.action-cell::before { display: none; }
+
+/* Meta block cosmetics (only visible in expanded state) */
+#resultsTable tr.expanded td:nth-child(2),
+#resultsTable tr.expanded td:nth-child(3),
+#resultsTable tr.expanded td:nth-child(4) {
+  border-top: 1px dashed #e6e8eb;
+  padding-top: 6px;
+  color: #2e3a4a;
+}
+
+/* Chevron toggle: touch-friendly, right-aligned in the title cell */
+#resultsTable .card-toggle {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #dfe1e6;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+#resultsTable .card-toggle::before {
+  content: "⌄";                           /* simple chevron */
+  display: block;
+  font-size: 16px;
+  line-height: 26px;
+  text-align: center;
+}
+#resultsTable tr.expanded .card-toggle::before {
+  transform: rotate(180deg);
+}
+#resultsTable .card-toggle:active {
+  background: #f4f5f7;
+}
+
+/* Tighter label/value grid so values get more room */
+#resultsTable td { grid-template-columns: 35% 1fr; }  /* was 40% 1fr */
+
+/* Buttons: full width on the smallest screens */
+.button-group { gap: 8px; }
+.button-group .btn { flex: 1 1 100%; }
+
+
+
+  
 }
 
 
@@ -630,6 +733,7 @@ th.action-col, td.action-cell {
               <button class="btn success add-btn add-btn-inline" data-sn="${book.sn}" ${isAdded ? 'disabled' : ''}>
                 ${isAdded ? 'Added' : 'Add'}
               </button>
+              <button class="card-toggle" aria-expanded="false" aria-label="Show details"></button>
             </td>
             <td data-label="Subject">${book.subject}</td>
             <td class="hide-sm" data-label="Publisher">${book.publisher}</td>
@@ -693,23 +797,41 @@ th.action-col, td.action-cell {
     /**
      * Handles clicks within the results table (e.g., "Add" buttons).
      */
+
     function handleResultsClick(event) {
+      // 1) Add button logic (existing)
       if (event.target.classList.contains('add-btn')) {
         const sn = event.target.dataset.sn;
         const bookToAdd = filteredBooks.find(b => b.sn === sn);
         if (bookToAdd && !myBookList.has(sn)) {
           myBookList.set(sn, bookToAdd);
-
-          // Disable ALL Add buttons for this SN (desktop + inline)
           document.querySelectorAll(`.add-btn[data-sn="${sn}"]`).forEach(btn => {
             btn.disabled = true;
             btn.textContent = 'Added';
           });
-
           renderMyListTable();
         }
+        return;
+      }
+
+      // 2) NEW: expand/collapse toggle (mobile cards)
+
+      if (event.target.classList.contains('card-toggle')) {
+        const tr = event.target.closest('tr');
+        const tbody = tr.parentElement;
+        // close others
+        tbody.querySelectorAll('tr.expanded').forEach(row => {
+          if (row !== tr) {
+            row.classList.remove('expanded');
+            row.querySelector('.card-toggle')?.setAttribute('aria-expanded', 'false');
+          }
+        });
+        // toggle current
+        const expanded = tr.classList.toggle('expanded');
+        event.target.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       }
     }
+
 
 
     
