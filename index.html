@@ -395,6 +395,44 @@ th.action-col, td.action-cell {
     .btn { padding: 12px 16px; min-height: 44px; }
   }
 }
+/* --- MOBILE CARD HOTFIX (place at the very end of your CSS) --- */
+@media (max-width: 640px){
+  /* 1) Show ONLY the footer Add button (hide the inline one in the title) */
+  #resultsTable .add-btn-inline { display: none !important; }
+
+  /* 2) Footer layout: price on the left, action button on the right */
+  #resultsTable tr { grid-template-columns: 1fr 160px; } /* give action room */
+  #resultsTable td.price-cell,
+  #resultsTable td.action-cell { display: flex !important; align-items: center; }
+  #resultsTable td.price-cell { justify-content: flex-start; }
+  #resultsTable td.action-cell { justify-content: flex-end; }
+  #resultsTable td.price-cell::before,
+  #resultsTable td.action-cell::before { display: none; } /* hide “Price” label + empty label */
+  #resultsTable td.action-cell .btn { width: 100%; min-width: 0; } /* no overflow */
+
+  /* 3) Reveal meta rows (subject/publisher/isbn) only when expanded */
+  #resultsTable tr:not(.expanded) td:nth-child(2),
+  #resultsTable tr:not(.expanded) td:nth-child(3),
+  #resultsTable tr:not(.expanded) td:nth-child(4){ display: none; }
+
+  #resultsTable tr.expanded td:nth-child(2),
+  #resultsTable tr.expanded td:nth-child(3),
+  #resultsTable tr.expanded td:nth-child(4){
+    border-top: 1px dashed #e6e8eb;
+    padding-top: 6px;
+  }
+
+  /* 4) Chevron cosmetic: don’t cover content */
+  .card-header .card-chevron,
+  .card-header::after{
+    background: transparent;             /* remove white disc fill */
+    border: 1px solid var(--border);
+  }
+}
+
+
+
+  
 </style>
 </head>
 <body>
