@@ -198,114 +198,94 @@
      --mobile-font-th    : Mobile table header font size
      --mobile-font-td    : Mobile table cell font size
    ============================================================ */
+/* ============================================================
+   Mobile tables (scoped): side-scroll + sticky Action column
+   ============================================================ */
 @media (max-width: 600px){
-  :root{
-    /* -------- Layout & sizing knobs -------- */
+  /* Put custom properties on the app wrapper (not :root) */
+  .booklist-app{
     --table-min-results: 900px;
     --table-min-mylist : 1000px;
 
-    /* Action column/button sizing */
-    --action-col: 48px;   /* was 56px; shrink here to save horizontal space */
-    --action-btn: 36px;   /* was 40px; keep ≥36px for comfortable taps */
-    --action-ico: 16px;   /* was 18px */
+    --action-col: 48px;
+    --action-btn: 36px;
+    --action-ico: 16px;
 
-    /* -------- Standardized mobile font sizes -------- */
     --mobile-font-body: 14px;
     --mobile-font-th  : 12px;
     --mobile-font-td  : 13px;
   }
 
-  /* Standardize mobile font sizes (keeps things consistent) */
-  body { font-size: var(--mobile-font-body); }
-  #resultsTable th, #myListTable th { font-size: var(--mobile-font-th); }
-  #resultsTable td, #myListTable td { font-size: var(--mobile-font-td); }
+  /* Standardize mobile font sizes */
+  .booklist-app { font-size: var(--mobile-font-body); }
+  .booklist-app #resultsTable th,
+  .booklist-app #myListTable th { font-size: var(--mobile-font-th); }
+  .booklist-app #resultsTable td,
+  .booklist-app #myListTable td { font-size: var(--mobile-font-td); }
 
-  /* Restore horizontal scroll for wide tables */
-  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  #resultsTable { table-layout: auto; min-width: var(--table-min-results); }
-  #myListTable  { table-layout: auto; min-width: var(--table-min-mylist); }
+  /* Side-scroll */
+  .booklist-app .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .booklist-app #resultsTable { table-layout: auto; min-width: var(--table-min-results); }
+  .booklist-app #myListTable  { table-layout: auto; min-width: var(--table-min-mylist); }
 
-  /* Freeze ONLY the Action column on the right (both tables) */
-  #resultsTable th:last-child, #resultsTable td:last-child,
-  #myListTable  th:last-child, #myListTable  td:last-child{
+  /* Sticky Action column (right) */
+  .booklist-app #resultsTable th:last-child,
+  .booklist-app #resultsTable td:last-child,
+  .booklist-app #myListTable  th:last-child,
+  .booklist-app #myListTable  td:last-child{
     position: sticky;
     right: 0;
     z-index: 3;
     text-align: center;
-
-    /* Column width controlled by variable */
     width: var(--action-col);
     min-width: var(--action-col);
     max-width: var(--action-col);
-
-    /* Visual separation from scrolling content */
-    background: #fff; /* match body cell background */
+    background: #fff;
     box-shadow: -8px 0 8px -8px rgba(0,0,0,0.15);
   }
-  /* Ensure header cell stacks above sticky body cells */
-  #resultsTable thead th:last-child,
-  #myListTable  thead th:last-child{
+  .booklist-app #resultsTable thead th:last-child,
+  .booklist-app #myListTable  thead th:last-child{
     z-index: 4;
-    background: #f4f5f7; /* match your header background color */
+    background: #f4f5f7;
   }
 
-  /* Icon-only buttons — scoped to Action cells ONLY (so other .btns are unaffected) */
-  #resultsTable td:last-child .add-btn,
-  #resultsTable td:last-child .remove-btn,
-  #myListTable  td:last-child .remove-btn{
-    padding: 0;                 /* do NOT affect global .btns */
+  /* Icon-only buttons — scoped to Action cells ONLY */
+  .booklist-app #resultsTable td:last-child .add-btn,
+  .booklist-app #resultsTable td:last-child .remove-btn,
+  .booklist-app #myListTable  td:last-child .remove-btn{
+    padding: 0;
     width: var(--action-btn);
     height: var(--action-btn);
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0;               /* visually hide text; keep for a11y with aria-label/title */
+    font-size: 0;  /* keep aria-label/title for a11y */
     line-height: 1;
   }
+  .booklist-app #resultsTable td:last-child .add-btn::after                 { content: "+"; font-size: var(--action-ico); }
+  .booklist-app #resultsTable td:last-child .add-btn.success::after,
+  .booklist-app #resultsTable td:last-child .add-btn[disabled]::after       { content: "✓"; font-size: var(--action-ico); }
+  .booklist-app #resultsTable td:last-child .remove-btn::after,
+  .booklist-app #myListTable  td:last-child .remove-btn::after              { content: "−"; font-size: var(--action-ico); }
 
-  /* Glyphs for icon-only buttons (change content if you prefer emoji or SVG) */
-  #resultsTable td:last-child .add-btn::after                 { content: "+"; font-size: var(--action-ico); }
-  #resultsTable td:last-child .add-btn.success::after,
-  #resultsTable td:last-child .add-btn[disabled]::after       { content: "✓"; font-size: var(--action-ico); }
-  #resultsTable td:last-child .remove-btn::after,
-  #myListTable  td:last-child .remove-btn::after              { content: "−"; font-size: var(--action-ico); }
-
-  /* Unfreeze the first column on very small screens to reduce crowding */
-  #resultsTable th:first-child, #resultsTable td:first-child,
-  #myListTable  th:first-child, #myListTable  td:first-child{
+  /* Unfreeze first column on tiny screens */
+  .booklist-app #resultsTable th:first-child, .booklist-app #resultsTable td:first-child,
+  .booklist-app #myListTable  th:first-child, .booklist-app #myListTable  td:first-child{
     position: static;
   }
 
-  /* (Optional) Keep tap targets accessible if you shrink below 36px:
-     Expands the clickable area to ~44px without changing visuals.
-     Remove this if not needed. */
-  #resultsTable td:last-child .add-btn,
-  #resultsTable td:last-child .remove-btn,
-  #myListTable  td:last-child .remove-btn{ position: relative; }
-  #resultsTable td:last-child .add-btn::before,
-  #resultsTable td:last-child .remove-btn::before,
-  #myListTable  td:last-child .remove-btn::before{
-    content:"";
-    position:absolute;
-    inset:-4px;  /* grow hit area */
+  /* Optional: larger click area if you shrink buttons below 36px */
+  .booklist-app #resultsTable td:last-child .add-btn,
+  .booklist-app #resultsTable td:last-child .remove-btn,
+  .booklist-app #myListTable  td:last-child .remove-btn{ position: relative; }
+  .booklist-app #resultsTable td:last-child .add-btn::before,
+  .booklist-app #resultsTable td:last-child .remove-btn::before,
+  .booklist-app #myListTable  td:last-child .remove-btn::before{
+    content:""; position:absolute; inset:-4px;
   }
 }
 
-/* ===== Developer Notes =========================================
-  • To make the Action column narrower/wider:
-      change --action-col (column) and --action-btn / --action-ico (button/icon).
-  • To give more space to Title/ISBN columns:
-      increase --table-min-results / --table-min-mylist so users scroll more.
-  • To adjust when this layout kicks in:
-      change the @media breakpoint (max-width: 600px).
-  • Accessibility:
-      keep aria-label/title on buttons, and prefer ≥36px visual size
-      or enable the hit-area ::before block above.
-  • Scope:
-      styles only target the last column (Action) cells; your other .btns
-      (Apply Filters, Reset, Download XLSX, Clear) remain untouched.
-================================================================= */
 
 
 
@@ -313,7 +293,7 @@
 </head>
 <body>
 
-  <div class="container">
+  <div class="container booklist-app">
     <header>
       <h1>Book List Builder</h1>
       <p class="subtitle">Filter textbooks and create a custom printable book list.</p>
