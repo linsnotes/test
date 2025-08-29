@@ -645,19 +645,29 @@
     });
 
     // Use event delegation for dynamic dropdown changes
-    $('#filters').addEventListener('change', event => {
-        if (event.target.tagName === 'SELECT') {
-            if (event.target.id === 'level' || event.target.id === 'subject') {
-                populateFilters();
-            }
-            applyFilters();
+    // Changing any select: clear keyword first, then keep your existing logic
+    $('#filters').addEventListener('change', (event) => {
+      if (event.target.tagName === 'SELECT') {
+        clearSearchBox(); // empty the Title Keyword box
+        if (event.target.id === 'level' || event.target.id === 'subject') {
+          populateFilters(); // dependent rebuild
         }
-        if(event.target.type === 'checkbox') {
-            applyFilters();
-        }
+        applyFilters();
+      } else if (event.target.type === 'checkbox') {
+        applyFilters();
+      }
     });
-    $('#search').addEventListener('input', applyFilters);
 
+    // Typing in search: reset selects to "Select …" when there’s text
+    $('#search').addEventListener('input', (e) => {
+      const hasText = e.target.value.trim().length > 0;
+      if (hasText) {
+        resetDropdownsToSelect();
+      }
+      applyFilters();
+    });
+
+  
     resultsTableBody.addEventListener('click', handleResultsClick);
     myListTableBody.addEventListener('click', handleMyListClick);
     $('#clearBtn').addEventListener('click', clearMyList);
