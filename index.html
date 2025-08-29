@@ -250,6 +250,12 @@
     const SHEET_ID = '1BKnMBNfnrVz0M317AysbuheMYS_TB_sbKrKCPUC386U';
     const XLSX_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
 
+    // options
+    const ALL = "ALL";
+    const isAll = v => v === ALL;
+    const matches = (filter, value) => isAll(filter) || value === filter;
+
+
     // ===== DOM Elements =====
     const $ = sel => document.querySelector(sel);
     const resultsTableBody = $('#resultsTable tbody');
@@ -323,14 +329,15 @@
      */
     function populateSelect(selectElement, values, currentValue) {
       const uniqueValues = [...new Set(values.filter(Boolean))].sort((a,b) => a.localeCompare(b, 'en', { numeric: true }));
-      selectElement.innerHTML = `<option value="">All ${selectElement.id.charAt(0).toUpperCase() + selectElement.id.slice(1)}s</option>`; // e.g., "All Levels"
+      
+      selectElement.innerHTML = `<option value="${ALL}">All ${selectElement.id.charAt(0).toUpperCase() + selectElement.id.slice(1)}s</option>`; // e.g., "All Levels"
       uniqueValues.forEach(val => {
         const option = document.createElement('option');
         option.value = val;
         option.textContent = val;
         selectElement.appendChild(option);
       });
-      selectElement.value = currentValue;
+      selectElement.value = currentValue && currentValue !== "" ? currentValue : ALL;
     }
 
     /**
@@ -343,9 +350,9 @@
 
       // Preserve current filter values
       const currentFilters = {
-        level: levelSel.value,
-        subject: subjectSel.value,
-        banding: bandingSel.value
+        level: levelSel.value || ALL,
+        subject: subjectSel.value || ALL,
+        banding: bandingSel.value || ALL
       };
 
       populateSelect(levelSel, allBooks.map(b => b.level), currentFilters.level);
@@ -370,9 +377,9 @@
         const keyword = $('#search').value.trim().toLowerCase();
 
         filteredBooks = allBooks.filter(book =>
-            (!level || book.level === level) &&
-            (!subject || book.subject === subject) &&
-            (!banding || book.banding === banding) &&
+            matches(level,   book.level)   &&
+            matches(subject, book.subject) &&
+            matches(banding, book.banding) &&
             (!compOnly || book.compulsory) &&
             (!keyword || book.title.toLowerCase().includes(keyword))
         );
