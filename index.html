@@ -181,44 +181,64 @@
   }
 
   /* Mobile: smaller type + fixed table layout, NO WRAP */
-/* ===== Mobile: freeze Action col + restore horizontal scroll (no ellipsis, no wrap) ===== */
+/* ===== Mobile: slim sticky Action column + scroll, no wrap ===== */
 @media (max-width: 600px){
-  /* Restore scrollable wide tables */
+  /* Keep side-scroll */
   .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   #resultsTable { table-layout: auto; min-width: 900px; }
   #myListTable  { table-layout: auto; min-width: 1000px; }
 
-  /* No wrapping, no ellipsis */
+  /* No wrapping anywhere */
   #resultsTable th, #resultsTable td,
   #myListTable  th, #myListTable  td{
     white-space: nowrap;
-    overflow: visible;      /* undo any previous ellipsis */
-    text-overflow: clip;    /* undo any previous ellipsis */
-    width: auto;            /* ignore any fixed % widths from earlier */
+    overflow: visible;
+    text-overflow: clip;
   }
 
-  /* Keep ONLY the Action column sticky on the right */
+  /* Freeze ONLY the Action column on the right, but make it narrow */
   #resultsTable th:last-child, #resultsTable td:last-child,
   #myListTable  th:last-child, #myListTable  td:last-child{
     position: sticky;
     right: 0;
     background: #fff;
-    z-index: 3;                     /* stay above body cells */
-    min-width: 96px;                /* room for the button */
-    box-shadow: -8px 0 8px -8px rgba(0,0,0,0.15); /* subtle divider */
+    z-index: 3;
+    width: 56px;      /* tighter column */
+    min-width: 56px;
+    max-width: 56px;
+    text-align: center;
+    box-shadow: -8px 0 8px -8px rgba(0,0,0,0.15);
   }
-  /* Ensure the header Action cell sits above its column cells */
   #resultsTable thead th:last-child,
   #myListTable  thead th:last-child{ z-index: 4; }
 
-  /* Unfreeze the first column on mobile (keeps layout clean) */
+  /* Make the buttons icon-only, comfortable tap size but narrow width */
+  .btn {
+    padding: 0;                 /* remove horizontal padding */
+    width: 40px; height: 40px;  /* ~44px tap target, still slim */
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;               /* hide text visually, keep for a11y */
+    line-height: 1;
+  }
+  .btn::after{
+    font-size: 18px;            /* icon size */
+    line-height: 1;
+  }
+
+  /* Icons per state */
+  .add-btn::after           { content: "+"; }  /* Add */
+  .add-btn.success::after,
+  .add-btn[disabled]::after { content: "✓"; }  /* Added */
+  .remove-btn::after        { content: "−"; }  /* Remove */
+
+  /* Unfreeze the first column on mobile so it doesn’t crowd */
   #resultsTable th:first-child, #resultsTable td:first-child,
   #myListTable  th:first-child, #myListTable  td:first-child{
     position: static;
   }
-
-  /* Make buttons fit comfortably in the sticky Action col */
-  .btn { padding: 6px 10px; font-size: 12px; }
 }
 
 
