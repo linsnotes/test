@@ -188,6 +188,7 @@ th.action-col, td.action-cell {
 
 /* --- True card layout under 640px --- */
 @media (max-width: 640px){
+  .hide-sm { display: grid; }  /* match your td display in card mode */
   /* Make the table render as a list of cards */
   #resultsTable thead, #myListTable thead { display: none; }
 
@@ -241,6 +242,7 @@ th.action-col, td.action-cell {
 
   /* Show labels on the left for non-title rows using data-label */
   #resultsTable td, #myListTable td{
+    white-space: normal;  /* override global nowrap so values wrap */
     display: grid;
     grid-template-columns: 40% 1fr;
     align-items: start;
@@ -258,10 +260,11 @@ th.action-col, td.action-cell {
 
   #resultsTable td.title-cell,
   #myListTable td.title-cell{
-    display: block;
+    display: -webkit-box; 
+    -webkit-box-orient: vertical;  /* required for clamp */
+    -webkit-line-clamp: 4;
     font-size: 1rem;
     font-weight: 600;
-    -webkit-line-clamp: 4;    /* a little more room in card mode */
   }
 
   /* Bring the Action back inside the card (bottom row) */
