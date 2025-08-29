@@ -391,6 +391,9 @@
       populateSelect(bandingSel, bandingPool.map(b => b.banding), current.banding);
     }
 
+    // helper: treat SELECT like no constraint during filtering
+    const effective = v => (isSelect(v) ? ALL : v);
+
     function applyFilters(event) {
       if (event) event.preventDefault();
 
@@ -400,25 +403,29 @@
       const compOnly = $('#compOnly').checked;
       const keyword = $('#search').value.trim().toLowerCase();
 
-      // If ANY dropdown is still "Select", show empty results (default state)
-      awaitSelection = [level, subject, banding].some(isSelect);
+      // Friendly gating: only block when ALL three are still Select and no other constraint
+      const anyChosen = ![level, subject, banding].every(isSelect);
+      const hasOtherConstraints = compOnly || !!keyword;
+
+      awaitSelection = !(anyChosen || hasOtherConstraints);
       if (awaitSelection) {
         filteredBooks = [];
         renderResultsTable();
         return;
       }
 
-      // Normal filtering (with "All" support)
+      // Normal filtering; SELECT behaves like ALL (no constraint)
       filteredBooks = allBooks.filter(book =>
-        matches(level,   book.level)   &&
-        matches(subject, book.subject) &&
-        matches(banding, book.banding) &&
+        matches(effective(level),   book.level)   &&
+        matches(effective(subject), book.subject) &&
+        matches(effective(banding), book.banding) &&
         (!compOnly || book.compulsory) &&
         (!keyword || book.title.toLowerCase().includes(keyword))
       );
 
       renderResultsTable();
     }
+
     
     function renderResultsTable() {
       resultsTableBody.innerHTML = ''; // Clear previous results
