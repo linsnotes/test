@@ -486,7 +486,7 @@
         // Sort by SN for consistent ordering
         // listItems.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
 
-        listItems.forEach(book => {
+        listItems.forEach((book, idx) => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${idx + 1}</td>
@@ -566,7 +566,7 @@
         const listItems = Array.from(myBookList.values());
 
         const headers = ['No', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
-        const data = listItems.map(book => [
+        const data = listItems.map((book, idx) => [
             idx + 1,
             book.subject,
             book.title,
