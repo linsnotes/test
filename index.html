@@ -512,11 +512,19 @@ tr:last-child td { border-bottom: none; }
     const isCompulsory = v => /^y(es)?$/i.test(normalize(v));
 
 
-    function resetDropdownsToSelect() {
-      ['level','subject','banding'].forEach(id => { $( '#' + id ).value = SELECT; });
+    //function resetDropdownsToSelect() {
+      //['level','subject','banding'].forEach(id => { $( '#' + id ).value = SELECT; });
       // Rebuild dependent options so everything shows "Select …" correctly
+      //populateFilters();
+    //}
+    function resetDropdownsToSelect() {
+      ['level','subject','banding'].forEach(id => {
+        document.getElementById(id).value = SELECT;
+      });
       populateFilters();
     }
+
+     
     function clearSearchBox() {
       const s = $('#search');
       if (s && s.value) s.value = '';
