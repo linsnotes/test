@@ -9,217 +9,244 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <style>
-  /* Basic Styles & Layout */
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f4f5f7;
-    color: #172b4d;
-    margin: 0;
-    padding: 20px;
-  }
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    padding: 24px;
-  }
-  header {
-    border-bottom: 1px solid #dfe1e6;
-    padding-bottom: 16px;
-    margin-bottom: 24px;
-  }
-  h1 { margin: 0 0 4px 0; }
-  h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px;}
-  .subtitle { color: #5e6c84; }
+/* ============================================
+   Typography tokens (single source of truth)
+   ============================================ */
+:root{
+  /* Global text size */
+  --font-body: 16px;
 
-  /* Forms & Filters */
-  .filters-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    align-items: end;
-  }
-  .form-group { display: flex; flex-direction: column; }
-  label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #5e6c84;
-    margin-bottom: 4px;
-  }
-  input[type="text"], select {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #c1c7d0;
-    background-color: #fafbfc;
-    box-sizing: border-box; /* Ensures padding doesn't affect width */
-  }
-  input[type="text"]:focus, select:focus {
-    border-color: #4c9aff;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(76,154,255,0.3);
-  }
-  .checkbox-group {
-    display: flex;
-    align-items: center;
-    padding-top: 24px;
-  }
-  .checkbox-group input { margin-right: 8px; }
+  /* Table scale (desktop defaults) */
+  --font-table: 15px;  /* base for both tables */
+  --font-th:    15px;  /* header text size */
+  --font-td:    15px;  /* body cell size */
 
-  /* Buttons */
-  .button-group {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .btn {
-    border: none;
-    border-radius: 4px;
-    padding: 10px 16px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-    transition: background-color 0.2s;
-  }
-  
-  .btn.primary  { background-color: #007bff; color: white; }
-  .btn.primary:hover  { background-color: #0056b3; }
-  .btn.success  { background-color: #28a745; color: white; }
-  .btn.success:hover  { background-color: #218838; }
-  .btn.danger   { background-color: #dc3545; color: white; }
-  .btn.danger:hover   { background-color: #c82333; }
-  .btn.ghost    { background-color: transparent; color: #6c757d; border: 1px solid #dfe1e6; }
-  .btn.ghost:hover { background-color: #f4f5f7; }
+  /* Inline elements inside table cells (relative to the cell) */
+  --font-btn:  1em;     /* buttons inherit from cell */
+  --font-chip: 0.85em;  /* subtle tag size */
 
-  /* Counter + Add All toolbar */
-  .results-toolbar{
-    display:flex;
-    align-items:center;
-    padding-right: 12px;
-    justify-content:space-between; /* counter left, button right */
-    gap:12px;
-    margin:16px 0; /* matches your status-message spacing */
-    flex-wrap:wrap; /* wrap on very small screens */
-  }
+  /* Column accent (Title) */
+  --font-title-weight: 500;
+}
 
-  /* Optional: make the counter not stretch when wrapping */
-  .results-toolbar .status-message{ margin:0; }
+/* ============================================
+   Base + Layout
+   ============================================ */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  background-color: #f4f5f7;
+  color: #172b4d;
+  margin: 0;
+  padding: 20px;
+  font-size: var(--font-body); /* uses global token */
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 24px;
+}
+header {
+  border-bottom: 1px solid #dfe1e6;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+h1 { margin: 0 0 4px 0; }
+h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px;}
+.subtitle { color: #5e6c84; }
 
+/* ============================================
+   Forms & Filters
+   ============================================ */
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+.form-group { display: flex; flex-direction: column; }
+label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #5e6c84;
+  margin-bottom: 4px;
+}
+input[type="text"], select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #c1c7d0;
+  background-color: #fafbfc;
+  box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+input[type="text"]:focus, select:focus {
+  border-color: #4c9aff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(76,154,255,0.3);
+}
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  padding-top: 24px;
+}
+.checkbox-group input { margin-right: 8px; }
 
+/* ============================================
+   Buttons
+   ============================================ */
+.button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn {
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 0.95rem; /* default for non-table buttons */
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s;
+}
 
-  
-  /* Tables */
-  .table-wrapper { overflow-x: auto; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-  }
-  th, td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #dfe1e6;
-    white-space: nowrap;
-  }
-  th {
-    background-color: #f4f5f7;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    color: #5e6c84;
-  }
-  tr:last-child td { border-bottom: none; }
-  .chip {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #172b4d;
-  }
-  .chip.compulsory { background-color: #e6ffed; border: 1px solid #57d9a3; }
+.btn.primary  { background-color: #007bff; color: white; }
+.btn.primary:hover  { background-color: #0056b3; }
+.btn.success  { background-color: #28a745; color: white; }
+.btn.success:hover  { background-color: #218838; }
+.btn.danger   { background-color: #dc3545; color: white; }
+.btn.danger:hover   { background-color: #c82333; }
+.btn.ghost    { background-color: transparent; color: #6c757d; border: 1px solid #dfe1e6; }
+.btn.ghost:hover { background-color: #f4f5f7; }
 
-  /* First column (left side) */
-  #resultsTable th:first-child,
-  #resultsTable td:first-child,
-  #myListTable th:first-child,
-  #myListTable td:first-child {
-    position: sticky;
-    left: 0;
-    background: #fff;      /* keep text visible */
-    z-index: 2;
-  }
+/* Buttons inside tables inherit from the cell size (consistency) */
+#resultsTable .btn,
+#myListTable .btn { font-size: var(--font-btn); }
 
-  /* Last column (right side) */
-  #resultsTable th:last-child,
-  #resultsTable td:last-child,
-  #myListTable th:last-child,
-  #myListTable td:last-child {
-    position: sticky;
-    right: 0;
-    background: #fff;      /* keep text visible */
-    z-index: 2;
-  }
+/* ============================================
+   Results toolbar
+   ============================================ */
+.results-toolbar{
+  display:flex;
+  align-items:center;
+  padding-right: 12px;
+  justify-content:space-between; /* counter left, button right */
+  gap:12px;
+  margin:16px 0; /* matches your status-message spacing */
+  flex-wrap:wrap; /* wrap on very small screens */
+}
+.results-toolbar .status-message{ margin:0; }
 
-  /* Ensure header cells stay above body cells */
-  #resultsTable th:first-child,
-  #resultsTable th:last-child,
-  #myListTable th:first-child,
-  #myListTable th:last-child {
-    background: #f4f5f7;   /* match your header background */
-    z-index: 3;
-  }
+/* ============================================
+   Tables
+   ============================================ */
+.table-wrapper { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
 
+/* Set a consistent base size for each table; cells inherit */
+#resultsTable, #myListTable { font-size: var(--font-table); }
 
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #dfe1e6;
+  white-space: nowrap;
+}
 
-  /* Helper Classes */
-  .message {
-    text-align: center;
-    padding: 40px 20px;
-    background-color: #fafbfc;
-    border-radius: 4px;
-    color: #5e6c84;
-    margin-top: 16px;
-    border: 1px dashed #c1c7d0;
-  }
-  .status-message { margin: 16px 0; color: #5e6c84; }
-  /* Make just these two counters red */
-  #resultsCounter,
-  #myListCounter {
-    color: #dc3545; /* or 'red' */
-  }
-  .my-list-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-  }
+/* Explicit sizes pulled from tokens */
+th {
+  background-color: #f4f5f7;
+  font-size: var(--font-th);
+  text-transform: uppercase;
+  color: #5e6c84;
+}
+td { font-size: var(--font-td); }
 
-  /* Mobile: smaller type + fixed table layout, NO WRAP */
-/* ===== Mobile: slim sticky Action column + scroll, no wrap ===== */
-/* ============================================================
-   Mobile tables: side-scroll + sticky Action column (right)
-   - NO wrapping (inherits your global th/td white-space: nowrap)
-   - Icon-only buttons ONLY inside the Action column cells
-   - Standardized mobile font sizes so headers/body feel consistent
-   ----------------------------------------------------------------
-   QUICK TUNING (change just these):
-     --table-min-results : minimum width for #resultsTable before scrolling
-     --table-min-mylist  : minimum width for #myListTable  before scrolling
-     --action-col        : Action column width (match button size + a bit)
-     --action-btn        : Button visual size inside the Action column
-     --action-ico        : Icon glyph size ("+", "✓", "−")
-     --mobile-font-body  : Base mobile body font size
-     --mobile-font-th    : Mobile table header font size
-     --mobile-font-td    : Mobile table cell font size
-   ============================================================ */
-/* ============================================================
-   Mobile tables (scoped): side-scroll + sticky Action column
-   ============================================================ */
+tr:last-child td { border-bottom: none; }
+
+.chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: var(--font-chip);
+  font-weight: 500;
+  color: #172b4d;
+}
+.chip.compulsory { background-color: #e6ffed; border: 1px solid #57d9a3; }
+
+/* Emphasize Title columns via weight (not size) */
+#resultsTable td:nth-child(2),
+#myListTable  td:nth-child(3) { font-weight: var(--font-title-weight); }
+
+/* First column (left side) */
+#resultsTable th:first-child,
+#resultsTable td:first-child,
+#myListTable th:first-child,
+#myListTable td:first-child {
+  position: sticky;
+  left: 0;
+  background: #fff;      /* keep text visible */
+  z-index: 2;
+}
+
+/* Last column (right side) */
+#resultsTable th:last-child,
+#resultsTable td:last-child,
+#myListTable th:last-child,
+#myListTable td:last-child {
+  position: sticky;
+  right: 0;
+  background: #fff;      /* keep text visible */
+  z-index: 2;
+}
+
+/* Ensure header cells stay above body cells */
+#resultsTable th:first-child,
+#resultsTable th:last-child,
+#myListTable th:first-child,
+#myListTable th:last-child {
+  background: #f4f5f7;   /* match your header background */
+  z-index: 3;
+}
+
+/* ============================================
+   Helper Classes
+   ============================================ */
+.message {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #fafbfc;
+  border-radius: 4px;
+  color: #5e6c84;
+  margin-top: 16px;
+  border: 1px dashed #c1c7d0;
+}
+.status-message { margin: 16px 0; color: #5e6c84; }
+/* Make just these two counters red */
+#resultsCounter,
+#myListCounter {
+  color: #dc3545; /* or 'red' */
+}
+.my-list-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* ============================================
+   Mobile (≤600px)
+   - Keep layout rules
+   - Only override the variables we need
+   ============================================ */
 @media (max-width: 600px){
-  /* Put custom properties on the app wrapper (not :root) */
+  /* Side-scroll minimum widths + sticky Action column geometry */
   .booklist-app{
     --table-min-results: 900px;
     --table-min-mylist : 1000px;
@@ -228,17 +255,11 @@
     --action-btn: 36px;
     --action-ico: 16px;
 
-    --mobile-font-body: 14px;
-    --mobile-font-th  : 12px;
-    --mobile-font-td  : 13px;
+    /* Table font scale on mobile (single source) */
+    --font-table: 14px;
+    --font-th:    14px;
+    --font-td:    14px;
   }
-
-  /* Standardize mobile font sizes */
-  .booklist-app { font-size: var(--mobile-font-body); }
-  .booklist-app #resultsTable th,
-  .booklist-app #myListTable th { font-size: var(--mobile-font-th); }
-  .booklist-app #resultsTable td,
-  .booklist-app #myListTable td { font-size: var(--mobile-font-td); }
 
   /* Side-scroll */
   .booklist-app .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -302,6 +323,7 @@
     content:""; position:absolute; inset:-4px;
   }
 }
+
 
 
 
