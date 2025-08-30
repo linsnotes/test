@@ -788,7 +788,7 @@ tr:last-child td { border-bottom: none; }
 
       const hasResults = !awaitSelection && filteredBooks.length > 0;
 
-      // NEW: only show the button when there is at least one result
+      // only show the button when there is at least one result
       addAllBtn.hidden = !hasResults;
 
       // Books that are currently visible (filtered) and NOT yet in My List
@@ -799,7 +799,8 @@ tr:last-child td { border-bottom: none; }
       addAllBtn.disabled = !canAdd;
 
       // Label and state
-      addAllBtn.textContent = canAdd ? `Add All (${eligible.length})` : 'Add All';
+      const label = canAdd ? `Add All (${eligible.length})` : (hasResults ? 'Added All' : 'Add All'); 
+      addAllBtn.textContent = label;
       addAllBtn.classList.toggle('primary', canAdd);
       addAllBtn.classList.toggle('success', hasResults && !canAdd);
     }
