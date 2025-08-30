@@ -168,8 +168,6 @@ input[type="text"]:focus, select:focus {
 .myList-toolbar .status-message{ margin:0; }
 
 
-   
-
 /* ============================================
    5) Tables (uniform header/body typography)
    ============================================ */
@@ -738,7 +736,7 @@ tr:last-child td { border-bottom: none; }
               </button>
             </td>
           `;           
-           
+
           resultsTableBody.appendChild(row);
         });
       }
@@ -794,7 +792,6 @@ tr:last-child td { border-bottom: none; }
       const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
       myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
       updateAddAllBtn();
-      updateDownloadButtonVisibility(); 
       updateRemoveAllBtn();
     }
 
@@ -830,16 +827,6 @@ tr:last-child td { border-bottom: none; }
       btn.disabled = !hasItems;
     }
 
-
-    // Function to update the visibility of the download buttons
-    function updateDownloadButtonVisibility() {
-      const isListEmpty = myBookList.size === 0;
-
-      // Show or hide the buttons based on the list's size
-      $('#xlsxBtn').hidden = isListEmpty;
-      $('#xlsxBtnBottom').hidden = isListEmpty;
-    }
-     
     /**
      * Handles clicks within the results table (e.g., "Add" buttons).
      */
@@ -882,6 +869,7 @@ tr:last-child td { border-bottom: none; }
             renderResultsTable();
         }
     }
+
 
    
     /**
