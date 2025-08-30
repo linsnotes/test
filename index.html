@@ -23,8 +23,15 @@
 
   /* Inline elements inside table cells (relative to the cell) */
   --font-btn:  1em;     /* buttons inherit from cell */
-  --font-chip: 0.85em;  /* subtle tag size */
 
+  /* Tag design tokens (isolated component) */
+  --tag-bg: #eef2f7;
+  --tag-fg: #172b4d;
+  --tag-weight: 400;
+  --tag-radius: 999px;
+  --tag-pad-y: 0.15em;
+  --tag-pad-x: 0.5em;
+  --tag-gap: 0.35em;
 }
 
 /* ============================================
@@ -169,17 +176,33 @@ td { font-size: var(--font-td); }
 
 tr:last-child td { border-bottom: none; }
 
-.chip {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: var(--font-chip);
-  font-weight: 500;
-  color: #172b4d;
+/* ============================================
+   Tag component (isolated from table typography)
+   ============================================ */
+.tag{
+  font: inherit;                         /* inherit family, size, line-height */
+  font-weight: var(--tag-weight);
+  color: var(--tag-fg);
+  background: var(--tag-bg);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tag-gap);
+  padding: var(--tag-pad-y) var(--tag-pad-x);
+  border-radius: var(--tag-radius);
+  border: 1px solid transparent;
+  vertical-align: baseline;
+  white-space: nowrap;
+  margin-left: 0.5em;                    /* small gap after title text */
 }
-.chip.compulsory { background-color: #e6ffed; border: 1px solid #57d9a3; }
+.tag--compulsory{
+  --tag-bg: #e6ffed;
+  --tag-fg: #172b4d;
+  border-color: #57d9a3;
+}
 
-/* First column (left side) */
+/* ============================================
+   Sticky columns
+   ============================================ */
 #resultsTable th:first-child,
 #resultsTable td:first-child,
 #myListTable th:first-child,
@@ -189,8 +212,6 @@ tr:last-child td { border-bottom: none; }
   background: #fff;      /* keep text visible */
   z-index: 2;
 }
-
-/* Last column (right side) */
 #resultsTable th:last-child,
 #resultsTable td:last-child,
 #myListTable th:last-child,
@@ -200,7 +221,6 @@ tr:last-child td { border-bottom: none; }
   background: #fff;      /* keep text visible */
   z-index: 2;
 }
-
 /* Ensure header cells stay above body cells */
 #resultsTable th:first-child,
 #resultsTable th:last-child,
@@ -317,6 +337,7 @@ tr:last-child td { border-bottom: none; }
     content:""; position:absolute; inset:-4px;
   }
 }
+
 
 
 
@@ -643,7 +664,8 @@ tr:last-child td { border-bottom: none; }
             <td>${book.subject}</td>
             <td>
               ${book.title}
-              ${book.compulsory ? '<span class="chip compulsory">Compulsory</span>' : ''}
+              ${book.compulsory ? '<span class="tag tag--compulsory">Compulsory</span>' : ''}
+
             </td>
             <td>${book.publisher}</td>
             <td>${book.isbn}</td>
