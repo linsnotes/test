@@ -132,6 +132,8 @@ input[type="text"]:focus, select:focus {
 .btn.danger:hover   { background-color: #c82333; }
 .btn.ghost    { background-color: transparent; color: #6c757d; border: 1px solid #dfe1e6; }
 .btn.ghost:hover { background-color: #f4f5f7; }
+/* second download button */
+.btn-right { display: block; margin-left: auto; }  
 
 /* Buttons inside tables inherit the cell size */
 #resultsTable .btn, #myListTable .btn { font-size: var(--font-btn); }
@@ -469,7 +471,7 @@ tr:last-child td { border-bottom: none; }
           </tbody>
         </table>
       </div>
-      <button id="xlsxBtn" class="btn primary">Download Book List</button>  
+      <button id="xlsxBtnBottom" class="btn primary btn-right">Download Book List</button> 
        <div id="myListEmpty" class="message">Add books from the search results above.</div>
     </section>
 
@@ -1152,7 +1154,10 @@ tr:last-child td { border-bottom: none; }
     resultsTableBody.addEventListener('click', handleResultsClick);
     myListTableBody.addEventListener('click', handleMyListClick);
     $('#removeBtn').addEventListener('click', clearMyList); 
-    $('#xlsxBtn').addEventListener('click', downloadXLSX);
+    ['#xlsxBtn', '#xlsxBtnBottom'].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.addEventListener('click', downloadXLSX);
+    }); 
 
   });
   </script>
