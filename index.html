@@ -915,7 +915,7 @@ tr:last-child td { border-bottom: none; }
       //   - fmt : Excel number format (e.g., '0', '0.00', '$#,##0.00'), optional
       const SUMMARY_ITEMS = [
         { label: 'Total books',        calc: items => items.length,                                    fmt: '0' },
-        { label: 'Total amount',       calc: items => items.reduce((s, b) => s + b.price, 0),          fmt: '0.00' },
+        { label: 'Total amount',       calc: items => items.reduce((s, b) => s + b.price, 0).toFixed(2) }, 
         { label: 'Compulsory books',   calc: items => items.filter(b => b.compulsory).length,          fmt: '0' },
         { label: 'Optional books',     calc: items => items.filter(b => !b.compulsory).length,         fmt: '0' },
         { label: 'Distinct subjects',  calc: items => new Set(items.map(b => b.subject)).size,         fmt: '0' },
