@@ -48,7 +48,6 @@ body {
   padding: 20px;
   font-size: var(--font-body);
 }
-
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -57,15 +56,11 @@ body {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   padding: 24px;
 }
-
-   
-
 header {
   border-bottom: 1px solid #dfe1e6;
   padding-bottom: 16px;
   margin-bottom: 24px;
 }
-
 h1 { margin: 0 0 4px 0; }
 h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px; }
 .subtitle { color: #5e6c84; }
@@ -134,7 +129,6 @@ input[type="text"]:focus, select:focus {
 .btn.ghost:hover { background-color: #f4f5f7; }
 /* second download button */
 .btn-right {
-  display: block;
   margin-left: auto;
   margin-top: 12px; /* <-- adds a bit of gap above */
 }
@@ -166,9 +160,6 @@ input[type="text"]:focus, select:focus {
   flex-wrap:wrap;
 }
 .myList-toolbar .status-message{ margin:0; }
-
-
-   
 
 /* ============================================
    5) Tables (uniform header/body typography)
@@ -414,8 +405,10 @@ tr:last-child td { border-bottom: none; }
           </div>
         </div>
         <div class="button-group" style="margin-top: 20px;">
+<!--
           <button type="submit" class="btn primary">Apply Filters</button>
-          <button type="button" id="resetBtn" class="btn ghost">Reset Filters</button>
+-->
+          <button type="button" id="resetBtn" class="btn primary">Reset Filters</button>
         </div>
       </form>
     </section>
@@ -451,7 +444,7 @@ tr:last-child td { border-bottom: none; }
     <section id="my-list-section">
       <h2>3. My Book List</h2>
       <div class="button-group">
-        <button id="xlsxBtn" class="btn primary">Download Book List</button>
+        <button id="xlsxBtn" class="btn primary" hidden>Download Book List</button>
       </div>
       <div class="myList-toolbar"> 
         <div id="myListCounter" class="status-message">Your list is empty.</div>
@@ -475,8 +468,8 @@ tr:last-child td { border-bottom: none; }
           </tbody>
         </table>
       </div>
-      <button id="xlsxBtnBottom" class="btn primary btn-right">Download Book List</button> 
-       <div id="myListEmpty" class="message">Add books from the search results above.</div>
+      <div id="myListEmpty" class="message">Add books from the search results above.</div>
+      <button id="xlsxBtnBottom" class="btn primary btn-right" hidden>Download Book List</button>  
     </section>
 
   </div>
@@ -543,21 +536,36 @@ tr:last-child td { border-bottom: none; }
       await loadingPromise;
     }
 
-
-
     function resetDropdownsToSelect() {
       ['level','subject','banding'].forEach(id => {
         document.getElementById(id).value = SELECT;
       });
     }
 
-     
     function clearSearchBox() {
       const s = $('#search');
       if (s && s.value) s.value = '';
     }
+  
+    function updateDownloadButtonsVisibility() {
+      const topButton = document.querySelector('#xlsxBtn');
+      const bottomButton = document.querySelector('#xlsxBtnBottom');
+      const hasItems = myBookList.size > 0;
 
+      // Toggle visibility for both using the 'hidden' attribute.
+      topButton.hidden = !hasItems;
+      bottomButton.hidden = !hasItems;
 
+      if (hasItems) {
+        // If the button should be VISIBLE, set its display to 'block' for alignment.
+        bottomButton.style.display = 'block';
+      } else {
+        // If the button should be HIDDEN, REMOVE the inline style.
+        // This allows the 'hidden' attribute's default 'display: none' to work again.
+        bottomButton.style.display = '';
+      }
+    }
+     
     /**
      * Maps spreadsheet header names to required object keys.
      * This makes the code resilient to column reordering.
@@ -637,7 +645,6 @@ tr:last-child td { border-bottom: none; }
       selectElement.value = currentValue && currentValue !== "" ? currentValue : SELECT;
     }
 
-
     function populateFilters() {
       const levelSel = $('#level');
       const subjectSel = $('#subject');
@@ -701,7 +708,6 @@ tr:last-child td { border-bottom: none; }
       renderResultsTable();
     }
 
-    
     function renderResultsTable() {
       resultsTableBody.innerHTML = ''; // Clear previous results
 
@@ -739,10 +745,6 @@ tr:last-child td { border-bottom: none; }
             </td>
           `;           
 
-
-
-
-           
           resultsTableBody.appendChild(row);
         });
       }
@@ -753,50 +755,6 @@ tr:last-child td { border-bottom: none; }
       updateAddAllBtn();
     }
     
-
-    /**
-     * Renders the user's selected books into the "My Book List" table.
-     */
-/*
-    function renderMyListTable() {
-      myListTableBody.innerHTML = '';
-      const listItems = Array.from(myBookList.values());
-
-      if (listItems.length === 0) {
-        myListEmpty.style.display = 'block';
-        $('#myListTable').hidden = true;
-      } else {
-        myListEmpty.style.display = 'none';
-        $('#myListTable').hidden = false;
-        
-        // Sort by SN for consistent ordering
-        // listItems.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
-
-        listItems.forEach((book, idx) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${idx + 1}</td>
-            <td>${book.subject}</td>
-            <td><span class="title-text">${book.title}</span></td>
-            <td>${book.publisher}</td>
-            <td>${book.isbn}</td>
-            <td>${book.price.toFixed(2)}</td>
-            <td>
-              <button class="btn danger remove-btn" data-sn="${book.sn}">Remove</button>
-            </td>
-          `;
-          myListTableBody.appendChild(row);
-        });
-      }
-
-      const totalItems = listItems.length;
-      const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
-      myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
-      updateAddAllBtn();
-      updateRemoveAllBtn();  
-    }
-*/
-
     function renderMyListTable() {
       myListTableBody.innerHTML = '';
       const listItems = Array.from(myBookList.values());
@@ -842,9 +800,9 @@ tr:last-child td { border-bottom: none; }
       myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
       updateAddAllBtn();
       updateRemoveAllBtn();
+      updateDownloadButtonsVisibility(); 
     }
 
-     
     function updateAddAllBtn(){
       const addAllBtn = $('#addAllBtn');
       if (!addAllBtn) return;
@@ -919,49 +877,6 @@ tr:last-child td { border-bottom: none; }
         }
     }
 
-
-     
-/*
-    function downloadXLSX() {
-        if (myBookList.size === 0) {
-            alert('Your book list is empty. Add some books before downloading.');
-            return;
-        }
-
-        // Keep insertion order to match on-screen numbering
-        const listItems = Array.from(myBookList.values());
-
-        const headers = ['No', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
-        const data = listItems.map((book, idx) => [
-            idx + 1,
-            book.subject,
-            book.title,
-            book.publisher,
-            book.isbn,
-            book.price,
-        ]);
-
-
-       
-
-        const worksheetData = [headers, ...data];
-        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-        
-        // Auto-fit column widths
-        const colWidths = headers.map((_, i) => ({
-            wch: worksheetData.reduce((w, r) => Math.max(w, (r[i] || '').toString().length), 10)
-        }));
-        worksheet['!cols'] = colWidths;
-        
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'My Book List');
-
-        XLSX.writeFile(workbook, 'MyBookList.xlsx');
-    }
-*/
-
-
-   
     /**
      * Generates and downloads an XLSX file from the "My Book List" data.
      */
