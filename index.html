@@ -750,6 +750,7 @@ tr:last-child td { border-bottom: none; }
     /**
      * Renders the user's selected books into the "My Book List" table.
      */
+/*
     function renderMyListTable() {
       myListTableBody.innerHTML = '';
       const listItems = Array.from(myBookList.values());
@@ -787,7 +788,56 @@ tr:last-child td { border-bottom: none; }
       updateAddAllBtn();
       updateRemoveAllBtn();  
     }
+*/
 
+    function renderMyListTable() {
+      myListTableBody.innerHTML = '';
+      const listItems = Array.from(myBookList.values());
+
+      if (listItems.length === 0) {
+        myListEmpty.style.display = 'block';
+        $('#myListTable').hidden = true;
+      } else {
+        myListEmpty.style.display = 'none';
+        $('#myListTable').hidden = false;
+
+        listItems.forEach((book, idx) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${book.subject}</td>
+            <td><span class="title-text">${book.title}</span></td>
+            <td>${book.publisher}</td>
+            <td>${book.isbn}</td>
+            <td>${book.price.toFixed(2)}</td>
+            <td>
+              <button class="btn danger remove-btn" data-sn="${book.sn}">Remove</button>
+            </td>
+          `;
+          myListTableBody.appendChild(row);
+        });
+
+        /* ▼▼ ADD THIS BLOCK: one extra total row with no numbering/data ▼▼ */
+        const total = listItems.reduce((sum, b) => sum + b.price, 0);
+        const totalRow = document.createElement('tr');
+        totalRow.innerHTML = `
+          <td></td>
+          <td colspan="4" style="text-align:right; font-weight:600;">Total</td>
+          <td style="font-weight:600;">${total.toFixed(2)}</td>
+          <td></td>
+        `;
+        myListTableBody.appendChild(totalRow);
+        /* ▲▲ END ADD ▲▲ */
+      }
+
+      const totalItems = listItems.length;
+      const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
+      myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
+      updateAddAllBtn();
+      updateRemoveAllBtn();
+    }
+
+     
     function updateAddAllBtn(){
       const addAllBtn = $('#addAllBtn');
       if (!addAllBtn) return;
