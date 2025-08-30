@@ -413,7 +413,7 @@ tr:last-child td { border-bottom: none; }
     <section id="results-section">
       <h2>2. Search Results</h2>
       <div class="results-toolbar">
-        <div id="resultsCounter" class="status-message" aria-live="polite">Loading books...</div>
+      <div id="resultsCounter" class="status-message" aria-live="polite"></div>
         <button id="addAllBtn" class="btn primary" disabled hidden>Add All</button>
       </div>
       <div class="table-wrapper">
@@ -511,17 +511,32 @@ tr:last-child td { border-bottom: none; }
     const normalize = v => (v ?? '').toString().trim();
     const isCompulsory = v => /^y(es)?$/i.test(normalize(v));
 
+    // // ===== lazy-load flags =====
+    let dataLoaded = false;
+    let loadingPromise = null;
 
-    //function resetDropdownsToSelect() {
-      //['level','subject','banding'].forEach(id => { $( '#' + id ).value = SELECT; });
-      // Rebuild dependent options so everything shows "Select …" correctly
-      //populateFilters();
-    //}
+    // ===== NEW: load once, on demand =====
+    async function ensureDataLoaded() {
+      if (dataLoaded) return;
+      if (!loadingPromise) {
+        resultsMessage.style.display = 'none';
+        resultsCounter.textContent = 'Loading books…';
+        loadingPromise = loadInitialData()
+          .then(() => {
+            dataLoaded = true;
+            resultsCounter.textContent = 'Waiting for selections…';
+          })
+          .catch((err) => { throw err; }); // loadInitialData already sets error UI
+      }
+      await loadingPromise;
+    }
+
+
+
     function resetDropdownsToSelect() {
       ['level','subject','banding'].forEach(id => {
         document.getElementById(id).value = SELECT;
       });
-      populateFilters();
     }
 
      
@@ -907,45 +922,48 @@ tr:last-child td { border-bottom: none; }
       }
     }
 
-    // ===== Event Listeners =====
-    $('#filtersForm').addEventListener('submit', applyFilters);
-    $('#resetBtn').addEventListener('click', () => {
-        $('#filtersForm').reset();
-        populateFilters(); // Repopulate to reset dependent dropdowns
-        applyFilters();
-    });
-
-    // Use event delegation for dynamic dropdown changes
-    // Changing any select: clear keyword first, then keep your existing logic
-    $('#filters').addEventListener('change', (event) => {
-      if (event.target.tagName === 'SELECT') {
-        clearSearchBox(); // empty the Title Keyword box
-        if (event.target.id === 'level' || event.target.id === 'subject') {
-          populateFilters(); // dependent rebuild
-        }
-        applyFilters();
-      } else if (event.target.type === 'checkbox') {
-        applyFilters();
-      }
-    });
-
-    // Typing in search: reset selects to "Select …" when there’s text
-    $('#search').addEventListener('input', (e) => {
-      const hasText = e.target.value.trim().length > 0;
-      if (hasText) {
-        resetDropdownsToSelect();
-      }
+    // ===== Event Listeners (lazy) =====
+    $('#filtersForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await ensureDataLoaded();
       applyFilters();
     });
 
-    $('#addAllBtn').addEventListener('click', (e) => {
-      const btn = e.currentTarget;
-      if (btn.disabled) return;  // already handled
-      btn.disabled = true;       // temporarily block rapid clicks
+    $('#resetBtn').addEventListener('click', async () => {
+      $('#filtersForm').reset();
+      if (dataLoaded) populateFilters();   // rebuild only after first load
+      await ensureDataLoaded();
+      applyFilters();
+    });
 
+    $('#filters').addEventListener('change', async (event) => {
+      const el = event.target;
+      if (el.tagName === 'SELECT') {
+        clearSearchBox();
+        await ensureDataLoaded();
+        if (el.id === 'level' || el.id === 'subject') populateFilters();
+        applyFilters();
+      } else if (el.type === 'checkbox') {
+        await ensureDataLoaded();
+        applyFilters();
+      }
+    });
+
+    $('#search').addEventListener('input', async (e) => {
+      await ensureDataLoaded();
+      const hasText = e.target.value.trim().length > 0;
+      if (hasText) resetDropdownsToSelect();
+      populateFilters();
+      applyFilters();
+    });
+
+    $('#addAllBtn').addEventListener('click', async (e) => {
+      await ensureDataLoaded();
+      const btn = e.currentTarget;
+      if (btn.disabled) return;
+      btn.disabled = true;
       const toAdd = filteredBooks.filter(b => !myBookList.has(b.sn));
       toAdd.forEach(b => myBookList.set(b.sn, b));
-
       renderMyListTable();
       renderResultsTable();
       updateAddAllBtn();
@@ -956,8 +974,6 @@ tr:last-child td { border-bottom: none; }
     $('#clearBtn').addEventListener('click', clearMyList);
     $('#xlsxBtn').addEventListener('click', downloadXLSX);
 
-    // ===== Initial Load =====
-    loadInitialData();
   });
   </script>
 </body>
