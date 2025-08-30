@@ -13,6 +13,9 @@
    0) Design Tokens (single source of truth)
    ============================================ */
 :root{
+  /* NEW: Background color variable */
+  --color-background-page: #f4f5f7;
+
   /* Global */
   --font-body: 16px;
 
@@ -42,7 +45,8 @@ html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; } /* stop mobile aut
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.6;
-  background-color: #f4f5f7;
+  /* UPDATED: Using the variable */
+  background-color: var(--color-background-page);
   color: #172b4d;
   margin: 0;
   padding: 20px;
@@ -101,30 +105,26 @@ input[type="text"]:focus, select:focus {
   padding-top: 24px;
 }
 
-/* New label for the text next to the toggle */
 .toggle-label {
   margin-left: 12px;
-  font-size: 0.875rem; /* Match your existing label styles */
+  font-size: 0.875rem;
   font-weight: 600;
   color: #5e6c84;
 }
 
-/* Container for the toggle switch */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 50px; /* Width of the toggle */
-  height: 28px; /* Height of the toggle */
+  width: 50px;
+  height: 28px;
 }
 
-/* Hide the default checkbox input */
 .toggle-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-/* The background of the toggle switch */
 .slider {
   position: absolute;
   cursor: pointer;
@@ -132,12 +132,11 @@ input[type="text"]:focus, select:focus {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #c1c7d0; /* Color when off */
+  background-color: #c1c7d0;
   transition: .4s;
-  border-radius: 28px; /* Make it rounded */
+  border-radius: 28px;
 }
 
-/* The sliding circle (the "knob") */
 .slider:before {
   position: absolute;
   content: "";
@@ -150,16 +149,14 @@ input[type="text"]:focus, select:focus {
   border-radius: 50%;
 }
 
-/* Styles for when the toggle is "on" (checked) */
 input:checked + .slider {
-  background-color: #007bff; /* Primary blue color when on */
+  background-color: #007bff;
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #007bff; /* Focus outline */
+  box-shadow: 0 0 1px #007bff;
 }
 
-/* Move the circle to the right when "on" */
 input:checked + .slider:before {
   transform: translateX(22px);
 }
@@ -174,7 +171,7 @@ input:checked + .slider:before {
 }
 .btn {
   border: none;
-  border-radius: 999px; 
+  border-radius: 999px;
   padding: 10px 16px;
   font-size: 0.95rem;
   font-weight: 600;
@@ -189,14 +186,14 @@ input:checked + .slider:before {
 .btn.danger   { background-color: #dc3545; color: #fff; }
 .btn.danger:hover   { background-color: #c82333; }
 .btn.ghost    { background-color: transparent; color: #6c757d; border: 1px solid #dfe1e6; }
-.btn.ghost:hover { background-color: #f4f5f7; }
-/* second download button */
+/* UPDATED: Using the variable for the ghost button's hover state */
+.btn.ghost:hover { background-color: var(--color-background-page); }
+
 .btn-right {
   margin-left: auto;
-  margin-top: 12px; /* <-- adds a bit of gap above */
+  margin-top: 12px;
 }
 
-/* Buttons inside tables inherit the cell size */
 #resultsTable .btn, #myListTable .btn { font-size: var(--font-btn); }
 
 /* ============================================
@@ -235,13 +232,11 @@ table {
   margin-top: 16px;
 }
 
-/* Base table font (both tables) */
 #resultsTable, #myListTable {
   font-family: inherit;
   font-size: var(--font-table);
 }
 
-/* Shared th/td box metrics */
 th, td {
   padding: 12px;
   text-align: left;
@@ -249,35 +244,33 @@ th, td {
   white-space: nowrap;
 }
 
-/* Headers: identical across all columns/tables */
 #resultsTable th, #myListTable th {
-  background-color: #f4f5f7;
+  /* UPDATED: Using the variable */
+  background-color: var(--color-background-page);
   color: #5e6c84;
   font-size: var(--font-th);
-  font-weight: 600;          /* explicit to avoid mobile variance */
+  font-weight: 600;
   text-transform: uppercase;
   line-height: 1.4;
 }
 
-/* Body cells: identical across all columns/tables */
 #resultsTable td, #myListTable td {
   font-size: var(--font-td);
-  font-weight: 400;          /* explicit to avoid mobile variance */
+  font-weight: 400;
   line-height: 1.4;
 }
 
 tr:last-child td { border-bottom: none; }
 
-/* Title text inside cells = same as other body cells */
 .title-text { font: inherit; font-weight: inherit; }
 
 /* ============================================
    6) Tag (isolated component)
    ============================================ */
 .tag{
-  font: inherit;                  /* inherit body cell font family/size */
+  font: inherit;
   font-weight: var(--tag-weight);
-  font-size: 0.9em;               /* slight visual down-scale */
+  font-size: 0.9em;
   color: var(--tag-fg);
   background: var(--tag-bg);
   display: inline-flex;
@@ -288,7 +281,7 @@ tr:last-child td { border-bottom: none; }
   border: 1px solid transparent;
   vertical-align: baseline;
   white-space: nowrap;
-  margin-left: 0.5em;             /* gap after title text */
+  margin-left: 0.5em;
 }
 .tag--compulsory{
   --tag-bg: #e6ffed;
@@ -311,7 +304,8 @@ tr:last-child td { border-bottom: none; }
 #myListTable td:first-child {
   position: sticky;
   left: 0;
-  background: #fff;
+  /* UPDATED: Using the variable */
+  background: var(--color-background-page);
   z-index: 2;
 }
 #resultsTable th:last-child,
@@ -320,15 +314,16 @@ tr:last-child td { border-bottom: none; }
 #myListTable td:last-child {
   position: sticky;
   right: 0;
-  background: #fff;
+  /* UPDATED: Using the variable */
+  background: var(--color-background-page);
   z-index: 2;
 }
-/* Keep header above body when sticky */
 #resultsTable th:first-child,
 #resultsTable th:last-child,
 #myListTable th:first-child,
 #myListTable th:last-child {
-  background: #f4f5f7;
+  /* UPDATED: Using the variable */
+  background: var(--color-background-page);
   z-index: 3;
 }
 
@@ -366,12 +361,10 @@ tr:last-child td { border-bottom: none; }
     --font-td:    14px;
   }
 
-  /* Side-scroll */
   .booklist-app .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .booklist-app #resultsTable { table-layout: auto; min-width: var(--table-min-results); }
   .booklist-app #myListTable  { table-layout: auto; min-width: var(--table-min-mylist); }
 
-  /* Sticky Action column (right) */
   .booklist-app #resultsTable th:last-child,
   .booklist-app #resultsTable td:last-child,
   .booklist-app #myListTable  th:last-child,
@@ -383,16 +376,17 @@ tr:last-child td { border-bottom: none; }
     width: var(--action-col);
     min-width: var(--action-col);
     max-width: var(--action-col);
-    background: #fff;
+    /* UPDATED: Mobile sticky columns need the variable too. */
+    background: var(--color-background-page);
     box-shadow: -8px 0 8px -8px rgba(0,0,0,0.15);
   }
   .booklist-app #resultsTable thead th:last-child,
   .booklist-app #myListTable  thead th:last-child{
     z-index: 4;
-    background: #f4f5f7;
+    /* UPDATED: And the mobile headers. */
+    background: var(--color-background-page);
   }
 
-  /* Icon-only buttons in Action column */
   .booklist-app #resultsTable td:last-child .add-btn,
   .booklist-app #resultsTable td:last-child .remove-btn,
   .booklist-app #myListTable  td:last-child .remove-btn{
@@ -403,16 +397,15 @@ tr:last-child td { border-bottom: none; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0;  /* keep aria-label/title for a11y */
+    font-size: 0;
     line-height: 1;
   }
-  .booklist-app #resultsTable td:last-child .add-btn::after                 { content: "+"; font-size: var(--action-ico); }
+  .booklist-app #resultsTable td:last-child .add-btn::after { content: "+"; font-size: var(--action-ico); }
   .booklist-app #resultsTable td:last-child .add-btn.success::after,
-  .booklist-app #resultsTable td:last-child .add-btn[disabled]::after       { content: "✓"; font-size: var(--action-ico); }
+  .booklist-app #resultsTable td:last-child .add-btn[disabled]::after { content: "✓"; font-size: var(--action-ico); }
   .booklist-app #resultsTable td:last-child .remove-btn::after,
-  .booklist-app #myListTable  td:last-child .remove-btn::after              { content: "−"; font-size: var(--action-ico); }
+  .booklist-app #myListTable  td:last-child .remove-btn::after { content: "−"; font-size: var(--action-ico); }
 
-  /* Unfreeze first column on tiny screens */
   .booklist-app #resultsTable th:first-child,
   .booklist-app #resultsTable td:first-child,
   .booklist-app #myListTable  th:first-child,
@@ -420,7 +413,6 @@ tr:last-child td { border-bottom: none; }
     position: static;
   }
 
-  /* Larger hit area for small icon buttons (optional) */
   .booklist-app #resultsTable td:last-child .add-btn,
   .booklist-app #resultsTable td:last-child .remove-btn,
   .booklist-app #myListTable  td:last-child .remove-btn{ position: relative; }
@@ -432,6 +424,7 @@ tr:last-child td { border-bottom: none; }
 }
 
 </style>
+
 </head>
 <body>
 
