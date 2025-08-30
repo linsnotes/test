@@ -48,7 +48,6 @@ body {
   padding: 20px;
   font-size: var(--font-body);
 }
-
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -57,15 +56,11 @@ body {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   padding: 24px;
 }
-
-   
-
 header {
   border-bottom: 1px solid #dfe1e6;
   padding-bottom: 16px;
   margin-bottom: 24px;
 }
-
 h1 { margin: 0 0 4px 0; }
 h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px; }
 .subtitle { color: #5e6c84; }
@@ -165,7 +160,6 @@ input[type="text"]:focus, select:focus {
   flex-wrap:wrap;
 }
 .myList-toolbar .status-message{ margin:0; }
-
 
 /* ============================================
    5) Tables (uniform header/body typography)
@@ -542,21 +536,17 @@ tr:last-child td { border-bottom: none; }
       await loadingPromise;
     }
 
-
-
     function resetDropdownsToSelect() {
       ['level','subject','banding'].forEach(id => {
         document.getElementById(id).value = SELECT;
       });
     }
 
-     
     function clearSearchBox() {
       const s = $('#search');
       if (s && s.value) s.value = '';
     }
   
-
     function updateDownloadButtonsVisibility() {
       const topButton = document.querySelector('#xlsxBtn');
       const bottomButton = document.querySelector('#xlsxBtnBottom');
@@ -576,8 +566,6 @@ tr:last-child td { border-bottom: none; }
       }
     }
      
-
-
     /**
      * Maps spreadsheet header names to required object keys.
      * This makes the code resilient to column reordering.
@@ -657,7 +645,6 @@ tr:last-child td { border-bottom: none; }
       selectElement.value = currentValue && currentValue !== "" ? currentValue : SELECT;
     }
 
-
     function populateFilters() {
       const levelSel = $('#level');
       const subjectSel = $('#subject');
@@ -721,7 +708,6 @@ tr:last-child td { border-bottom: none; }
       renderResultsTable();
     }
 
-    
     function renderResultsTable() {
       resultsTableBody.innerHTML = ''; // Clear previous results
 
@@ -769,7 +755,6 @@ tr:last-child td { border-bottom: none; }
       updateAddAllBtn();
     }
     
-
     function renderMyListTable() {
       myListTableBody.innerHTML = '';
       const listItems = Array.from(myBookList.values());
@@ -818,7 +803,6 @@ tr:last-child td { border-bottom: none; }
       updateDownloadButtonsVisibility(); 
     }
 
-     
     function updateAddAllBtn(){
       const addAllBtn = $('#addAllBtn');
       if (!addAllBtn) return;
@@ -893,8 +877,6 @@ tr:last-child td { border-bottom: none; }
         }
     }
 
-
-   
     /**
      * Generates and downloads an XLSX file from the "My Book List" data.
      */
