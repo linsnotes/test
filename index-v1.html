@@ -94,12 +94,78 @@ input[type="text"]:focus, select:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(76,154,255,0.3);
 }
+
+/* ============================================
+   Toggle Switch Styles
+   ============================================ */
 .checkbox-group {
   display: flex;
   align-items: center;
   padding-top: 24px;
 }
-.checkbox-group input { margin-right: 8px; }
+
+/* New label for the text next to the toggle */
+.toggle-label {
+  margin-left: 12px;
+  font-size: 0.875rem; /* Match your existing label styles */
+  font-weight: 600;
+  color: #5e6c84;
+}
+
+/* Container for the toggle switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px; /* Width of the toggle */
+  height: 28px; /* Height of the toggle */
+}
+
+/* Hide the default checkbox input */
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The background of the toggle switch */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #c1c7d0; /* Color when off */
+  transition: .4s;
+  border-radius: 28px; /* Make it rounded */
+}
+
+/* The sliding circle (the "knob") */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+/* Styles for when the toggle is "on" (checked) */
+input:checked + .slider {
+  background-color: #007bff; /* Primary blue color when on */
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #007bff; /* Focus outline */
+}
+
+/* Move the circle to the right when "on" */
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
 
 /* ============================================
    3) Buttons
@@ -396,13 +462,25 @@ tr:last-child td { border-bottom: none; }
             <select id="banding"><option value="SELECT">Select Banding</option></select>
           </div>
           <div class="form-group">
-            <label for="search">Title Keyword</label>
+            <label for="search">Search by Keyword</label>
             <input id="search" type="text" placeholder="e.g., Workbook, 1A, etc." />
           </div>
+
+ <!---         
           <div class="form-group checkbox-group">
             <input id="compOnly" type="checkbox" />
             <label for="compOnly">Show compulsory books only</label>
           </div>
+--->
+          <div class="form-group checkbox-group">
+            <label class="toggle-switch">
+             <input id="compOnly" type="checkbox" />
+             <span class="slider"></span>
+            </label>
+            <label for="compOnly" class="toggle-label">Hide Optional</label>
+          </div>
+
+           
         </div>
         <div class="button-group" style="margin-top: 20px;">
 <!--
