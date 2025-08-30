@@ -819,7 +819,9 @@ tr:last-child td { border-bottom: none; }
     function updateRemoveAllBtn(){
       const btn = $('#removeBtn');
       if (!btn) return;
-      btn.disabled = myBookList.size === 0;
+      const hasItems = myBookList.size > 0;
+      btn.hidden   = !hasItems;
+      btn.disabled = !hasItems;
     }
 
     /**
@@ -858,10 +860,10 @@ tr:last-child td { border-bottom: none; }
      * Clears all items from "My Book List".
      */
     function clearMyList() {
-        if (confirm('Are you sure you want to clear your entire book list?')) {
+        if (confirm('Remove ALL books from your list? This cannot be undone.')) {
             myBookList.clear();
             renderMyListTable();
-            renderResultsTable(); // Update button states in results
+            renderResultsTable();
         }
     }
 
