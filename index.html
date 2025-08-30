@@ -783,15 +783,16 @@ tr:last-child td { border-bottom: none; }
 
         if (listItems.length === 0) {
             myListEmpty.style.display = 'block';
-            $('#myListTable').hidden = true;
-            $('#xlsxBtn').hidden = true;  // Hide download button
-            $('#xlsxBtnBottom').hidden = true;  // Hide download button
+            $('#myListTable').style.display = 'none'; // Hide table
+            $('#xlsxBtn').style.display = 'none';  // Hide download button
+            $('#xlsxBtnBottom').style.display = 'none';  // Hide download button
         } else {
             myListEmpty.style.display = 'none';
-            $('#myListTable').hidden = false;
-            $('#xlsxBtn').hidden = false;  // Show download button
-            $('#xlsxBtnBottom').hidden = false;  // Show download button
-
+            $('#myListTable').style.display = 'block'; // Show table
+            $('#xlsxBtn').style.display = 'block';  // Show download button
+            $('#xlsxBtnBottom').style.display = 'block';  // Show download button
+        }
+           
             listItems.forEach((book, idx) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
