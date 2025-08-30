@@ -758,25 +758,27 @@ tr:last-child td { border-bottom: none; }
       myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
       updateAddAllBtn();
     }
-    
+
     function updateAddAllBtn(){
       const addAllBtn = $('#addAllBtn');
       if (!addAllBtn) return;
 
+      const hasResults = !awaitSelection && filteredBooks.length > 0;
+
+      // NEW: only show the button when there is at least one result
+      addAllBtn.hidden = !hasResults;
+
       // Books that are currently visible (filtered) and NOT yet in My List
       const eligible = filteredBooks.filter(b => !myBookList.has(b.sn));
 
-      // Enable only if there's at least one eligible item and we aren't waiting for selections
-      const canAdd = !awaitSelection && eligible.length > 0;
+      // Enable only if there's at least one eligible item
+      const canAdd = hasResults && eligible.length > 0;
       addAllBtn.disabled = !canAdd;
 
-      // Show a count when useful
+      // Label and state
       addAllBtn.textContent = canAdd ? `Add All (${eligible.length})` : 'Add All';
-
-      // - primary when actionable OR when there are zero results / waiting (keeps visual consistency)
-      // - success when everything visible is already added
-      addAllBtn.classList.toggle('primary', canAdd || awaitSelection || filteredBooks.length === 0);
-      addAllBtn.classList.toggle('success', !canAdd && filteredBooks.length > 0);
+      addAllBtn.classList.toggle('primary', canAdd);
+      addAllBtn.classList.toggle('success', hasResults && !canAdd);
     }
 
 
