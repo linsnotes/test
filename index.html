@@ -903,7 +903,7 @@ tr:last-child td { border-bottom: none; }
         resultsCounter.textContent = '';
         resultsMessage.innerHTML = `<strong>Error loading book data.</strong><br>${error.message}<br>Please check the SHEET_ID and that the sheet is published to the web.`;
         resultsMessage.style.display = 'block';
-        $('#resultsTable').style.display = 'none';
+        $('#resultsTable').hidden = true;
       }
     }
 
