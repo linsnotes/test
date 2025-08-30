@@ -352,7 +352,7 @@
     <section id="results-section">
       <h2>2. Search Results</h2>
       <div class="results-toolbar">
-        <div id="resultsCounter" class="status-message">Loading books...</div>
+        <div id="resultsCounter" class="status-message" aria-live="polite">Loading books...</div>
         <button id="addAllBtn" class="btn primary" disabled>Add All</button>
       </div>
       <div class="table-wrapper">
@@ -452,12 +452,12 @@
 
 
     function resetDropdownsToSelect() {
-      ['level','subject','banding'].forEach(id => { document.getElementById(id).value = SELECT; });
+      ['level','subject','banding'].forEach(id => { $( '#' + id ).value = SELECT; });
       // Rebuild dependent options so everything shows "Select …" correctly
       populateFilters();
     }
     function clearSearchBox() {
-      const s = document.getElementById('search');
+      const s = $('#search');
       if (s && s.value) s.value = '';
     }
 
@@ -709,10 +709,6 @@
     }
 
 
-
-
-    
-
     /**
      * Handles clicks within the results table (e.g., "Add" buttons).
      */
@@ -861,7 +857,11 @@
       applyFilters();
     });
 
-    $('#addAllBtn').addEventListener('click', () => {
+    $('#addAllBtn').addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      if (btn.disabled) return;  // already handled
+      btn.disabled = true;       // temporarily block rapid clicks
+
       const toAdd = filteredBooks.filter(b => !myBookList.has(b.sn));
       toAdd.forEach(b => myBookList.set(b.sn, b));
 
@@ -870,8 +870,6 @@
       updateAddAllBtn();
     });
 
-
-  
     resultsTableBody.addEventListener('click', handleResultsClick);
     myListTableBody.addEventListener('click', handleMyListClick);
     $('#clearBtn').addEventListener('click', clearMyList);
