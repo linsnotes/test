@@ -848,6 +848,49 @@ tr:last-child td { border-bottom: none; }
         }
     }
 
+
+     
+/*
+    function downloadXLSX() {
+        if (myBookList.size === 0) {
+            alert('Your book list is empty. Add some books before downloading.');
+            return;
+        }
+
+        // Keep insertion order to match on-screen numbering
+        const listItems = Array.from(myBookList.values());
+
+        const headers = ['No', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
+        const data = listItems.map((book, idx) => [
+            idx + 1,
+            book.subject,
+            book.title,
+            book.publisher,
+            book.isbn,
+            book.price,
+        ]);
+
+
+       
+
+        const worksheetData = [headers, ...data];
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        
+        // Auto-fit column widths
+        const colWidths = headers.map((_, i) => ({
+            wch: worksheetData.reduce((w, r) => Math.max(w, (r[i] || '').toString().length), 10)
+        }));
+        worksheet['!cols'] = colWidths;
+        
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'My Book List');
+
+        XLSX.writeFile(workbook, 'MyBookList.xlsx');
+    }
+*/
+
+
+   
     /**
      * Generates and downloads an XLSX file from the "My Book List" data.
      */
