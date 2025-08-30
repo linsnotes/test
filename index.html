@@ -851,42 +851,112 @@ tr:last-child td { border-bottom: none; }
     /**
      * Generates and downloads an XLSX file from the "My Book List" data.
      */
+
     function downloadXLSX() {
-        if (myBookList.size === 0) {
-            alert('Your book list is empty. Add some books before downloading.');
-            return;
+      if (myBookList.size === 0) {
+        alert('Your book list is empty. Add some books before downloading.');
+        return;
+      }
+
+      // ========= TOGGLE SUMMARY =========
+      // Turn this off if you don't want any summary lines.
+      const INCLUDE_SUMMARY = true;
+      // Add an empty spacer row between summary and header?
+      const INCLUDE_SPACER = true;
+
+      // ========= SUMMARY CONFIG =========
+      // Add/remove items here to change the summary.
+      // Each item: { label: string, calc: (items)=>any, fmt?: string }
+      //   - label: left cell (column A), “:” is optional
+      //   - calc: computes value from the selected list items
+      //   - fmt : Excel number format (e.g., '0', '0.00', '$#,##0.00'), optional
+      const SUMMARY_ITEMS = [
+        { label: 'Total books',        calc: items => items.length,                                    fmt: '0' },
+        { label: 'Total amount',       calc: items => items.reduce((s, b) => s + b.price, 0),          fmt: '0.00' },
+        { label: 'Compulsory books',   calc: items => items.filter(b => b.compulsory).length,          fmt: '0' },
+        { label: 'Optional books',     calc: items => items.filter(b => !b.compulsory).length,         fmt: '0' },
+        { label: 'Distinct subjects',  calc: items => new Set(items.map(b => b.subject)).size,         fmt: '0' },
+        // --- ADD YOUR OWN METRICS BELOW ---
+        // Example (distinct publishers):
+        // { label: 'Distinct publishers', calc: items => new Set(items.map(b => b.publisher)).size, fmt: '0' },
+      ];
+      // ========= END SUMMARY CONFIG =========
+
+      // Keep insertion order to match on-screen numbering
+      const listItems = Array.from(myBookList.values());
+
+      // Build table data
+      const headers = ['No', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
+      const data = listItems.map((book, idx) => [
+        idx + 1,
+        book.subject,
+        book.title,
+        book.publisher,
+        book.isbn,
+        book.price,
+      ]);
+
+      // Build summary rows from config
+      const summaryRows = INCLUDE_SUMMARY
+        ? SUMMARY_ITEMS.map(item => [item.label + ':', item.calc(listItems)])
+        : [];
+
+      // Assemble final AoA
+      const worksheetData = [
+        ...summaryRows,
+        ...(INCLUDE_SUMMARY && INCLUDE_SPACER ? [[]] : []), // optional spacer row
+        headers,
+        ...data
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+
+      // ===== Apply number formats to SUMMARY (column B) based on config =====
+      if (INCLUDE_SUMMARY) {
+        SUMMARY_ITEMS.forEach((item, i) => {
+          const cellRef = `B${i + 1}`; // summary starts at row 1
+          const cell = ws[cellRef];
+          if (!cell) return;
+          // If value is numeric, signal type and format
+          if (typeof cell.v === 'number') {
+            cell.t = 'n';
+            if (item.fmt) cell.z = item.fmt;
+          }
+        });
+      }
+
+      // ===== Apply number format to Price column in DATA =====
+      // Compute where the data starts, regardless of how many summary rows you add/remove
+      const sRows = INCLUDE_SUMMARY ? summaryRows.length : 0;
+      const spacer = (INCLUDE_SUMMARY && INCLUDE_SPACER) ? 1 : 0;
+      const headerRow = sRows + spacer + 1;   // row index (1-based) of the header
+      const dataStartRow = headerRow + 1;     // first data row index (1-based)
+
+      // Price is column F
+      for (let r = dataStartRow; r < dataStartRow + data.length; r++) {
+        const priceCell = ws[`F${r}`];
+        if (priceCell && typeof priceCell.v === 'number') {
+          priceCell.t = 'n';
+          priceCell.z = '0.00'; // change to '$#,##0.00' if you want currency formatting
         }
+      }
 
-        //const listItems = Array.from(myBookList.values())
-          //.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
-        // Keep insertion order to match on-screen numbering
-        const listItems = Array.from(myBookList.values());
+      // ===== Auto-fit columns (works with or without summary) =====
+      const colCount = headers.length; // 6
+      const colWidths = Array.from({ length: colCount }, (_, i) => ({
+        wch: worksheetData.reduce((w, row) => {
+          const val = (row[i] ?? '').toString();
+          return Math.max(w, val.length, 10);
+        }, 10)
+      }));
+      ws['!cols'] = colWidths;
 
-        const headers = ['No', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
-        const data = listItems.map((book, idx) => [
-            idx + 1,
-            book.subject,
-            book.title,
-            book.publisher,
-            book.isbn,
-            book.price,
-        ]);
-
-        const worksheetData = [headers, ...data];
-        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-        
-        // Auto-fit column widths
-        const colWidths = headers.map((_, i) => ({
-            wch: worksheetData.reduce((w, r) => Math.max(w, (r[i] || '').toString().length), 10)
-        }));
-        worksheet['!cols'] = colWidths;
-        
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'My Book List');
-
-        XLSX.writeFile(workbook, 'MyBookList.xlsx');
+      // Finalize workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'My Book List');
+      XLSX.writeFile(wb, 'MyBookList.xlsx');
     }
-
+     
     /**
      * Fetches and loads the book data from the Google Sheet.
      */
