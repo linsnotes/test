@@ -931,8 +931,8 @@ tr:last-child td { border-bottom: none; }
 
     $('#resetBtn').addEventListener('click', async () => {
       $('#filtersForm').reset();
-      if (dataLoaded) populateFilters();   // rebuild only after first load
       await ensureDataLoaded();
+      populateFilters();
       applyFilters();
     });
 
