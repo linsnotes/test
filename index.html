@@ -738,10 +738,6 @@ tr:last-child td { border-bottom: none; }
               </button>
             </td>
           `;           
-
-
-
-
            
           resultsTableBody.appendChild(row);
         });
@@ -753,49 +749,6 @@ tr:last-child td { border-bottom: none; }
       updateAddAllBtn();
     }
     
-
-    /**
-     * Renders the user's selected books into the "My Book List" table.
-     */
-/*
-    function renderMyListTable() {
-      myListTableBody.innerHTML = '';
-      const listItems = Array.from(myBookList.values());
-
-      if (listItems.length === 0) {
-        myListEmpty.style.display = 'block';
-        $('#myListTable').hidden = true;
-      } else {
-        myListEmpty.style.display = 'none';
-        $('#myListTable').hidden = false;
-        
-        // Sort by SN for consistent ordering
-        // listItems.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
-
-        listItems.forEach((book, idx) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${idx + 1}</td>
-            <td>${book.subject}</td>
-            <td><span class="title-text">${book.title}</span></td>
-            <td>${book.publisher}</td>
-            <td>${book.isbn}</td>
-            <td>${book.price.toFixed(2)}</td>
-            <td>
-              <button class="btn danger remove-btn" data-sn="${book.sn}">Remove</button>
-            </td>
-          `;
-          myListTableBody.appendChild(row);
-        });
-      }
-
-      const totalItems = listItems.length;
-      const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
-      myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
-      updateAddAllBtn();
-      updateRemoveAllBtn();  
-    }
-*/
 
     function renderMyListTable() {
       myListTableBody.innerHTML = '';
@@ -841,6 +794,7 @@ tr:last-child td { border-bottom: none; }
       const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
       myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
       updateAddAllBtn();
+      updateDownloadButtonVisibility(); 
       updateRemoveAllBtn();
     }
 
@@ -876,6 +830,16 @@ tr:last-child td { border-bottom: none; }
       btn.disabled = !hasItems;
     }
 
+
+    // Function to update the visibility of the download buttons
+    function updateDownloadButtonVisibility() {
+      const isListEmpty = myBookList.size === 0;
+
+      // Show or hide the buttons based on the list's size
+      $('#xlsxBtn').hidden = isListEmpty;
+      $('#xlsxBtnBottom').hidden = isListEmpty;
+    }
+     
     /**
      * Handles clicks within the results table (e.g., "Add" buttons).
      */
