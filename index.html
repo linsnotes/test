@@ -449,7 +449,7 @@ tr:last-child td { border-bottom: none; }
     <section id="my-list-section">
       <h2>3. My Book List</h2>
       <div class="button-group">
-        <button id="xlsxBtn" class="btn primary">Download Book List</button>
+        <button id="xlsxBtn" class="btn primary" hidden>Download Book List</button>
       </div>
       <div class="myList-toolbar"> 
         <div id="myListCounter" class="status-message">Your list is empty.</div>
@@ -474,7 +474,7 @@ tr:last-child td { border-bottom: none; }
         </table>
       </div>
       <div id="myListEmpty" class="message">Add books from the search results above.</div>
-      <button id="xlsxBtnBottom" class="btn primary btn-right">Download Book List</button>  
+      <button id="xlsxBtnBottom" class="btn primary btn-right" hidden>Download Book List</button>  
     </section>
 
   </div>
@@ -554,6 +554,18 @@ tr:last-child td { border-bottom: none; }
       const s = $('#search');
       if (s && s.value) s.value = '';
     }
+
+    function updateDownloadButtonsVisibility() {
+      const downloadButtons = document.querySelectorAll('#xlsxBtn, #xlsxBtnBottom');
+      const hasItems = myBookList.size > 0;
+
+      downloadButtons.forEach(btn => {
+        btn.hidden = !hasItems; // This is a clean way to set the hidden property
+      });
+    }
+
+
+     
 
 
     /**
@@ -793,6 +805,7 @@ tr:last-child td { border-bottom: none; }
       myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
       updateAddAllBtn();
       updateRemoveAllBtn();
+      updateDownloadButtonsVisibility(); 
     }
 
      
