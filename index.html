@@ -155,6 +155,13 @@ table {
   margin-top: 16px;
 }
 
+/* Keep Title text identical to any other cell text */
+.title-text {
+  font: inherit;         /* same family/size/line-height as td */
+  font-weight: inherit;  /* same weight as td (normal) */
+}
+
+
 /* Set a consistent base size for each table; cells inherit */
 #resultsTable, #myListTable { font-size: var(--font-table); }
 
@@ -664,9 +671,8 @@ tr:last-child td { border-bottom: none; }
           row.innerHTML = `
             <td>${book.subject}</td>
             <td>
-              ${book.title}
+              <span class="title-text">${book.title}</span>
               ${book.compulsory ? '<span class="tag tag--compulsory">Compulsory</span>' : ''}
-
             </td>
             <td>${book.publisher}</td>
             <td>${book.isbn}</td>
@@ -712,6 +718,7 @@ tr:last-child td { border-bottom: none; }
             <td>${idx + 1}</td>
             <td>${book.subject}</td>
             <td>${book.title}</td>
+            <td><span class="title-text">${book.title}</span></td>
             <td>${book.publisher}</td>
             <td>${book.isbn}</td>
             <td>${book.price.toFixed(2)}</td>
