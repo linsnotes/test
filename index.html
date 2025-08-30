@@ -10,10 +10,10 @@
 
 <style>
 /* ============================================
-   Typography tokens (single source of truth)
+   0) Design Tokens (single source of truth)
    ============================================ */
 :root{
-  /* Global text size */
+  /* Global */
   --font-body: 16px;
 
   /* Table scale (desktop defaults) */
@@ -21,10 +21,10 @@
   --font-th:    15px;  /* header text size */
   --font-td:    15px;  /* body cell size */
 
-  /* Inline elements inside table cells (relative to the cell) */
-  --font-btn:  1em;     /* buttons inherit from cell */
+  /* Inline elements inside table cells */
+  --font-btn:  1em;    /* buttons inherit from cell */
 
-  /* Tag design tokens (isolated component) */
+  /* Tag (isolated component) */
   --tag-bg: #eef2f7;
   --tag-fg: #172b4d;
   --tag-weight: 400;
@@ -35,8 +35,10 @@
 }
 
 /* ============================================
-   Base + Layout
+   1) Base / Layout
    ============================================ */
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; } /* stop mobile auto-zoom font tweaks */
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.6;
@@ -44,8 +46,9 @@ body {
   color: #172b4d;
   margin: 0;
   padding: 20px;
-  font-size: var(--font-body); /* uses global token */
+  font-size: var(--font-body);
 }
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -54,17 +57,19 @@ body {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   padding: 24px;
 }
+
 header {
   border-bottom: 1px solid #dfe1e6;
   padding-bottom: 16px;
   margin-bottom: 24px;
 }
+
 h1 { margin: 0 0 4px 0; }
-h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px;}
+h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px; }
 .subtitle { color: #5e6c84; }
 
 /* ============================================
-   Forms & Filters
+   2) Forms & Filters
    ============================================ */
 .filters-grid {
   display: grid;
@@ -85,7 +90,7 @@ input[type="text"], select {
   border-radius: 4px;
   border: 1px solid #c1c7d0;
   background-color: #fafbfc;
-  box-sizing: border-box; /* Ensures padding doesn't affect width */
+  box-sizing: border-box;
 }
 input[type="text"]:focus, select:focus {
   border-color: #4c9aff;
@@ -100,7 +105,7 @@ input[type="text"]:focus, select:focus {
 .checkbox-group input { margin-right: 8px; }
 
 /* ============================================
-   Buttons
+   3) Buttons
    ============================================ */
 .button-group {
   display: flex;
@@ -111,60 +116,56 @@ input[type="text"]:focus, select:focus {
   border: none;
   border-radius: 4px;
   padding: 10px 16px;
-  font-size: 0.95rem; /* default for non-table buttons */
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   text-align: center;
   transition: background-color 0.2s;
 }
-
-.btn.primary  { background-color: #007bff; color: white; }
+.btn.primary  { background-color: #007bff; color: #fff; }
 .btn.primary:hover  { background-color: #0056b3; }
-.btn.success  { background-color: #28a745; color: white; }
+.btn.success  { background-color: #28a745; color: #fff; }
 .btn.success:hover  { background-color: #218838; }
-.btn.danger   { background-color: #dc3545; color: white; }
+.btn.danger   { background-color: #dc3545; color: #fff; }
 .btn.danger:hover   { background-color: #c82333; }
 .btn.ghost    { background-color: transparent; color: #6c757d; border: 1px solid #dfe1e6; }
 .btn.ghost:hover { background-color: #f4f5f7; }
 
-/* Buttons inside tables inherit from the cell size (consistency) */
-#resultsTable .btn,
-#myListTable .btn { font-size: var(--font-btn); }
+/* Buttons inside tables inherit the cell size */
+#resultsTable .btn, #myListTable .btn { font-size: var(--font-btn); }
 
 /* ============================================
-   Results toolbar
+   4) Results Toolbar
    ============================================ */
 .results-toolbar{
   display:flex;
   align-items:center;
   padding-right: 12px;
-  justify-content:space-between; /* counter left, button right */
+  justify-content:space-between;
   gap:12px;
-  margin:16px 0; /* matches your status-message spacing */
-  flex-wrap:wrap; /* wrap on very small screens */
+  margin:16px 0;
+  flex-wrap:wrap;
 }
 .results-toolbar .status-message{ margin:0; }
 
 /* ============================================
-   Tables
+   5) Tables (uniform header/body typography)
    ============================================ */
 .table-wrapper { overflow-x: auto; }
+
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 16px;
 }
 
-/* Keep Title text identical to any other cell text */
-.title-text {
-  font: inherit;         /* same family/size/line-height as td */
-  font-weight: inherit;  /* same weight as td (normal) */
+/* Base table font (both tables) */
+#resultsTable, #myListTable {
+  font-family: inherit;
+  font-size: var(--font-table);
 }
 
-
-/* Set a consistent base size for each table; cells inherit */
-#resultsTable, #myListTable { font-size: var(--font-table); }
-
+/* Shared th/td box metrics */
 th, td {
   padding: 12px;
   text-align: left;
@@ -172,24 +173,35 @@ th, td {
   white-space: nowrap;
 }
 
-/* Explicit sizes pulled from tokens */
-th {
+/* Headers: identical across all columns/tables */
+#resultsTable th, #myListTable th {
   background-color: #f4f5f7;
-  font-size: var(--font-th);
-  text-transform: uppercase;
   color: #5e6c84;
+  font-size: var(--font-th);
+  font-weight: 600;          /* explicit to avoid mobile variance */
+  text-transform: uppercase;
+  line-height: 1.4;
 }
-td { font-size: var(--font-td); }
+
+/* Body cells: identical across all columns/tables */
+#resultsTable td, #myListTable td {
+  font-size: var(--font-td);
+  font-weight: 400;          /* explicit to avoid mobile variance */
+  line-height: 1.4;
+}
 
 tr:last-child td { border-bottom: none; }
 
+/* Title text inside cells = same as other body cells */
+.title-text { font: inherit; font-weight: inherit; }
+
 /* ============================================
-   Tag component (isolated from table typography)
+   6) Tag (isolated component)
    ============================================ */
 .tag{
-  font: inherit;                         /* inherit family, size, line-height */
+  font: inherit;                  /* inherit body cell font family/size */
   font-weight: var(--tag-weight);
-  font-size: 0.9em;
+  font-size: 0.9em;               /* slight visual down-scale */
   color: var(--tag-fg);
   background: var(--tag-bg);
   display: inline-flex;
@@ -200,7 +212,7 @@ tr:last-child td { border-bottom: none; }
   border: 1px solid transparent;
   vertical-align: baseline;
   white-space: nowrap;
-  margin-left: 0.5em;                    /* small gap after title text */
+  margin-left: 0.5em;             /* gap after title text */
 }
 .tag--compulsory{
   --tag-bg: #e6ffed;
@@ -209,7 +221,7 @@ tr:last-child td { border-bottom: none; }
 }
 
 /* ============================================
-   Sticky columns
+   7) Sticky Columns
    ============================================ */
 #resultsTable th:first-child,
 #resultsTable td:first-child,
@@ -217,7 +229,7 @@ tr:last-child td { border-bottom: none; }
 #myListTable td:first-child {
   position: sticky;
   left: 0;
-  background: #fff;      /* keep text visible */
+  background: #fff;
   z-index: 2;
 }
 #resultsTable th:last-child,
@@ -226,20 +238,20 @@ tr:last-child td { border-bottom: none; }
 #myListTable td:last-child {
   position: sticky;
   right: 0;
-  background: #fff;      /* keep text visible */
+  background: #fff;
   z-index: 2;
 }
-/* Ensure header cells stay above body cells */
+/* Keep header above body when sticky */
 #resultsTable th:first-child,
 #resultsTable th:last-child,
 #myListTable th:first-child,
 #myListTable th:last-child {
-  background: #f4f5f7;   /* match your header background */
+  background: #f4f5f7;
   z-index: 3;
 }
 
 /* ============================================
-   Helper Classes
+   8) Helpers
    ============================================ */
 .message {
   text-align: center;
@@ -251,11 +263,7 @@ tr:last-child td { border-bottom: none; }
   border: 1px dashed #c1c7d0;
 }
 .status-message { margin: 16px 0; color: #5e6c84; }
-/* Make just these two counters red */
-#resultsCounter,
-#myListCounter {
-  color: #dc3545; /* or 'red' */
-}
+#resultsCounter, #myListCounter { color: #dc3545; }
 .my-list-header {
   display: flex;
   align-items: flex-start;
@@ -263,13 +271,11 @@ tr:last-child td { border-bottom: none; }
 }
 
 /* ============================================
-   Mobile (≤600px)
-   - Keep layout rules
-   - Only override the variables we need
+   9) Mobile (≤600px): token overrides + geometry
    ============================================ */
 @media (max-width: 600px){
-  /* Side-scroll minimum widths + sticky Action column geometry */
   .booklist-app{
+    /* Side-scroll geometry */
     --table-min-results: 900px;
     --table-min-mylist : 1000px;
 
@@ -309,7 +315,7 @@ tr:last-child td { border-bottom: none; }
     background: #f4f5f7;
   }
 
-  /* Icon-only buttons — scoped to Action cells ONLY */
+  /* Icon-only buttons in Action column */
   .booklist-app #resultsTable td:last-child .add-btn,
   .booklist-app #resultsTable td:last-child .remove-btn,
   .booklist-app #myListTable  td:last-child .remove-btn{
@@ -330,12 +336,14 @@ tr:last-child td { border-bottom: none; }
   .booklist-app #myListTable  td:last-child .remove-btn::after              { content: "−"; font-size: var(--action-ico); }
 
   /* Unfreeze first column on tiny screens */
-  .booklist-app #resultsTable th:first-child, .booklist-app #resultsTable td:first-child,
-  .booklist-app #myListTable  th:first-child, .booklist-app #myListTable  td:first-child{
+  .booklist-app #resultsTable th:first-child,
+  .booklist-app #resultsTable td:first-child,
+  .booklist-app #myListTable  th:first-child,
+  .booklist-app #myListTable  td:first-child{
     position: static;
   }
 
-  /* Optional: larger click area if you shrink buttons below 36px */
+  /* Larger hit area for small icon buttons (optional) */
   .booklist-app #resultsTable td:last-child .add-btn,
   .booklist-app #resultsTable td:last-child .remove-btn,
   .booklist-app #myListTable  td:last-child .remove-btn{ position: relative; }
@@ -345,6 +353,7 @@ tr:last-child td { border-bottom: none; }
     content:""; position:absolute; inset:-4px;
   }
 }
+
 
 
 
