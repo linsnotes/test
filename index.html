@@ -703,8 +703,9 @@
       // Show a count when useful
       addAllBtn.textContent = canAdd ? `Add All (${eligible.length})` : 'Add All';
 
-      // Keep "same style as Add": primary when actionable, success when all already added
-      addAllBtn.classList.toggle('primary', canAdd);
+      // - primary when actionable OR when there are zero results / waiting (keeps visual consistency)
+      // - success when everything visible is already added
+      addAllBtn.classList.toggle('primary', canAdd || awaitSelection || filteredBooks.length === 0);
       addAllBtn.classList.toggle('success', !canAdd && filteredBooks.length > 0);
     }
 
