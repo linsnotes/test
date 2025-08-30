@@ -58,14 +58,18 @@ body {
   padding: 24px;
 }
 
-   */
+   */ 
+
 .container {
   width: 100%;
-  margin: 0 auto;
-  border-radius: 0;
+  max-width: none;     /* remove the cap */
+  margin: 0;           /* no centering margin */
+  border-radius: 0;    /* optional: flush with edges */
+  box-shadow: none;    /* optional: Apple-style flat */
+  padding: 24px 10vw;  /* 10% gutters left/right */
   background-color: #ffffff;
-  padding: 24px; 
-}   
+}
+   
 
 header {
   border-bottom: 1px solid #dfe1e6;
