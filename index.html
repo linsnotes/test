@@ -451,7 +451,7 @@ tr:last-child td { border-bottom: none; }
     <section id="my-list-section">
       <h2>3. My Book List</h2>
       <div class="button-group">
-        <button id="xlsxBtn" class="btn primary" hidden>Download Book List</button>
+        <button id="xlsxBtn" class="btn primary">Download Book List</button>
       </div>
       <div class="myList-toolbar"> 
         <div id="myListCounter" class="status-message">Your list is empty.</div>
@@ -475,7 +475,7 @@ tr:last-child td { border-bottom: none; }
           </tbody>
         </table>
       </div>
-      <button id="xlsxBtnBottom" class="btn primary btn-right" hidden>Download Book List</button> 
+      <button id="xlsxBtnBottom" class="btn primary btn-right">Download Book List</button> 
        <div id="myListEmpty" class="message">Add books from the search results above.</div>
     </section>
 
@@ -738,6 +738,11 @@ tr:last-child td { border-bottom: none; }
               </button>
             </td>
           `;           
+
+
+
+
+           
           resultsTableBody.appendChild(row);
         });
       }
@@ -749,52 +754,95 @@ tr:last-child td { border-bottom: none; }
     }
     
 
+    /**
+     * Renders the user's selected books into the "My Book List" table.
+     */
+/*
     function renderMyListTable() {
-        myListTableBody.innerHTML = '';
-        const listItems = Array.from(myBookList.values());
+      myListTableBody.innerHTML = '';
+      const listItems = Array.from(myBookList.values());
 
-        if (listItems.length === 0) {
-            myListEmpty.style.display = 'block';
-            $('#myListTable').hidden = true;
-            // Hide both download buttons and remove button when the list is empty
-            $('#removeBtn').hidden = true;
-            $('#xlsxBtn').hidden = true;
-            $('#xlsxBtnBottom').hidden = true;
-        } else {
-            myListEmpty.style.display = 'none';
-            $('#myListTable').hidden = false;
+      if (listItems.length === 0) {
+        myListEmpty.style.display = 'block';
+        $('#myListTable').hidden = true;
+      } else {
+        myListEmpty.style.display = 'none';
+        $('#myListTable').hidden = false;
+        
+        // Sort by SN for consistent ordering
+        // listItems.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
 
-            listItems.forEach((book, idx) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${idx + 1}</td>
-                    <td>${book.subject}</td>
-                    <td><span class="title-text">${book.title}</span></td>
-                    <td>${book.publisher}</td>
-                    <td>${book.isbn}</td>
-                    <td>${book.price.toFixed(2)}</td>
-                    <td>
-                        <button class="btn danger remove-btn" data-sn="${book.sn}">Remove</button>
-                    </td>
-                `;
-                myListTableBody.appendChild(row);
-            });
+        listItems.forEach((book, idx) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${book.subject}</td>
+            <td><span class="title-text">${book.title}</span></td>
+            <td>${book.publisher}</td>
+            <td>${book.isbn}</td>
+            <td>${book.price.toFixed(2)}</td>
+            <td>
+              <button class="btn danger remove-btn" data-sn="${book.sn}">Remove</button>
+            </td>
+          `;
+          myListTableBody.appendChild(row);
+        });
+      }
 
-            const totalItems = listItems.length;
-            const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
-            myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
-
-            // Show both download buttons and remove button when list is not empty
-            $('#removeBtn').hidden = false;
-            $('#xlsxBtn').hidden = false;
-            $('#xlsxBtnBottom').hidden = false;
-        }
-
-        updateAddAllBtn();
-        updateRemoveAllBtn();
+      const totalItems = listItems.length;
+      const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
+      myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
+      updateAddAllBtn();
+      updateRemoveAllBtn();  
     }
+*/
 
+    function renderMyListTable() {
+      myListTableBody.innerHTML = '';
+      const listItems = Array.from(myBookList.values());
 
+      if (listItems.length === 0) {
+        myListEmpty.style.display = 'block';
+        $('#myListTable').hidden = true;
+      } else {
+        myListEmpty.style.display = 'none';
+        $('#myListTable').hidden = false;
+
+        listItems.forEach((book, idx) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${book.subject}</td>
+            <td><span class="title-text">${book.title}</span></td>
+            <td>${book.publisher}</td>
+            <td>${book.isbn}</td>
+            <td>${book.price.toFixed(2)}</td>
+            <td>
+              <button class="btn danger remove-btn" data-sn="${book.sn}">Remove</button>
+            </td>
+          `;
+          myListTableBody.appendChild(row);
+        });
+
+        /* ▼▼ ADD THIS BLOCK: one extra total row with no numbering/data ▼▼ */
+        const total = listItems.reduce((sum, b) => sum + b.price, 0);
+        const totalRow = document.createElement('tr');
+        totalRow.innerHTML = `
+          <td></td>
+          <td colspan="4" style="text-align:right; font-weight:600; color:red;">Total Price</td>
+          <td style="font-weight:600;">SGD ${total.toFixed(2)}</td>
+          <td></td>
+        `;
+        myListTableBody.appendChild(totalRow);
+        /* ▲▲ END ADD ▲▲ */
+      }
+
+      const totalItems = listItems.length;
+      const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
+      myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
+      updateAddAllBtn();
+      updateRemoveAllBtn();
+    }
 
      
     function updateAddAllBtn(){
