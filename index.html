@@ -95,6 +95,22 @@
   .btn.ghost    { background-color: transparent; color: #6c757d; border: 1px solid #dfe1e6; }
   .btn.ghost:hover { background-color: #f4f5f7; }
 
+  /* Counter + Add All toolbar */
+  .results-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between; /* counter left, button right */
+    gap:12px;
+    margin:16px 0; /* matches your status-message spacing */
+    flex-wrap:wrap; /* wrap on very small screens */
+  }
+
+  /* Optional: make the counter not stretch when wrapping */
+  .results-toolbar .status-message{ margin:0; }
+
+
+
+  
   /* Tables */
   .table-wrapper { overflow-x: auto; }
   table {
@@ -335,7 +351,10 @@
     <!-- Results Section -->
     <section id="results-section">
       <h2>2. Search Results</h2>
-      <div id="resultsCounter" class="status-message">Loading books...</div>
+      <div class="results-toolbar">
+        <div id="resultsCounter" class="status-message">Loading books...</div>
+        <button id="addAllBtn" class="btn primary" disabled>Add All</button>
+      </div>
       <div class="table-wrapper">
         <table id="resultsTable">
           <thead>
@@ -626,6 +645,7 @@
       resultsCounter.textContent = awaitSelection
         ? 'Waiting for selections…'
         : `${filteredBooks.length} book(s) found.`;
+      updateAddAllBtn();
     }
     
 
@@ -666,7 +686,32 @@
       const totalItems = listItems.length;
       const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
       myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
+      updateAddAllBtn();
     }
+    
+    function updateAddAllBtn(){
+      const addAllBtn = $('#addAllBtn');
+      if (!addAllBtn) return;
+
+      // Books that are currently visible (filtered) and NOT yet in My List
+      const eligible = filteredBooks.filter(b => !myBookList.has(b.sn));
+
+      // Enable only if there's at least one eligible item and we aren't waiting for selections
+      const canAdd = !awaitSelection && eligible.length > 0;
+      addAllBtn.disabled = !canAdd;
+
+      // Show a count when useful
+      addAllBtn.textContent = canAdd ? `Add All (${eligible.length})` : 'Add All';
+
+      // Keep "same style as Add": primary when actionable, success when all already added
+      addAllBtn.classList.toggle('primary', canAdd);
+      addAllBtn.classList.toggle('success', !canAdd && filteredBooks.length > 0);
+    }
+
+
+
+
+    
 
     /**
      * Handles clicks within the results table (e.g., "Add" buttons).
@@ -774,6 +819,7 @@
         populateFilters();
         renderResultsTable();
         renderMyListTable();
+        updateAddAllBtn(); 
 
       } catch (error) {
         console.error('Failed to load or process sheet:', error);
@@ -814,6 +860,16 @@
       }
       applyFilters();
     });
+
+    $('#addAllBtn').addEventListener('click', () => {
+      const toAdd = filteredBooks.filter(b => !myBookList.has(b.sn));
+      toAdd.forEach(b => myBookList.set(b.sn, b));
+
+      renderMyListTable();
+      renderResultsTable();
+      updateAddAllBtn();
+    });
+
 
   
     resultsTableBody.addEventListener('click', handleResultsClick);
