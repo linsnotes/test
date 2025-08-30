@@ -553,28 +553,26 @@ tr:last-child td { border-bottom: none; }
       const s = $('#search');
       if (s && s.value) s.value = '';
     }
-
+  
 
     function updateDownloadButtonsVisibility() {
       const topButton = document.querySelector('#xlsxBtn');
       const bottomButton = document.querySelector('#xlsxBtnBottom');
       const hasItems = myBookList.size > 0;
 
-      // 1. Toggle visibility for both using the 'hidden' attribute.
+      // Toggle visibility for both using the 'hidden' attribute.
       topButton.hidden = !hasItems;
       bottomButton.hidden = !hasItems;
 
-      // 2. If the bottom button is now visible, restore its 'block' display
-      //    so its alignment works correctly.
       if (hasItems) {
+        // If the button should be VISIBLE, set its display to 'block' for alignment.
         bottomButton.style.display = 'block';
+      } else {
+        // If the button should be HIDDEN, REMOVE the inline style.
+        // This allows the 'hidden' attribute's default 'display: none' to work again.
+        bottomButton.style.display = '';
       }
-    }     
-
-
-     
-
-
+    }
      
 
 
