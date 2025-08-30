@@ -417,7 +417,7 @@ tr:last-child td { border-bottom: none; }
         <button id="addAllBtn" class="btn primary" disabled hidden>Add All</button>
       </div>
       <div class="table-wrapper">
-        <table id="resultsTable">
+        <table id="resultsTable" hidden>
           <thead>
             <tr>
               <th>Subject</th>
@@ -447,7 +447,7 @@ tr:last-child td { border-bottom: none; }
       </div>
       <div id="myListCounter" class="status-message">Your list is empty.</div>
       <div class="table-wrapper">
-        <table id="myListTable">
+        <table id="myListTable" hidden>
           <thead>
             <tr>
               <th>No</th>
@@ -679,14 +679,14 @@ tr:last-child td { border-bottom: none; }
       resultsTableBody.innerHTML = ''; // Clear previous results
 
       if (filteredBooks.length === 0) {
-        $('#resultsTable').style.display = 'none';
+        $('#resultsTable').hidden = true; 
         resultsMessage.style.display = 'block';
         resultsMessage.textContent = awaitSelection
           ? 'Choose any filter (or “All”), type a keyword, or tick Compulsory to see books.'
           : 'No books match your current filters.';
       } else {
         resultsMessage.style.display = 'none';
-        $('#resultsTable').style.display = '';
+        $('#resultsTable').hidden = false;
 
         filteredBooks.forEach(book => {
           const row = document.createElement('tr');
@@ -736,10 +736,10 @@ tr:last-child td { border-bottom: none; }
 
       if (listItems.length === 0) {
         myListEmpty.style.display = 'block';
-        $('#myListTable').style.display = 'none';
+        $('#myListTable').hidden = true;
       } else {
         myListEmpty.style.display = 'none';
-        $('#myListTable').style.display = '';
+        $('#myListTable').hidden = false;
         
         // Sort by SN for consistent ordering
         // listItems.sort((a,b) => a.sn.localeCompare(b, 'en', { numeric: true }));
