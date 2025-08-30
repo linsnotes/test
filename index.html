@@ -220,6 +220,12 @@ tr:last-child td { border-bottom: none; }
   border-color: #57d9a3;
 }
 
+.tag--optional{
+  --tag-bg: #f1f2f4;
+  --tag-fg: #5e6c84;
+  border-color: #dfe1e6;
+}
+
 /* ============================================
    7) Sticky Columns
    ============================================ */
@@ -677,11 +683,15 @@ tr:last-child td { border-bottom: none; }
         filteredBooks.forEach(book => {
           const row = document.createElement('tr');
           const isAdded = myBookList.has(book.sn);
+          const tagHTML = book.compulsory
+            ? '<span class="tag tag--compulsory">Compulsory</span>'
+            : '<span class="tag tag--optional">Optional</span>';
+
           row.innerHTML = `
             <td>${book.subject}</td>
             <td>
-              <span class="title-text">${book.title}</span>
-              ${book.compulsory ? '<span class="tag tag--compulsory">Compulsory</span>' : ''}
+             <span class="title-text">${book.title}</span>
+             ${tagHTML}
             </td>
             <td>${book.publisher}</td>
             <td>${book.isbn}</td>
@@ -692,7 +702,12 @@ tr:last-child td { border-bottom: none; }
                 ${isAdded ? 'Added' : 'Add'}
               </button>
             </td>
-          `;
+          `;           
+
+
+
+
+           
           resultsTableBody.appendChild(row);
         });
       }
