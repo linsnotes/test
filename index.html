@@ -554,14 +554,25 @@ tr:last-child td { border-bottom: none; }
       if (s && s.value) s.value = '';
     }
 
+
     function updateDownloadButtonsVisibility() {
-      const downloadButtons = document.querySelectorAll('#xlsxBtn, #xlsxBtnBottom');
+      const topButton = document.querySelector('#xlsxBtn');
+      const bottomButton = document.querySelector('#xlsxBtnBottom');
       const hasItems = myBookList.size > 0;
 
-      downloadButtons.forEach(btn => {
-        btn.hidden = !hasItems; // This is a clean way to set the hidden property
-      });
-    }
+      // 1. Toggle visibility for both using the 'hidden' attribute.
+      topButton.hidden = !hasItems;
+      bottomButton.hidden = !hasItems;
+
+      // 2. If the bottom button is now visible, restore its 'block' display
+      //    so its alignment works correctly.
+      if (hasItems) {
+        bottomButton.style.display = 'block';
+      }
+    }     
+
+
+     
 
 
      
