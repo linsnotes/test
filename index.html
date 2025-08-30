@@ -137,7 +137,7 @@ input[type="text"]:focus, select:focus {
 /* ============================================
    4) Results Toolbar
    ============================================ */
-.results-toolbar{
+.results-toolbar .myList-toolbar{
   display:flex;
   align-items:center;
   padding-right: 12px;
@@ -146,7 +146,7 @@ input[type="text"]:focus, select:focus {
   margin:16px 0;
   flex-wrap:wrap;
 }
-.results-toolbar .status-message{ margin:0; }
+.results-toolbar .myList-toolbar .status-message{ margin:0; }
 
 /* ============================================
    5) Tables (uniform header/body typography)
@@ -445,7 +445,10 @@ tr:last-child td { border-bottom: none; }
         <button id="xlsxBtn" class="btn primary">Download XLSX</button>
         <button id="clearBtn" class="btn ghost">Clear List</button>
       </div>
-      <div id="myListCounter" class="status-message">Your list is empty.</div>
+      <div class="myList-toolbar"> 
+        <div id="myListCounter" class="status-message">Your list is empty.</div>
+        <button id="removeBtn" class="btn danger">Remove All</button> 
+      </div>
       <div class="table-wrapper">
         <table id="myListTable" hidden>
           <thead>
@@ -780,6 +783,7 @@ tr:last-child td { border-bottom: none; }
       const totalPrice = listItems.reduce((sum, book) => sum + book.price, 0);
       myListCounter.textContent = `${totalItems} item(s) in your list. Total Price: $${totalPrice.toFixed(2)}`;
       updateAddAllBtn();
+      updateRemoveAllBtn();  
     }
 
     function updateAddAllBtn(){
@@ -805,6 +809,11 @@ tr:last-child td { border-bottom: none; }
       addAllBtn.classList.toggle('success', hasResults && !canAdd);
     }
 
+    function updateRemoveAllBtn(){
+      const btn = $('#removeBtn');
+      if (!btn) return;
+      btn.disabled = myBookList.size === 0;
+    }
 
     /**
      * Handles clicks within the results table (e.g., "Add" buttons).
@@ -1088,6 +1097,7 @@ tr:last-child td { border-bottom: none; }
     resultsTableBody.addEventListener('click', handleResultsClick);
     myListTableBody.addEventListener('click', handleMyListClick);
     $('#clearBtn').addEventListener('click', clearMyList);
+    $('#removeBtn').addEventListener('click', clearMyList); 
     $('#xlsxBtn').addEventListener('click', downloadXLSX);
 
   });
