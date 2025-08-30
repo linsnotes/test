@@ -822,8 +822,8 @@ tr:last-child td { border-bottom: none; }
         const totalRow = document.createElement('tr');
         totalRow.innerHTML = `
           <td></td>
-          <td colspan="4" style="text-align:right; font-weight:600;">Total</td>
-          <td style="font-weight:600;">${total.toFixed(2)}</td>
+          <td colspan="4" style="text-align:right; font-weight:600; color:red;">Total Price</td>
+          <td style="font-weight:600;">SGD ${total.toFixed(2)}</td>
           <td></td>
         `;
         myListTableBody.appendChild(totalRow);
