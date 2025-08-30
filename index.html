@@ -137,7 +137,7 @@ input[type="text"]:focus, select:focus {
 /* ============================================
    4) Results Toolbar
    ============================================ */
-.results-toolbar .myList-toolbar{
+.results-toolbar {
   display:flex;
   align-items:center;
   padding-right: 12px;
@@ -146,7 +146,21 @@ input[type="text"]:focus, select:focus {
   margin:16px 0;
   flex-wrap:wrap;
 }
-.results-toolbar .myList-toolbar .status-message{ margin:0; }
+.results-toolbar .status-message{ margin:0; }
+
+.myList-toolbar{
+  display:flex;
+  align-items:center;
+  padding-right: 12px;
+  justify-content:space-between;
+  gap:12px;
+  margin:16px 0;
+  flex-wrap:wrap;
+}
+.myList-toolbar .status-message{ margin:0; }
+
+
+   
 
 /* ============================================
    5) Tables (uniform header/body typography)
@@ -360,12 +374,6 @@ tr:last-child td { border-bottom: none; }
   }
 }
 
-
-
-
-
-
-
 </style>
 </head>
 <body>
@@ -443,7 +451,6 @@ tr:last-child td { border-bottom: none; }
       </div>
       <div class="button-group">
         <button id="xlsxBtn" class="btn primary">Download XLSX</button>
-        <button id="clearBtn" class="btn ghost">Clear List</button>
       </div>
       <div class="myList-toolbar"> 
         <div id="myListCounter" class="status-message">Your list is empty.</div>
