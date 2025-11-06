@@ -608,7 +608,8 @@ tr:last-child td { border-bottom: none; }
 
     function resetDropdownsToSelect() {
       ['level','subject','banding'].forEach(id => {
-        document.getElementById(id).value = SELECT;
+        // document.getElementById(id).value = SELECT;
+        const el = document.getElementById(id); if (el) el.value = SELECT;
       });
     }
 
@@ -722,16 +723,19 @@ tr:last-child td { border-bottom: none; }
 
       // Preserve current filter values
       const current = {
-        level: levelSel.value || SELECT,
+        // level: levelSel.value || SELECT,
+        level: levelSel ? (levelSel.value || SELECT) : ALL, 
         subject: subjectSel.value || SELECT,
         banding: bandingSel.value || SELECT
       };
 
       // Build Level options from all books
-      populateSelect(levelSel, allBooks.map(b => b.level), current.level);
+      // populateSelect(levelSel, allBooks.map(b => b.level), current.level);
+      if (levelSel) populateSelect(levelSel, allBooks.map(b => b.level), current.level);
 
       // If level is ALL or SELECT, use full pool; else filter by level
       const subjectPool = (isAll(current.level) || isSelect(current.level))
+      const subjectPool = (isAll(current.level) || isSelect(current.level) || !levelSel)
         ? allBooks
         : allBooks.filter(b => b.level === current.level);
       populateSelect(subjectSel, subjectPool.map(b => b.subject), current.subject);
@@ -749,7 +753,8 @@ tr:last-child td { border-bottom: none; }
     function applyFilters(event) {
       if (event) event.preventDefault();
 
-      const level = $('#level').value;
+      // const level = $('#level').value;
+      const levelEl = $('#level'); const level = levelEl ? levelEl.value : ALL;
       const subject = $('#subject').value;
       const banding = $('#banding').value;
       const compOnly = $('#compOnly').checked;
