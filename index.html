@@ -562,7 +562,8 @@ tr:last-child td { border-bottom: none; }
     const LABELS = {
       level:   { singular: 'Level',   plural: 'Levels' },
       subject: { singular: 'Subject', plural: 'Subjects' },
-      banding: { singular: 'Banding', plural: 'Bandings' },
+      // banding: { singular: 'Banding', plural: 'Bandings' },
+      banding: { singular: 'Level', plural: 'Levels' },
     };
     
 
@@ -734,7 +735,7 @@ tr:last-child td { border-bottom: none; }
       if (levelSel) populateSelect(levelSel, allBooks.map(b => b.level), current.level);
 
       // If level is ALL or SELECT, use full pool; else filter by level
-      const subjectPool = (isAll(current.level) || isSelect(current.level))
+      // const subjectPool = (isAll(current.level) || isSelect(current.level))
       const subjectPool = (isAll(current.level) || isSelect(current.level) || !levelSel)
         ? allBooks
         : allBooks.filter(b => b.level === current.level);
