@@ -1,85 +1,840 @@
-<!-- Filters Section -->
-<section id="filters">
-  <h2>1. Find Books</h2>
-  <form id="filtersForm">
-    <div class="filters-grid">
-      <div class="form-group">
-        <label for="subject">Subject</label>
-        <select id="subject"><option value="SELECT">Select Subject</option></select>
-      </div>
-      <div class="form-group">
-        <label for="banding">Level (G1/G2/G3)</label>
-        <select id="banding"><option value="SELECT">Select Banding</option></select>
-      </div>
-      <div class="form-group">
-        <label for="search">Search by Keyword</label>
-        <input id="search" type="text" placeholder="e.g., Workbook, 1A, etc." />
-      </div>
-      <div class="form-group checkbox-group">
-        <label class="toggle-switch">
-         <input id="compOnly" type="checkbox" />
-         <span class="slider"></span>
-        </label>
-        <label for="compOnly" class="toggle-label">Hide Optional</label>
-      </div>
-    </div>
-    <div class="button-group" style="margin-top: 20px;">
-      <button type="button" id="resetBtn" class="btn primary">Reset Filters</button>
-    </div>
-  </form>
-</section>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>School Textbook Finder</title>
 
-<!-- Results Section -->
-<section id="results-section">
-  <h2>2. Search Results</h2>
-  <div class="results-toolbar">
-    <div id="resultsCounter" class="status-message" aria-live="polite"></div>
-    <button id="addAllBtn" class="btn primary" disabled hidden>Add All</button>
-  </div>
-  <div class="table-wrapper">
-    <table id="resultsTable" hidden>
-      <thead>
-        <tr>
-          <th>Subject</th>
-          <th>Title</th>
-          <th>Publisher</th>
-          <th>ISBN</th>
-          <th>Price</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody><!-- Results injected here --></tbody>
-    </table>
-  </div>
-  <div id="resultsMessage" class="message" style="display: none;"></div>
-</section>
+<!-- Library for XLSX Export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<!-- My Book List Section -->
-<section id="my-list-section">
-  <h2>3. My Book List</h2>
-  <div class="button-group">
-    <button id="xlsxBtn" class="btn primary" hidden>Download Book List</button>
+<style>
+/* ============================================
+   Design Tokens & Layout
+   ============================================ */
+:root{
+  --color-background-page: #f4f5f7;
+  --font-body: 16px;
+  --font-table: 15px;
+  --font-th:    15px;
+  --font-td:    15px;
+  --font-btn:  1em;
+  --tag-bg: #eef2f7;
+  --tag-fg: #172b4d;
+  --tag-weight: 400;
+  --tag-radius: 999px;
+  --tag-pad-y: 0.15em;
+  --tag-pad-x: 0.5em;
+  --tag-gap: 0.35em;
+}
+
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; } 
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  background-color: var(--color-background-page);
+  color: #172b4d;
+  margin: 0;
+  padding: 20px;
+  font-size: var(--font-body);
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+header {
+  border-bottom: 1px solid #dfe1e6;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+h1 { margin: 0 0 4px 0; }
+h2 { margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 8px; }
+.subtitle { color: #5e6c84; }
+
+/* ============================================
+   Forms & Filters
+   ============================================ */
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+.form-group { display: flex; flex-direction: column; }
+label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #5e6c84;
+  margin-bottom: 4px;
+}
+input[type="text"], select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #c1c7d0;
+  background-color: #fafbfc;
+  box-sizing: border-box;
+}
+input[type="text"]:focus, select:focus {
+  border-color: #4c9aff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(76,154,255,0.3);
+}
+
+/* Toggle Switch */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  padding-top: 24px;
+}
+.toggle-label {
+  margin-left: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #5e6c84;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #c1c7d0; transition: .4s; border-radius: 28px;
+}
+.slider:before {
+  position: absolute; content: "";
+  height: 20px; width: 20px; left: 4px; bottom: 4px;
+  background-color: white; transition: .4s; border-radius: 50%;
+}
+input:checked + .slider { background-color: #007bff; }
+input:focus + .slider { box-shadow: 0 0 1px #007bff; }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* ============================================
+   Buttons
+   ============================================ */
+.button-group { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  border: none; border-radius: 999px; padding: 10px 16px;
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  text-align: center; transition: background-color 0.2s;
+}
+.btn.primary  { background-color: #007bff; color: #fff; }
+.btn.primary:hover  { background-color: #0056b3; }
+.btn.success  { background-color: #28a745; color: #fff; }
+.btn.success:hover  { background-color: #218838; }
+.btn.danger   { background-color: #dc3545; color: #fff; }
+.btn.danger:hover   { background-color: #c82333; }
+.btn.ghost    { background-color: transparent; color: #6c757d; border: 1px solid #dfe1e6; }
+.btn.ghost:hover { background-color: var(--color-background-page); }
+.btn-right { margin-left: auto; margin-top: 12px; }
+#resultsTable .btn, #myListTable .btn { font-size: var(--font-btn); }
+
+/* ============================================
+   Toolbars & Tables
+   ============================================ */
+.results-toolbar, .myList-toolbar {
+  display:flex; align-items:center; padding-right: 12px;
+  justify-content:space-between; gap:12px; margin:16px 0; flex-wrap:wrap;
+}
+.status-message{ margin:0; }
+
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+#resultsTable, #myListTable { font-family: inherit; font-size: var(--font-table); }
+th, td {
+  padding: 12px; text-align: left; border-bottom: 1px solid #dfe1e6; white-space: nowrap;
+}
+#resultsTable th, #myListTable th {
+  background-color: var(--color-background-page); color: #5e6c84;
+  font-size: var(--font-th); font-weight: 600; text-transform: uppercase; line-height: 1.4;
+}
+#resultsTable td, #myListTable td {
+  font-size: var(--font-td); font-weight: 400; line-height: 1.4;
+}
+tr:last-child td { border-bottom: none; }
+.title-text { font: inherit; font-weight: inherit; }
+
+/* Tags */
+.tag{
+  font: inherit; font-weight: var(--tag-weight); font-size: 0.9em;
+  color: var(--tag-fg); background: var(--tag-bg);
+  display: inline-flex; align-items: center; gap: var(--tag-gap);
+  padding: var(--tag-pad-y) var(--tag-pad-x); border-radius: var(--tag-radius);
+  border: 1px solid transparent; vertical-align: baseline; white-space: nowrap; margin-left: 0.5em;
+}
+.tag--compulsory{ --tag-bg: #e6ffed; --tag-fg: #172b4d; border-color: #57d9a3; }
+.tag--optional{ --tag-bg: #f1f2f4; --tag-fg: #5e6c84; border-color: #dfe1e6; }
+
+/* Sticky Columns */
+#resultsTable th:first-child, #resultsTable td:first-child,
+#myListTable th:first-child, #myListTable td:first-child {
+  position: sticky; left: 0; background: var(--color-background-page); z-index: 2;
+}
+#resultsTable th:last-child, #resultsTable td:last-child,
+#myListTable th:last-child, #myListTable td:last-child {
+  position: sticky; right: 0; background: var(--color-background-page); z-index: 2;
+}
+#resultsTable th:first-child, #resultsTable th:last-child,
+#myListTable th:first-child, #myListTable th:last-child {
+  background: var(--color-background-page); z-index: 3;
+}
+
+/* Helpers */
+.message {
+  text-align: center; padding: 40px 20px; background-color: #fafbfc;
+  border-radius: 4px; color: #5e6c84; margin-top: 16px; border: 1px dashed #c1c7d0;
+}
+.status-message { margin: 16px 0; color: #5e6c84; }
+#resultsCounter, #myListCounter { color: #dc3545; }
+
+/* Mobile */
+@media (max-width: 600px){
+  .booklist-app{
+    --table-min-results: 900px; --table-min-mylist : 1000px;
+    --action-col: 48px; --action-btn: 36px; --action-ico: 16px;
+    --font-table: 14px; --font-th:    14px; --font-td:    14px;
+  }
+  .booklist-app .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .booklist-app #resultsTable { table-layout: auto; min-width: var(--table-min-results); }
+  .booklist-app #myListTable  { table-layout: auto; min-width: var(--table-min-mylist); }
+
+  .booklist-app #resultsTable th:last-child, .booklist-app #resultsTable td:last-child,
+  .booklist-app #myListTable  th:last-child, .booklist-app #myListTable  td:last-child{
+    position: sticky; right: 0; z-index: 3; text-align: center;
+    width: var(--action-col); min-width: var(--action-col); max-width: var(--action-col);
+    background: var(--color-background-page); box-shadow: -8px 0 8px -8px rgba(0,0,0,0.15);
+  }
+  .booklist-app #resultsTable thead th:last-child, .booklist-app #myListTable  thead th:last-child{
+    z-index: 4; background: var(--color-background-page);
+  }
+  .booklist-app #resultsTable td:last-child .add-btn,
+  .booklist-app #resultsTable td:last-child .remove-btn,
+  .booklist-app #myListTable  td:last-child .remove-btn{
+    padding: 0; width: var(--action-btn); height: var(--action-btn);
+    border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0; line-height: 1; position: relative;
+  }
+  .booklist-app #resultsTable td:last-child .add-btn::after { content: "+"; font-size: var(--action-ico); }
+  .booklist-app #resultsTable td:last-child .add-btn.success::after,
+  .booklist-app #resultsTable td:last-child .add-btn[disabled]::after { content: "✓"; font-size: var(--action-ico); }
+  .booklist-app #resultsTable td:last-child .remove-btn::after,
+  .booklist-app #myListTable  td:last-child .remove-btn::after { content: "−"; font-size: var(--action-ico); }
+  
+  .booklist-app #resultsTable th:first-child, .booklist-app #resultsTable td:first-child,
+  .booklist-app #myListTable  th:first-child, .booklist-app #myListTable  td:first-child{ position: static; }
+  .booklist-app #resultsTable td:last-child .add-btn::before,
+  .booklist-app #resultsTable td:last-child .remove-btn::before,
+  .booklist-app #myListTable  td:last-child .remove-btn::before{ content:""; position:absolute; inset:-4px; }
+}
+</style>
+
+</head>
+<body>
+
+  <div class="container booklist-app">
+    <header>
+      <h1>School Textbook Finder</h1>
+      <p class="subtitle">Select your subjects to get a list of textbooks for the new school year. 
+
+<p><b>For parents/students in PG1 and PG2, you should only purchase school books after accepting or rejecting offers to take a subject at a more demanding level (if offered).</b>
+<p>
+<u>Bookshop and Uniform Hours:</u>
+<ul>
+<li>Dates: 19, 22, 23, 26, 29 Dec 2025</li>
+<li>Mon - Fri: 9:00am - 3:00pm</li>
+<li>Venue: School Canteen / Classroom</li></ul>
+<p>
+View PDF of Sec 1 Textbook list: <ahref="https://drive.google.com/file/d/1RCdsvHXBGdM-rU58E5pn10A_L_vomg58/view?usp=sharing">Click here</a>
+</p>
+    </header>
+
+    <!-- Filters Section -->
+    <section id="filters">
+      <h2>1. Find Books</h2>
+      <form id="filtersForm">
+        <div class="filters-grid">
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <select id="subject"><option value="SELECT">Select Subject</option></select>
+          </div>
+          <div class="form-group">
+            <label for="banding">Level (G1/G2/G3)</label>
+            <select id="banding"><option value="SELECT">Select Banding</option></select>
+          </div>
+          <div class="form-group">
+            <label for="search">Search by Keyword</label>
+            <input id="search" type="text" placeholder="e.g., Workbook, 1A, etc." />
+          </div>
+          <div class="form-group checkbox-group">
+            <label class="toggle-switch">
+             <input id="compOnly" type="checkbox" />
+             <span class="slider"></span>
+            </label>
+            <label for="compOnly" class="toggle-label">Hide Optional</label>
+          </div>
+        </div>
+        <div class="button-group" style="margin-top: 20px;">
+          <button type="button" id="resetBtn" class="btn primary">Reset Filters</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results-section">
+      <h2>2. Search Results</h2>
+      <div class="results-toolbar">
+        <div id="resultsCounter" class="status-message" aria-live="polite"></div>
+        <button id="addAllBtn" class="btn primary" disabled hidden>Add All</button>
+      </div>
+      <div class="table-wrapper">
+        <table id="resultsTable" hidden>
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Title</th>
+              <th>Publisher</th>
+              <th>ISBN</th>
+              <th>Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody><!-- Results injected here --></tbody>
+        </table>
+      </div>
+      <div id="resultsMessage" class="message" style="display: none;"></div>
+    </section>
+
+    <!-- My Book List Section -->
+    <section id="my-list-section">
+      <h2>3. My Book List</h2>
+      <div class="button-group">
+        <button id="xlsxBtn" class="btn primary" hidden>Download Book List</button>
+      </div>
+      <div class="myList-toolbar"> 
+        <div id="myListCounter" class="status-message">Your list is empty.</div>
+        <button id="removeBtn" class="btn danger" hidden>Remove All</button> 
+      </div>
+      <div class="table-wrapper">
+        <table id="myListTable" hidden>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Subject</th>
+              <th>Title</th>
+              <th>Publisher</th>
+              <th>ISBN</th>
+              <th>Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody><!-- My List injected here --></tbody>
+        </table>
+      </div>
+      <div id="myListEmpty" class="message">Add books from the search results above.</div>
+      <button id="xlsxBtnBottom" class="btn primary btn-right" hidden>Download Book List</button>  
+    </section>
   </div>
-  <div class="myList-toolbar"> 
-    <div id="myListCounter" class="status-message">Your list is empty.</div>
-    <button id="removeBtn" class="btn danger" hidden>Remove All</button> 
-  </div>
-  <div class="table-wrapper">
-    <table id="myListTable" hidden>
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Subject</th>
-          <th>Title</th>
-          <th>Publisher</th>
-          <th>ISBN</th>
-          <th>Price</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody><!-- My List injected here --></tbody>
-    </table>
-  </div>
-  <div id="myListEmpty" class="message">Add books from the search results above.</div>
-  <button id="xlsxBtnBottom" class="btn primary btn-right" hidden>Download Book List</button>  
-</section>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    // ===== 1. Configuration =====
+    const SHEET_ID = '1BKnMBNfnrVz0M317AysbuheMYS_TB_sbKrKCPUC386U';
+    const XLSX_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
+
+    const ALL = "ALL";
+    const SELECT = "SELECT";
+    const LABELS = {
+      level:   { singular: 'Level',   plural: 'Levels' },
+      subject: { singular: 'Subject', plural: 'Subjects' },
+      banding: { singular: 'Level',   plural: 'Levels' },
+    };
+
+    // ===== 2. DOM Helpers =====
+    const $ = sel => document.querySelector(sel);
+    const resultsTableBody = $('#resultsTable tbody');
+    const myListTableBody  = $('#myListTable tbody');
+    
+    // ===== 3. State =====
+    let allBooks = [];
+    let filteredBooks = [];
+    const myBookList = new Map();
+    let awaitSelection = true;
+    let dataLoaded = false;
+    let loadingPromise = null;
+
+    // ===== 4. Core Logic =====
+
+    async function ensureDataLoaded() {
+      if (dataLoaded) return;
+      if (!loadingPromise) {
+        $('#resultsMessage').style.display = 'none';
+        $('#resultsCounter').textContent = 'Loading books…';
+        loadingPromise = loadInitialData()
+          .then(() => {
+            dataLoaded = true;
+            $('#resultsCounter').textContent = 'Waiting for selections…';
+          })
+          .catch((err) => { throw err; });
+      }
+      await loadingPromise;
+    }
+
+    async function loadInitialData() {
+      try {
+        const response = await fetch(XLSX_URL);
+        if (!response.ok) throw new Error(`Network error: ${response.statusText}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        // header:1 ensures we get array of arrays (safe for empty cells)
+        const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+        
+        allBooks = processSheetData(data);
+        
+        // Reset state
+        filteredBooks = [];
+        awaitSelection = true;
+        populateFilters();
+        renderResultsTable();
+        renderMyListTable();
+      } catch (error) {
+        console.error(error);
+        $('#resultsCounter').textContent = '';
+        $('#resultsMessage').innerHTML = `<strong>Error loading data.</strong><br>${error.message}`;
+        $('#resultsMessage').style.display = 'block';
+        $('#resultsTable').hidden = true;
+      }
+    }
+
+    function processSheetData(rows2D) {
+      if (rows2D.length < 2) return [];
+      
+      // Dynamic Header Mapping
+      const getIdx = (headers, key) => headers.findIndex(h => (h||'').toString().trim().toLowerCase() === key);
+      const headers = rows2D[0];
+      
+      const idx = {
+        sn: getIdx(headers, 'sn'),
+        level: getIdx(headers, 'level'),
+        subject: getIdx(headers, 'subject'),
+        banding: getIdx(headers, 'banding'),
+        title: getIdx(headers, 'title'),
+        compulsory: getIdx(headers, 'compulsory'),
+        publisher: getIdx(headers, 'publisher'),
+        isbn: getIdx(headers, 'isbn'),
+        price: getIdx(headers, 'price')
+      };
+
+      const books = [];
+      // Start from 1 to skip header
+      for (let i = 1; i < rows2D.length; i++) {
+        const row = rows2D[i];
+        // If row is completely empty or title is missing, skip safely
+        if (!row || (idx.title > -1 && !row[idx.title])) continue;
+
+        // Create a unique internal ID based on row index to allow duplicate/empty SNs
+        const internalId = `row_${i}`;
+
+        books.push({
+          _id: internalId, // Internal unique ID (the fix for stability)
+          sn: idx.sn > -1 ? (row[idx.sn] || '').toString().trim() : '',
+          level: idx.level > -1 ? (row[idx.level] || '').toString().trim() : '',
+          subject: idx.subject > -1 ? (row[idx.subject] || '').toString().trim() : '',
+          banding: idx.banding > -1 ? (row[idx.banding] || '').toString().trim() : '',
+          title: (row[idx.title] || '').toString().trim(),
+          compulsory: idx.compulsory > -1 && /^y(es)?$/i.test((row[idx.compulsory] || '').toString().trim()),
+          publisher: idx.publisher > -1 ? (row[idx.publisher] || '').toString().trim() : '',
+          isbn: idx.isbn > -1 ? (row[idx.isbn] || '').toString().trim() : '',
+          price: idx.price > -1 ? (parseFloat(row[idx.price]) || 0) : 0
+        });
+      }
+      return books;
+    }
+
+    // ===== 5. UI & Rendering =====
+
+    function populateFilters() {
+      const subjectSel = $('#subject');
+      const bandingSel = $('#banding');
+      const levelSel = $('#level'); // Might not exist in HTML, check first
+
+      const current = {
+        level: levelSel ? levelSel.value : ALL,
+        subject: subjectSel.value,
+        banding: bandingSel.value
+      };
+
+      // 1. Level (if exists)
+      if (levelSel) {
+        buildSelectOptions(levelSel, allBooks.map(b => b.level), current.level);
+      }
+
+      // 2. Subject (Filtered by Level if applicable)
+      const subjectPool = (current.level === SELECT || current.level === ALL) 
+        ? allBooks 
+        : allBooks.filter(b => b.level === current.level);
+      buildSelectOptions(subjectSel, subjectPool.map(b => b.subject), current.subject);
+
+      // 3. Banding (Filtered by Subject if applicable)
+      const bandingPool = (current.subject === SELECT || current.subject === ALL)
+        ? subjectPool
+        : subjectPool.filter(b => b.subject === current.subject);
+      buildSelectOptions(bandingSel, bandingPool.map(b => b.banding), current.banding);
+    }
+
+    function buildSelectOptions(el, values, currentVal) {
+      const unique = [...new Set(values.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
+      const { singular, plural } = LABELS[el.id] || { singular:'Option', plural:'Options' };
+      
+      el.innerHTML = `<option value="${SELECT}">Select ${singular}</option><option value="${ALL}">All ${plural}</option>`;
+      unique.forEach(val => {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        el.appendChild(opt);
+      });
+      el.value = (currentVal && currentVal !== "") ? currentVal : SELECT;
+    }
+
+    function applyFilters() {
+      const level = $('#level') ? $('#level').value : ALL;
+      const subject = $('#subject').value;
+      const banding = $('#banding').value;
+      const compOnly = $('#compOnly').checked;
+      const keyword = $('#search').value.trim().toLowerCase();
+
+      const isSel = v => v === SELECT;
+      const effective = v => isSel(v) ? ALL : v;
+      const matches = (filt, val) => filt === ALL || val === filt;
+
+      const anyChosen = ![level, subject, banding].every(isSel);
+      const hasSearch = compOnly || !!keyword;
+      
+      awaitSelection = !(anyChosen || hasSearch);
+
+      if (awaitSelection) {
+        filteredBooks = [];
+      } else {
+        filteredBooks = allBooks.filter(b => 
+          matches(effective(level), b.level) &&
+          matches(effective(subject), b.subject) &&
+          matches(effective(banding), b.banding) &&
+          (!compOnly || b.compulsory) &&
+          (!keyword || b.title.toLowerCase().includes(keyword))
+        );
+      }
+      renderResultsTable();
+    }
+
+    function renderResultsTable() {
+      resultsTableBody.innerHTML = '';
+      
+      if (filteredBooks.length === 0) {
+        $('#resultsTable').hidden = true;
+        $('#resultsMessage').style.display = 'block';
+        $('#resultsMessage').textContent = awaitSelection 
+          ? 'Select a filter or type a keyword to view books.' 
+          : 'No books match your current filters.';
+      } else {
+        $('#resultsMessage').style.display = 'none';
+        $('#resultsTable').hidden = false;
+
+        filteredBooks.forEach(book => {
+          const isAdded = myBookList.has(book._id);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${book.subject}</td>
+            <td>
+              <span class="title-text">${book.title}</span>
+              ${book.compulsory 
+                ? '<span class="tag tag--compulsory">Compulsory</span>' 
+                : '<span class="tag tag--optional">Optional</span>'}
+            </td>
+            <td>${book.publisher}</td>
+            <td>${book.isbn}</td>
+            <td>${book.price.toFixed(2)}</td>
+            <td>
+              <button class="btn ${isAdded?'success':'primary'} add-btn" data-id="${book._id}" ${isAdded?'disabled':''}>
+                ${isAdded ? 'Added' : 'Add'}
+              </button>
+            </td>`;
+          resultsTableBody.appendChild(tr);
+        });
+      }
+      $('#resultsCounter').textContent = awaitSelection ? 'Waiting for selections…' : `${filteredBooks.length} book(s) found.`;
+      updateAddAllBtn();
+    }
+
+    function renderMyListTable() {
+      myListTableBody.innerHTML = '';
+      const items = Array.from(myBookList.values());
+      const hasItems = items.length > 0;
+
+      $('#myListEmpty').style.display = hasItems ? 'none' : 'block';
+      $('#myListTable').hidden = !hasItems;
+
+      if (hasItems) {
+        items.forEach((book, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${book.subject}</td>
+            <td><span class="title-text">${book.title}</span></td>
+            <td>${book.publisher}</td>
+            <td>${book.isbn}</td>
+            <td>${book.price.toFixed(2)}</td>
+            <td><button class="btn danger remove-btn" data-id="${book._id}">Remove</button></td>
+          `;
+          myListTableBody.appendChild(tr);
+        });
+        
+        // Total Row
+        const total = items.reduce((sum, b) => sum + b.price, 0);
+        const totalRow = document.createElement('tr');
+        totalRow.innerHTML = `
+          <td></td>
+          <td colspan="4" style="text-align:right; font-weight:600; color:red;">Total Price</td>
+          <td style="font-weight:600;">SGD ${total.toFixed(2)}</td>
+          <td></td>`;
+        myListTableBody.appendChild(totalRow);
+      }
+
+      $('#myListCounter').textContent = `${items.length} item(s) in your list.`;
+      
+      updateAddAllBtn();
+      updateRemoveAllBtn(hasItems); 
+      updateDownloadButtons(hasItems);
+    }
+
+    // ===== 6. Button States & Interaction =====
+
+    function updateAddAllBtn() {
+      const btn = $('#addAllBtn');
+      if (!btn) return;
+      const hasResults = !awaitSelection && filteredBooks.length > 0;
+      btn.hidden = !hasResults;
+      
+      // Eligible = visible books NOT already in list
+      const eligible = filteredBooks.filter(b => !myBookList.has(b._id));
+      const canAdd = hasResults && eligible.length > 0;
+      
+      btn.disabled = !canAdd;
+      if (canAdd) {
+        btn.textContent = `Add All (${eligible.length})`;
+        btn.className = 'btn primary';
+      } else {
+        btn.textContent = hasResults ? 'Added All' : 'Add All';
+        btn.className = 'btn success';
+      }
+    }
+
+    function updateRemoveAllBtn(hasItems) {
+      const btn = $('#removeBtn');
+      if (!btn) return;
+      
+      btn.hidden = !hasItems;
+      
+      // SAFETY: Reset confirmation state if list changed to prevent logic stuck
+      if (btn.getAttribute('data-confirming') === 'true') {
+         btn.textContent = 'Remove All';
+         btn.removeAttribute('data-confirming');
+      }
+    }
+
+    function updateDownloadButtons(hasItems) {
+      $('#xlsxBtn').hidden = !hasItems;
+      $('#xlsxBtnBottom').hidden = !hasItems;
+      $('#xlsxBtnBottom').style.display = hasItems ? 'block' : '';
+    }
+
+    // ===== 7. Actions =====
+
+    // CLICK HANDLER: Uses .closest() for stability
+    function handleResultsClick(e) {
+      const btn = e.target.closest('.add-btn');
+      if (!btn || btn.disabled) return;
+      
+      const id = btn.dataset.id;
+      const book = filteredBooks.find(b => b._id === id);
+      if (book) {
+        myBookList.set(id, book);
+        btn.textContent = 'Added';
+        btn.disabled = true;
+        btn.classList.replace('primary', 'success');
+        renderMyListTable();
+        updateAddAllBtn(); 
+      }
+    }
+
+    function handleMyListClick(e) {
+      const btn = e.target.closest('.remove-btn');
+      if (!btn) return;
+      
+      const id = btn.dataset.id;
+      if (myBookList.has(id)) {
+        myBookList.delete(id);
+        renderMyListTable();
+        renderResultsTable(); 
+      }
+    }
+
+    function handleAddAll() {
+      const btn = $('#addAllBtn');
+      if (btn.disabled) return;
+      
+      filteredBooks.forEach(b => {
+        if (!myBookList.has(b._id)) myBookList.set(b._id, b);
+      });
+      
+      renderMyListTable();
+      renderResultsTable();
+    }
+
+    function handleRemoveAll() {
+      const btn = $('#removeBtn');
+      if (!btn) return;
+
+      // Step 2: Confirm
+      if (btn.getAttribute('data-confirming') === 'true') {
+        myBookList.clear();
+        renderMyListTable();
+        renderResultsTable();
+      } 
+      // Step 1: Request
+      else {
+        const originalText = btn.textContent;
+        btn.textContent = 'Confirm Clear?';
+        btn.setAttribute('data-confirming', 'true');
+        
+        // Auto-cancel after 3 seconds
+        setTimeout(() => {
+          if (btn.getAttribute('data-confirming') === 'true' && myBookList.size > 0) {
+            btn.textContent = originalText;
+            btn.removeAttribute('data-confirming');
+          }
+        }, 3000);
+      }
+    }
+
+function downloadXLSX() {
+      if (myBookList.size === 0) {
+        // Just in case button is manually enabled
+        return;
+      }
+
+      const items = Array.from(myBookList.values());
+      const headers = ['No', 'Subject', 'Title', 'Publisher', 'ISBN', 'Price'];
+      
+      // Summary configuration
+      const summary = [
+        ['Total books:', items.length],
+        // UPDATED: Send raw number, don't convert to string yet
+        ['Total amount:', items.reduce((acc,b)=>acc+b.price,0)], 
+        ['Compulsory:', items.filter(b=>b.compulsory).length],
+        ['Optional:', items.filter(b=>!b.compulsory).length],
+        [] // spacer
+      ];
+
+      const dataRows = items.map((b, i) => [
+        i+1, b.subject, b.title, b.publisher, b.isbn, b.price
+      ]);
+
+      const wsData = [...summary, headers, ...dataRows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // ===== NEW FORMATTING LOGIC =====
+
+      // 1. Format "Total Amount" (Cell B2)
+      const totalCell = ws['B2'];
+      if (totalCell && typeof totalCell.v === 'number') {
+          totalCell.t = 'n';
+          totalCell.z = '0.00'; // Displays: 1234.50 (No comma)
+      }
+
+      // 2. Format Prices Column (Column F, starting after summary + header)
+      // Summary is 5 rows (0-4), Header is 1 row (5). Data starts at Index 6 (Row 7 in Excel)
+      const dataStartRow = 6; // 0-based index for code, matches Excel Row 7
+      
+      // Loop through all data rows
+      for (let i = 0; i < dataRows.length; i++) {
+        // Calculate the Excel cell reference (e.g., F7, F8...)
+        const cellRef = XLSX.utils.encode_cell({ c: 5, r: dataStartRow + i }); // c:5 = Column F
+        
+        if (ws[cellRef] && typeof ws[cellRef].v === 'number') {
+          ws[cellRef].t = 'n';
+          ws[cellRef].z = '0.00'; // Displays: 1234.50 (No comma)
+        }
+      }
+
+      // Auto-width columns
+      const wch = wsData[0].map((_, i) => ({
+        wch: wsData.reduce((max, r) => Math.max(max, (r[i]||'').toString().length), 10)
+      }));
+      ws['!cols'] = wch;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'BookList');
+      XLSX.writeFile(wb, 'MyBookList.xlsx');
+    }
+
+    // ===== 8. Event Listeners =====
+    
+    $('#filtersForm').addEventListener('submit', e => { e.preventDefault(); applyFilters(); });
+    
+    $('#resetBtn').addEventListener('click', () => {
+      $('#filtersForm').reset();
+      ['level','subject','banding'].forEach(id => {
+        const el = $(`#${id}`); if(el) el.value = SELECT;
+      });
+      populateFilters();
+      applyFilters();
+    });
+
+    $('#filters').addEventListener('change', async (e) => {
+      await ensureDataLoaded();
+      if (e.target.tagName === 'SELECT') {
+        $('#search').value = ''; 
+        if (['level','subject'].includes(e.target.id)) populateFilters();
+      }
+      applyFilters();
+    });
+
+    $('#search').addEventListener('input', async (e) => {
+      await ensureDataLoaded();
+      if (e.target.value.trim().length > 0) {
+        ['level','subject','banding'].forEach(id => {
+           const el = $(`#${id}`); if(el) el.value = SELECT;
+        });
+      }
+      populateFilters();
+      applyFilters();
+    });
+
+    $('#addAllBtn').addEventListener('click', async () => {
+      await ensureDataLoaded();
+      handleAddAll();
+    });
+
+    $('#removeBtn').addEventListener('click', handleRemoveAll);
+    
+    resultsTableBody.addEventListener('click', handleResultsClick);
+    myListTableBody.addEventListener('click', handleMyListClick);
+    
+    ['#xlsxBtn', '#xlsxBtnBottom'].forEach(sel => {
+      const el = $(sel); if(el) el.addEventListener('click', downloadXLSX);
+    });
+
+    // Init
+    ensureDataLoaded();
+  });
+  </script>
+</body>
+</html>
