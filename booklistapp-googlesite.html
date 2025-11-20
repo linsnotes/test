@@ -1,0 +1,85 @@
+<!-- Filters Section -->
+<section id="filters">
+  <h2>1. Find Books</h2>
+  <form id="filtersForm">
+    <div class="filters-grid">
+      <div class="form-group">
+        <label for="subject">Subject</label>
+        <select id="subject"><option value="SELECT">Select Subject</option></select>
+      </div>
+      <div class="form-group">
+        <label for="banding">Level (G1/G2/G3)</label>
+        <select id="banding"><option value="SELECT">Select Banding</option></select>
+      </div>
+      <div class="form-group">
+        <label for="search">Search by Keyword</label>
+        <input id="search" type="text" placeholder="e.g., Workbook, 1A, etc." />
+      </div>
+      <div class="form-group checkbox-group">
+        <label class="toggle-switch">
+         <input id="compOnly" type="checkbox" />
+         <span class="slider"></span>
+        </label>
+        <label for="compOnly" class="toggle-label">Hide Optional</label>
+      </div>
+    </div>
+    <div class="button-group" style="margin-top: 20px;">
+      <button type="button" id="resetBtn" class="btn primary">Reset Filters</button>
+    </div>
+  </form>
+</section>
+
+<!-- Results Section -->
+<section id="results-section">
+  <h2>2. Search Results</h2>
+  <div class="results-toolbar">
+    <div id="resultsCounter" class="status-message" aria-live="polite"></div>
+    <button id="addAllBtn" class="btn primary" disabled hidden>Add All</button>
+  </div>
+  <div class="table-wrapper">
+    <table id="resultsTable" hidden>
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Title</th>
+          <th>Publisher</th>
+          <th>ISBN</th>
+          <th>Price</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody><!-- Results injected here --></tbody>
+    </table>
+  </div>
+  <div id="resultsMessage" class="message" style="display: none;"></div>
+</section>
+
+<!-- My Book List Section -->
+<section id="my-list-section">
+  <h2>3. My Book List</h2>
+  <div class="button-group">
+    <button id="xlsxBtn" class="btn primary" hidden>Download Book List</button>
+  </div>
+  <div class="myList-toolbar"> 
+    <div id="myListCounter" class="status-message">Your list is empty.</div>
+    <button id="removeBtn" class="btn danger" hidden>Remove All</button> 
+  </div>
+  <div class="table-wrapper">
+    <table id="myListTable" hidden>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Subject</th>
+          <th>Title</th>
+          <th>Publisher</th>
+          <th>ISBN</th>
+          <th>Price</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody><!-- My List injected here --></tbody>
+    </table>
+  </div>
+  <div id="myListEmpty" class="message">Add books from the search results above.</div>
+  <button id="xlsxBtnBottom" class="btn primary btn-right" hidden>Download Book List</button>  
+</section>
